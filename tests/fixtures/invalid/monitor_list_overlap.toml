@@ -1,0 +1,16 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+
+# Rule 1: a name in two [monitor] lists at once.
+
+[monitor]
+inputs = ["speed"]
+outputs = ["p_holds"]
+parameters = ["speed"]
+
+[variables]
+speed = { initial_value = 10 }
+p_holds = { type = "bool" }
+
+[[properties]]
+name = "p"
+check = ["gt", "speed", 0]

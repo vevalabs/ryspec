@@ -1,0 +1,21 @@
+#:schema ../schemas/v0/ryspec.schema.json
+
+# Naming `guard` in both `[rules]` and `[variables]` is not two definitions:
+# the rule is the value, and `[variables]` declares it part of the interface.
+[monitor]
+inputs = ["q", "r"]
+outputs = ["guard"]
+
+[variables]
+q = { type = "bool" }
+r = { type = "bool" }
+guard = { type = "bool" }
+
+[rules]
+once_q = ["once", "q"]
+r_and_not_q = ["and", "r", ["not", "q"]]
+guard = ["and", "r_and_not_q", "once_q"]
+
+[[properties]]
+name = "guard_holds"
+check = "guard"

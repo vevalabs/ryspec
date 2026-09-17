@@ -1,0 +1,11 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+
+# Rule 2: two [[properties]] entries sharing a name.
+
+[[properties]]
+name = "p"
+check = "a"
+
+[[properties]]
+name = "p"
+check = "b"

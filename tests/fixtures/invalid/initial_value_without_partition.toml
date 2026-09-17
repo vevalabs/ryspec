@@ -1,0 +1,17 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+
+# Rule 5: an initial_value on a name in no [monitor] list.
+
+[monitor]
+inputs = ["speed"]
+outputs = ["p_out"]
+parameters = []
+
+[variables]
+speed = {}
+p_out = { type = "bool" }
+threshold = { initial_value = 5 }
+
+[[properties]]
+name = "p"
+check = ["gt", "threshold", 0]

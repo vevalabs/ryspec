@@ -1,0 +1,10 @@
+#:schema ../schemas/v0/ryspec.schema.json
+
+# A single property in infix expression form: whenever `s` holds, `p` must
+# have held at some point in the last 3 to 10 steps.
+[features]
+allow_expressions = true
+
+[[properties]]
+name = "my_property"
+check = "({s} -> once[3:10] {p})"

@@ -1,0 +1,15 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+
+# Rule 4: a source or a format on a name in outputs or parameters.
+
+[monitor]
+inputs = ["raw"]
+outputs = ["result"]
+
+[variables]
+raw = { type = "text", format = "json" }
+result = { source = "raw" }
+
+[[properties]]
+name = "p"
+check = "flag"

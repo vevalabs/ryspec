@@ -1,0 +1,23 @@
+#:schema ../schemas/v0/ryspec.schema.json
+
+# `[monitor]` fixes the order of each partition; `[variables]` describes each
+# name -- its type, unit and (for a parameter) starting value.
+[monitor]
+inputs = ["speed", "brake"]
+outputs = ["speed_within_limit"]
+parameters = ["speed_max"]
+
+[monitor.runtime]
+allocation_size = 65536
+buffer_size = 4096
+
+[variables]
+speed = { type = "number", unit = "m/s", description = "vehicle speed" }
+brake = { type = "bool" }
+velocity = { source = "speed", type = "number", unit = "m/s" }
+speed_max = { initial_value = 50.0, min = 0.0 }
+speed_within_limit = { type = "bool" }
+
+[[properties]]
+name = "speed_within_limit"
+check = ["le", "speed", "speed_max"]

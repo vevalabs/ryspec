@@ -1,0 +1,10 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+
+# Rule 9: a rule naming a text or binary variable.
+
+[variables]
+frame = { type = "text", format = "json" }
+
+[[properties]]
+name = "p"
+check = "frame"

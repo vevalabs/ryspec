@@ -1,0 +1,10 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+
+# Rule 7: min greater than max, on a parameter or on a metric bound.
+
+[variables]
+speed = { min = 100, max = 10 }
+
+[[properties]]
+name = "p"
+check = ["gt", "speed", 0]

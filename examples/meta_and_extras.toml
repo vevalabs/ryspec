@@ -1,0 +1,22 @@
+#:schema ../schemas/v0/ryspec.schema.json
+
+# `meta` records facts about the document; `extras` is free-form data outside
+# the document's metadata. Both take arbitrary keys beyond the ones shown here.
+namespace = "https://example.com/ryspec/vehicle-braking"
+
+[meta]
+title = "Vehicle braking properties"
+description = "Braking response checks for the reference vehicle model."
+author = "John Doe"
+license = "MIT"
+
+[extras]
+owner_team = "safety"
+jira_project = "VEH"
+
+[[properties]]
+name = "brakes_after_warning"
+title = "Brakes engage after a warning"
+criticality = "critical"
+message = "brake was not engaged within 10 steps of a warning"
+check = ["once", "brake", { max = 10 }]

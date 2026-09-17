@@ -1,0 +1,17 @@
+#:schema ../schemas/v0/ryspec.schema.json
+
+# A `text` variable decoded as JSON lets other variables read fields out of it
+# through a dotted `source` path, without claiming an input slot of their own.
+[monitor]
+inputs = ["vehicle_state"]
+outputs = ["in_gear_while_moving"]
+
+[variables]
+vehicle_state = { type = "text", format = "json", description = "telemetry frame" }
+speed = { type = "number", source = "vehicle_state.vehicle.speed" }
+gear = { type = "number", source = "vehicle_state.drive.gear" }
+in_gear_while_moving = { type = "bool" }
+
+[[properties]]
+name = "in_gear_while_moving"
+check = ["implies", ["gt", "speed", 0], ["gt", "gear", 0]]

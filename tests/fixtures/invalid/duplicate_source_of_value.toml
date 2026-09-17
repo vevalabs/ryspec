@@ -1,0 +1,10 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+
+# Rule 11: two sources of value sharing one name.
+
+[[properties]]
+name = "guard"
+check = "flag"
+
+[rules]
+guard = ["not", "flag"]

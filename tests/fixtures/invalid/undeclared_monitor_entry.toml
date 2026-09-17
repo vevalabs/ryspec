@@ -1,0 +1,14 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+
+# Rule 3: a [monitor] list entry with no [variables] declaration.
+
+[monitor]
+inputs = ["x"]
+outputs = ["result"]
+
+[variables]
+x = {}
+
+[[properties]]
+name = "p"
+check = ["gt", "x", 0]

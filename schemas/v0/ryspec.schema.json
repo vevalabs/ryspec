@@ -1,0 +1,452 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/vevalabs/ryspec/schemas/v0/ryspec.schema.json",
+  "title": "Reelay Specification Schema",
+  "type": "object",
+  "required": ["properties"],
+  "additionalProperties": false,
+  "properties": {
+    "namespace": {
+      "title": "Namespace",
+      "type": "string",
+      "format": "uri-reference",
+      "pattern": "^\\S+(?![\\s\\S])",
+      "minLength": 1
+    },
+    "features": {
+      "title": "Format flags",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow_expressions": {
+          "type": "boolean"
+        }
+      }
+    },
+    "variables": {
+      "title": "Value space",
+      "type": "object",
+      "propertyNames": { "$ref": "#/definitions/identifier" },
+      "additionalProperties": { "$ref": "#/definitions/variable" }
+    },
+    "monitor": {
+      "title": "Monitor interface",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runtime": {
+          "title": "Build sizing",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allocation_size": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "buffer_size": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/identifier" }
+        },
+        "outputs": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/identifier" }
+        },
+        "parameters": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/identifier" }
+        }
+      },
+      "required": ["inputs", "outputs"]
+    },
+    "meta": {
+      "title": "Document metadata",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "license": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "extras": {
+      "title": "Free-form extension data",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "rules": {
+      "title": "File-level rules",
+      "allOf": [{ "$ref": "#/definitions/ruleTable" }]
+    },
+    "properties": {
+      "title": "Properties",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/property" }
+    }
+  },
+  "definitions": {
+    "identifier": {
+      "title": "Identifier",
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?![\\s\\S])"
+    },
+    "dottedName": {
+      "title": "Dotted path",
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*(?![\\s\\S])"
+    },
+    "variable": {
+      "title": "Variable",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "$ref": "#/definitions/dottedName"
+        },
+        "format": {
+          "title": "Decoded format",
+          "description": "How to decode the value a source path reads into. Only a text or binary variable may carry one -- there is nothing to decode in a number -- and only an input carries one. Decoding happens in the loader, never in the runtime core.",
+          "anyOf": [
+            {
+              "const": "json",
+              "description": "A JSON document, whose fields other variables address through a dotted source path."
+            }
+          ]
+        },
+        "type": {
+          "title": "Value type",
+          "description": "Defaults to number when absent.",
+          "anyOf": [
+            {
+              "const": "bool",
+              "description": "A truth value."
+            },
+            {
+              "const": "number",
+              "description": "A numeric value. The default."
+            },
+            {
+              "const": "text",
+              "description": "A document. It holds no value a rule can compare -- give it a format and other variables read fields out of it through a source path."
+            },
+            {
+              "const": "binary",
+              "description": "A blob. It holds no value a rule can compare -- give it a format and other variables read fields out of it through a source path."
+            }
+          ]
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "initial_value": {
+          "type": ["number", "boolean"]
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["type"],
+            "properties": { "type": { "const": "bool" } }
+          },
+          "then": {
+            "properties": { "initial_value": { "type": "boolean" } }
+          }
+        },
+        {
+          "if": {
+            "anyOf": [
+              { "not": { "required": ["type"] } },
+              { "properties": { "type": { "const": "number" } } }
+            ]
+          },
+          "then": {
+            "properties": { "initial_value": { "type": "number" } }
+          }
+        },
+        {
+          "if": {
+            "required": ["type"],
+            "properties": { "type": { "enum": ["text", "binary"] } }
+          },
+          "then": {
+            "not": { "required": ["initial_value"] }
+          }
+        },
+        {
+          "if": {
+            "required": ["type"],
+            "properties": { "type": { "enum": ["bool", "text", "binary"] } }
+          },
+          "then": {
+            "not": { "anyOf": [{ "required": ["min"] }, { "required": ["max"] }] }
+          }
+        },
+        {
+          "if": {
+            "anyOf": [
+              { "not": { "required": ["type"] } },
+              { "properties": { "type": { "enum": ["bool", "number"] } } }
+            ]
+          },
+          "then": {
+            "not": { "required": ["format"] }
+          }
+        }
+      ]
+    },
+    "expression": {
+      "title": "Expression",
+      "type": "string",
+      "pattern": "^\\([\\s\\S]*\\S[\\s\\S]*\\)(?![\\s\\S])"
+    },
+    "parameter": {
+      "title": "Scalar operand",
+      "anyOf": [{ "type": "number" }, { "$ref": "#/definitions/identifier" }]
+    },
+    "boundValue": {
+      "title": "Metric bound value",
+      "anyOf": [{ "type": "number", "minimum": 0 }, { "$ref": "#/definitions/identifier" }]
+    },
+    "bound": {
+      "title": "Metric bound",
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "min": { "$ref": "#/definitions/boundValue" },
+        "max": { "$ref": "#/definitions/boundValue" }
+      }
+    },
+    "rule": {
+      "title": "Rule",
+      "anyOf": [
+        { "$ref": "#/definitions/identifier" },
+        { "$ref": "#/definitions/expression" },
+        { "$ref": "#/definitions/predicateRule" },
+        { "$ref": "#/definitions/unaryRule" },
+        { "$ref": "#/definitions/multiaryRule" },
+        { "$ref": "#/definitions/unaryTemporalRule" },
+        { "$ref": "#/definitions/binaryTemporalRule" }
+      ]
+    },
+    "unaryOperator": {
+      "title": "Unary operator",
+      "anyOf": [
+        {
+          "const": "not",
+          "description": "Logical negation. Holds exactly when its operand does not."
+        },
+        {
+          "const": "prev",
+          "description": "The operand's value at the previous step. Past-time; has no infix spelling, so a property using it writes that rule in prefix form."
+        },
+        {
+          "const": "next",
+          "description": "The operand's value at the next step. Future-time."
+        }
+      ]
+    },
+    "unaryTemporalOperator": {
+      "title": "Unary temporal operator",
+      "anyOf": [
+        {
+          "const": "once",
+          "description": "The operand held at some point in the past. Takes an optional metric bound narrowing how far back to look."
+        },
+        {
+          "const": "historically",
+          "description": "The operand held at every point in the past. Takes an optional metric bound narrowing how far back to look."
+        },
+        {
+          "const": "eventually",
+          "description": "The operand holds at some point in the future. Takes an optional metric bound narrowing how far ahead to look."
+        },
+        {
+          "const": "always",
+          "description": "The operand holds at every point in the future. Takes an optional metric bound narrowing how far ahead to look."
+        }
+      ]
+    },
+    "binaryTemporalOperator": {
+      "title": "Binary temporal operator",
+      "anyOf": [
+        {
+          "const": "since",
+          "description": "The second operand held at some point in the past and the first has held at every point after it. Past-time; takes an optional metric bound on when the second operand held."
+        },
+        {
+          "const": "until",
+          "description": "The second operand holds at some point in the future and the first holds at every point before it. Future-time; takes an optional metric bound on when the second operand holds."
+        }
+      ]
+    },
+    "multiaryOperator": {
+      "title": "N-ary operator",
+      "anyOf": [
+        {
+          "const": "and",
+          "description": "Holds when every operand holds."
+        },
+        {
+          "const": "or",
+          "description": "Holds when at least one operand holds."
+        },
+        {
+          "const": "equiv",
+          "description": "Holds when the operands all have the same truth value. Has no infix spelling, so a property using it writes that rule in prefix form."
+        },
+        {
+          "const": "implies",
+          "description": "Holds when each operand implies the next; the first is the antecedent and the last the consequent."
+        }
+      ]
+    },
+    "comparisonOperator": {
+      "title": "Comparison operator",
+      "description": "Compares a variable against a scalar operand -- a number written inline, or a name resolving to a parameter or another variable. Comparisons have no infix spelling, so a property using one writes that rule in prefix form.",
+      "anyOf": [
+        { "const": "lt", "description": "Strictly less than." },
+        { "const": "le", "description": "Less than or equal to." },
+        { "const": "gt", "description": "Strictly greater than." },
+        { "const": "ge", "description": "Greater than or equal to." },
+        { "const": "eq", "description": "Equal to." },
+        { "const": "ne", "description": "Not equal to." }
+      ]
+    },
+    "unaryRule": {
+      "title": "Unary rule",
+      "type": "array",
+      "items": [
+        { "$ref": "#/definitions/unaryOperator" },
+        { "$ref": "#/definitions/rule" }
+      ],
+      "minItems": 2,
+      "maxItems": 2,
+      "additionalItems": false
+    },
+    "unaryTemporalRule": {
+      "title": "Unary temporal rule",
+      "type": "array",
+      "items": [
+        { "$ref": "#/definitions/unaryTemporalOperator" },
+        { "$ref": "#/definitions/rule" }
+      ],
+      "minItems": 2,
+      "maxItems": 3,
+      "additionalItems": { "$ref": "#/definitions/bound" }
+    },
+    "predicateRule": {
+      "title": "Comparison predicate",
+      "type": "array",
+      "items": [
+        { "$ref": "#/definitions/comparisonOperator" },
+        { "$ref": "#/definitions/identifier" },
+        { "$ref": "#/definitions/parameter" }
+      ],
+      "minItems": 3,
+      "maxItems": 3,
+      "additionalItems": false
+    },
+    "multiaryRule": {
+      "title": "N-ary rule",
+      "type": "array",
+      "items": [
+        { "$ref": "#/definitions/multiaryOperator" },
+        { "$ref": "#/definitions/rule" },
+        { "$ref": "#/definitions/rule" }
+      ],
+      "minItems": 3,
+      "additionalItems": { "$ref": "#/definitions/rule" }
+    },
+    "binaryTemporalRule": {
+      "title": "Binary temporal rule",
+      "type": "array",
+      "items": [
+        { "$ref": "#/definitions/binaryTemporalOperator" },
+        { "$ref": "#/definitions/rule" },
+        { "$ref": "#/definitions/rule" }
+      ],
+      "minItems": 3,
+      "maxItems": 4,
+      "additionalItems": { "$ref": "#/definitions/bound" }
+    },
+    "ruleTable": {
+      "title": "Rule table",
+      "type": "object",
+      "propertyNames": { "$ref": "#/definitions/identifier" },
+      "additionalProperties": { "$ref": "#/definitions/rule" }
+    },
+    "property": {
+      "title": "Property",
+      "type": "object",
+      "required": ["name", "check"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/identifier"
+        },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "criticality": {
+          "title": "Criticality",
+          "description": "How much a violation of this property matters. It classifies the verdict for whoever reads it and does not change how the property is evaluated.",
+          "anyOf": [
+            {
+              "const": "info",
+              "description": "Informational; a violation is worth recording and nothing more."
+            },
+            {
+              "const": "warning",
+              "description": "A violation is a concern but not a failure."
+            },
+            {
+              "const": "error",
+              "description": "A violation is a failure."
+            },
+            {
+              "const": "critical",
+              "description": "A violation is a failure that matters most -- a safety requirement."
+            }
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "given": {
+          "$ref": "#/definitions/rule"
+        },
+        "check": {
+          "$ref": "#/definitions/rule"
+        },
+        "rules": {
+          "$ref": "#/definitions/ruleTable"
+        }
+      }
+    }
+  }
+}
