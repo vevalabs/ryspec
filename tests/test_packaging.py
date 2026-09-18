@@ -13,10 +13,14 @@ import os
 import tomllib
 from pathlib import Path
 
+import ryspec
 from ryspec import DEFAULT_SCHEMA
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-PACKAGE_DIR = Path(DEFAULT_SCHEMA).resolve().parent.parent.parent
+# Where setuptools globs package-data from. Taken from the module rather than
+# from DEFAULT_SCHEMA, whose resolved path leaves the package through the
+# schemas symlink and lands wherever the checkout happens to be.
+PACKAGE_DIR = Path(ryspec.__file__).resolve().parent
 
 
 def _package_data_patterns() -> list[str]:
@@ -26,7 +30,7 @@ def _package_data_patterns() -> list[str]:
 
 def test_default_schema_lives_inside_the_package():
     assert DEFAULT_SCHEMA.exists()
-    assert PACKAGE_DIR.name == "ryspec"
+    assert DEFAULT_SCHEMA.is_relative_to(PACKAGE_DIR)
 
 
 def test_package_data_patterns_match_the_default_schema():
