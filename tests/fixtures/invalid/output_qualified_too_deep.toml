@@ -1,0 +1,20 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+version = 0
+
+# Rule 3, qualified form: an output is typed as a dotted path, so a deeper
+# path is well-formed to the schema. A qualified output names one property
+# and one of its rules, and nothing nested below that.
+
+[monitor]
+inputs = ["x"]
+outputs = ["p.rhs.inner"]
+
+[variables]
+x = {}
+
+[[properties]]
+name = "p"
+check = "rhs"
+
+[properties.rules]
+rhs = ["gt", "x", 0]

@@ -1,0 +1,16 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+version = 0
+
+# Rule 3, outputs form: 'result' declares no variable, names no property and
+# names no file-level rule, so nothing in the file gives it a value.
+
+[monitor]
+inputs = ["x"]
+outputs = ["result"]
+
+[variables]
+x = {}
+
+[[properties]]
+name = "p"
+check = ["gt", "x", 0]

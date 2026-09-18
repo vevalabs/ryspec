@@ -60,7 +60,7 @@
           "type": "array",
           "uniqueItems": true,
           "minItems": 1,
-          "items": { "$ref": "#/$defs/identifier" }
+          "items": { "$ref": "#/$defs/dottedName" }
         },
         "parameters": {
           "type": "array",

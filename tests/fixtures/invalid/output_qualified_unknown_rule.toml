@@ -1,0 +1,23 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+version = 0
+
+# Rule 3, qualified form: property 'p' exists but declares no private rule
+# called 'lhs'. A file-level rule of that name would not do -- a qualified
+# output reaches into [properties.rules] and nowhere else.
+
+[monitor]
+inputs = ["x"]
+outputs = ["p.lhs"]
+
+[variables]
+x = {}
+
+[rules]
+lhs = ["gt", "x", 0]
+
+[[properties]]
+name = "p"
+check = "rhs"
+
+[properties.rules]
+rhs = ["lt", "x", 0]

@@ -1,22 +1,33 @@
 #:schema ../schemas/v0/ryspec.schema.json
 version = 0
 
-# Naming `guard` in both `[rules]` and `[variables]` is not two definitions:
-# the rule is the value, and `[variables]` declares it part of the interface.
+# An output names the value it publishes, and there are four ways to name one:
+# a [variables] declaration, a property whose verdict is published, a
+# file-level rule, or a rule private to a property, written <property>.<rule>.
 [monitor]
 inputs = ["q", "r"]
-outputs = ["guard"]
+outputs = ["guard", "guard_holds", "guard_holds.rhs", "late_q"]
 
+# Naming `guard` in both [rules] and [variables] is not two definitions: the
+# rule is the value, and [variables] declares it part of the interface. A
+# declaration is what carries a type, a unit or a description -- the three
+# outputs below it publish without one.
 [variables]
 q = { type = "bool" }
 r = { type = "bool" }
-guard = { type = "bool" }
+guard = { type = "bool", description = "the published guard" }
 
 [rules]
 once_q = ["once", "q"]
 r_and_not_q = ["and", "r", ["not", "q"]]
 guard = ["and", "r_and_not_q", "once_q"]
+late_q = ["eventually", "q"]
 
 [[properties]]
 name = "guard_holds"
-check = "guard"
+check = ["and", "guard", "rhs"]
+
+# `rhs` is private to this property -- another property may declare its own.
+# The qualified name is what publishes it without moving it to file level.
+[properties.rules]
+rhs = ["or", "q", "r"]

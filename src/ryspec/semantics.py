@@ -197,16 +197,67 @@ def _check_duplicate_property_names(ctx: Context) -> list[SemanticError]:
     return errors
 
 
+def _unresolved_output(ctx: Context, name: str, pointer: Pointer) -> SemanticError | None:
+    """Whether `name` in `outputs` reaches something that gives it a value.
+
+    An output publishes a value that already exists somewhere in the file, so
+    a `[variables]` entry is one way to name it and not the only one: a
+    property publishes its verdict under its own name, a file-level rule
+    publishes the rule's value, and a rule private to a property is reachable
+    as `<property>.<rule>` -- the qualified form being the one way past the
+    visibility boundary that `[properties.rules]` draws, without moving the
+    rule to file level. A declaration remains the only way to give an output
+    a `type`, a `unit` or a `description`.
+
+    The schema types an output as a dotted path, which admits paths deeper
+    than the one dot this form uses, so the arity is checked here.
+    """
+    if "." in name:
+        segments = name.split(".")
+        if len(segments) > 2:
+            return SemanticError(
+                pointer,
+                f"'{name}' is listed in outputs but a qualified output names one property and one of its rules",
+            )
+        property_name, rule_name = segments
+        index = next(
+            (i for i, (declared, _) in enumerate(ctx.property_names) if declared == property_name),
+            None,
+        )
+        if index is None:
+            return SemanticError(pointer, f"'{name}' is listed in outputs but no property is named '{property_name}'")
+        if rule_name not in ctx.property_private_rules.get(index, {}):
+            return SemanticError(
+                pointer,
+                f"'{name}' is listed in outputs but property '{property_name}' declares no rule '{rule_name}'",
+            )
+        return None
+
+    if name in ctx.variables or name in ctx.file_rules:
+        return None
+    if any(declared == name for declared, _ in ctx.property_names):
+        return None
+    return SemanticError(
+        pointer,
+        f"'{name}' is listed in outputs but names no variable, property or file-level rule",
+    )
+
+
 def _check_monitor_entries_declared(ctx: Context) -> list[SemanticError]:
     errors = []
     for list_name, names in ctx.monitor.items():
         if names is None:
             continue
         for index, name in enumerate(names):
-            if name not in ctx.variables:
+            pointer = ("monitor", list_name, index)
+            if list_name == "outputs":
+                error = _unresolved_output(ctx, name, pointer)
+                if error is not None:
+                    errors.append(error)
+            elif name not in ctx.variables:
                 errors.append(
                     SemanticError(
-                        ("monitor", list_name, index),
+                        pointer,
                         f"'{name}' is listed in {list_name} but not declared in [variables]",
                     )
                 )
@@ -361,6 +412,8 @@ def _check_source_of_value_collisions(ctx: Context) -> list[SemanticError]:
             if not names:
                 continue
             for index, name in enumerate(names):
+                if "." in name:
+                    continue  # a qualified output reaches a private rule; it declares nothing
                 if name not in entries or all(kind != "variable" for kind, _ in entries[name]):
                     entries.setdefault(name, []).append(("variable", ("monitor", list_name, index)))
         return entries

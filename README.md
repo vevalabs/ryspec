@@ -103,7 +103,7 @@ The `[variables]` table declares variables by name. It does not say which partit
 | partition | meaning |
 | --- | --- |
 | input | fed in from outside at each step (the default) |
-| output | computed and published -- a property's verdict, or a rule named in `[monitor].outputs` |
+| output | computed and published -- a property's verdict, or a rule named in `[monitor].outputs`, whether file-level or private to a property |
 | parameter | set before the run and held, carrying an `initial_value` |
 
 The set is deliberately smaller than FMI 3.0's causality, which also has `local`, `independent`, `calculatedParameter` and `structuralParameter`: the runtime's value space has exactly these three partitions, in this order, and nothing else to name.
@@ -138,7 +138,7 @@ Both are in bytes and both are optional; absent either, the build sizes itself f
 
 Because the lists alone decide the partition, `[variables]` carries no key restating it, and the two can never disagree. What a file can still get wrong is putting a variable in a list its declaration does not suit -- a `source` or a `format` on a name in `outputs` or `parameters`, an `initial_value` on a name in no list -- and the loader reports those, the schema having no way to see which list a name is in. An input is listed exactly when it has no `source`: `velocity` above has one, so it reads a slot another variable already holds rather than claiming one of its own.
 
-Every name in those three lists is a variable reference and nothing else -- so a published verdict or rule, once named in a list, is declared like any other variable. Where its *value* comes from is a separate question, answered by name resolution: `respond_bqr` below takes its value from the property of that name, `guard` from a file-level rule. One namespace, so the name is all it takes to reach either.
+Every name in `inputs` and `parameters` is a variable reference and nothing else. An `outputs` entry is looser, because it publishes a value the file already computes somewhere: it names a `[variables]` declaration, a property whose verdict is published, a file-level rule, or a rule private to a property, written `<property>.<rule>`. One namespace, so the name is all it takes to reach the first three. What a declaration adds is the interface detail -- a `type`, a `unit`, a `description` -- and a published name without one takes the defaults.
 
 ```toml
 [monitor]
@@ -149,7 +149,7 @@ respond_bqr = { type = "bool", description = "RespondBQR verdict" }
 guard = { type = "bool" }
 ```
 
-A verdict published by default -- the set is every property in declaration order, which `outputs` replaces when present -- needs no such entry, having no list to be referenced from.
+`respond_bqr` above takes its value from the property of that name and `guard` from a file-level rule; either could have been listed without the `[variables]` entry beside it, which is there to give the published signal a type and a description. A verdict published by default -- the set is every property in declaration order, which `outputs` replaces when present -- needs no entry either way, having no list to be referenced from.
 
 A parameter carries its start value as `initial_value`; `min` and `max` are optional and bound it for an embedding that exposes it. A number written inline in a rule is an anonymous parameter -- the loader allocates it a slot exactly as if it had been declared -- so naming one buys addressability and a place in `parameters`, nothing else. The anonymous ones follow the named, in the order the loader meets them.
 
@@ -200,7 +200,7 @@ The exception is a **parameter**, which cannot be deduced: a threshold has no se
 
 ## Naming and Visibility
 
-Variables, rules and properties share one namespace, and a name means one thing in it. What may not be duplicated is a *source of value*: two rules, or a rule and a property, or a rule and an input, cannot share a name. Every name in `[monitor].inputs`, `outputs` and `parameters` is a plain identifier -- no dots.
+Variables, rules and properties share one namespace, and a name means one thing in it. What may not be duplicated is a *source of value*: two rules, or a rule and a property, or a rule and an input, cannot share a name. Every name in `[monitor].inputs` and `parameters` is a plain identifier -- no dots. An `outputs` entry is the one exception: `<property>.<rule>` reaches a rule private to a property, and is the only dotted form a `[monitor]` list accepts.
 
 A published variable is the exception that proves the rule, because it produces no value of its own. Declaring
 
@@ -217,9 +217,9 @@ guard = ["and", "r_and_not_q", "once_q"]
 
 is not two definitions of `guard`. The rule is the value; the variable is that value's declaration as part of the interface, and the shared name is the binding between them. The same holds for a published property verdict. This is how every published name in `data/` is written.
 
-That is what makes `[properties.rules]` a visibility boundary rather than a convenience: a rule scoped to a property is private to it, and two properties may each define a `rhs` without colliding. Publishing one means declaring it at file level in `[rules]`, under a name unique across the file.
+That is what makes `[properties.rules]` a visibility boundary rather than a convenience: a rule scoped to a property is private to it, and two properties may each define a `rhs` without colliding. Publishing one without moving it to file level means naming it qualified -- `guard_holds.rhs` -- in `outputs`, which is how the name stays unambiguous while two properties each keep their own `rhs`. Moving it to `[rules]`, under a name unique across the file, publishes it as a plain name instead.
 
-A verdict's *value* is derived, never declared -- it follows from the property, and no table states it. What a file may declare is that the verdict is published, which is naming it in an `outputs` list and declaring it in `[variables]`, as above. The default published set is every property in declaration order, and `outputs` REPLACES that set when present.
+A verdict's *value* is derived, never declared -- it follows from the property, and no table states it. What a file may declare is that the verdict is published, which is naming it in an `outputs` list; a `[variables]` entry beside it, as above, is optional and describes the published signal rather than defining it. The default published set is every property in declaration order, and `outputs` REPLACES that set when present.
 
 ## Document Structure
 
@@ -253,7 +253,10 @@ about which partition it is in, so everything that turns on a partition is here:
 
 - a name in two `[monitor]` lists at once
 - two `[[properties]]` entries sharing a `name`
-- a `[monitor]` list entry with no `[variables]` declaration
+- an `inputs` or `parameters` entry with no `[variables]` declaration
+- an `outputs` entry that names no variable, property or rule -- including a
+  qualified `<property>.<rule>` whose property or private rule does not exist,
+  and one carrying more than the single dot the qualified form takes
 - a `source` or a `format` on a name in `outputs` or `parameters` -- only an
   input carries either
 - an `initial_value` on a name in no `[monitor]` list -- only a parameter has one

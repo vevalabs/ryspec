@@ -1,0 +1,19 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+version = 0
+
+# Rule 3, qualified form: the head of a dotted output names the property the
+# private rule belongs to, and no property here is called 'other'.
+
+[monitor]
+inputs = ["x"]
+outputs = ["other.rhs"]
+
+[variables]
+x = {}
+
+[[properties]]
+name = "p"
+check = "rhs"
+
+[properties.rules]
+rhs = ["gt", "x", 0]

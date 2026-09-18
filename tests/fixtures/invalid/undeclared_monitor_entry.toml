@@ -1,11 +1,12 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
 version = 0
 
-# Rule 3: a [monitor] list entry with no [variables] declaration.
+# Rule 3: an inputs or parameters entry with no [variables] declaration.
+# outputs is the exception -- see unresolved_output.toml.
 
 [monitor]
-inputs = ["x"]
-outputs = ["result"]
+inputs = ["x", "y"]
+outputs = ["p"]
 
 [variables]
 x = {}
