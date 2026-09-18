@@ -1,4 +1,5 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
+version = 0
 
 # Rule 5: an initial_value on a name in no [monitor] list.
 

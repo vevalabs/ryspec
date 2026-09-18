@@ -25,7 +25,6 @@ EXPECTED = {
     "min_greater_than_max.toml": "is greater than max",
     "source_undeclared_head.toml": "undeclared variable",
     "rule_names_text_variable.toml": "no comparable value",
-    "expression_without_flag.toml": "allow_expressions",
     "duplicate_source_of_value.toml": "more than one source of value",
 }
 

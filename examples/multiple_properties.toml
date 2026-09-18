@@ -1,10 +1,8 @@
 #:schema ../schemas/v0/ryspec.schema.json
+version = 0
 
 # Each property is evaluated independently while sharing the signals
 # referenced by its formula.
-[features]
-allow_expressions = true
-
 [[properties]]
 name = "my_property"
 check = "({s} -> once[3:10] {p})"

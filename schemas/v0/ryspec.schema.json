@@ -3,31 +3,32 @@
   "$id": "https://raw.githubusercontent.com/vevalabs/ryspec/schemas/v0/ryspec.schema.json",
   "title": "Reelay Specification Schema",
   "type": "object",
-  "required": ["properties"],
+  "required": ["version", "properties"],
   "additionalProperties": false,
   "properties": {
+    "version": {
+      "title": "Format version",
+      "description": "The ryspec schema version this document targets.",
+      "const": 0
+    },
     "namespace": {
-      "title": "Namespace",
-      "type": "string",
-      "format": "uri-reference",
-      "pattern": "^\\S+(?![\\s\\S])",
-      "minLength": 1
+      "$ref": "#/$defs/dottedName"
     },
     "features": {
-      "title": "Format flags",
+      "title": "Format flags for the document",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "allow_expressions": {
-          "type": "boolean"
+        "disable_expressions": {
+          "description": "RESERVED"
         }
       }
     },
     "variables": {
       "title": "Value space",
       "type": "object",
-      "propertyNames": { "$ref": "#/definitions/identifier" },
-      "additionalProperties": { "$ref": "#/definitions/variable" }
+      "propertyNames": { "$ref": "#/$defs/identifier" },
+      "additionalProperties": { "$ref": "#/$defs/variable" }
     },
     "monitor": {
       "title": "Monitor interface",
@@ -53,18 +54,18 @@
           "type": "array",
           "uniqueItems": true,
           "minItems": 1,
-          "items": { "$ref": "#/definitions/identifier" }
+          "items": { "$ref": "#/$defs/identifier" }
         },
         "outputs": {
           "type": "array",
           "uniqueItems": true,
           "minItems": 1,
-          "items": { "$ref": "#/definitions/identifier" }
+          "items": { "$ref": "#/$defs/identifier" }
         },
         "parameters": {
           "type": "array",
           "uniqueItems": true,
-          "items": { "$ref": "#/definitions/identifier" }
+          "items": { "$ref": "#/$defs/identifier" }
         }
       },
       "required": ["inputs", "outputs"]
@@ -77,7 +78,13 @@
         "title": { "type": "string" },
         "author": { "type": "string" },
         "license": { "type": "string" },
-        "description": { "type": "string" }
+        "description": { "type": "string" },
+        "url": {
+          "type": "string",
+          "format": "uri-reference",
+          "pattern": "^\\S+(?![\\s\\S])",
+          "minLength": 1
+        }
       }
     },
     "extras": {
@@ -87,16 +94,16 @@
     },
     "rules": {
       "title": "File-level rules",
-      "allOf": [{ "$ref": "#/definitions/ruleTable" }]
+      "allOf": [{ "$ref": "#/$defs/ruleTable" }]
     },
     "properties": {
       "title": "Properties",
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "#/definitions/property" }
+      "items": { "$ref": "#/$defs/property" }
     }
   },
-  "definitions": {
+  "$defs": {
     "identifier": {
       "title": "Identifier",
       "type": "string",
@@ -113,7 +120,7 @@
       "additionalProperties": false,
       "properties": {
         "source": {
-          "$ref": "#/definitions/dottedName"
+          "$ref": "#/$defs/dottedName"
         },
         "format": {
           "title": "Decoded format",
@@ -226,11 +233,11 @@
     },
     "parameter": {
       "title": "Scalar operand",
-      "anyOf": [{ "type": "number" }, { "$ref": "#/definitions/identifier" }]
+      "anyOf": [{ "type": "number" }, { "$ref": "#/$defs/identifier" }]
     },
     "boundValue": {
       "title": "Metric bound value",
-      "anyOf": [{ "type": "number", "minimum": 0 }, { "$ref": "#/definitions/identifier" }]
+      "anyOf": [{ "type": "number", "minimum": 0 }, { "$ref": "#/$defs/identifier" }]
     },
     "bound": {
       "title": "Metric bound",
@@ -238,20 +245,20 @@
       "additionalProperties": false,
       "minProperties": 1,
       "properties": {
-        "min": { "$ref": "#/definitions/boundValue" },
-        "max": { "$ref": "#/definitions/boundValue" }
+        "min": { "$ref": "#/$defs/boundValue" },
+        "max": { "$ref": "#/$defs/boundValue" }
       }
     },
     "rule": {
       "title": "Rule",
       "anyOf": [
-        { "$ref": "#/definitions/identifier" },
-        { "$ref": "#/definitions/expression" },
-        { "$ref": "#/definitions/predicateRule" },
-        { "$ref": "#/definitions/unaryRule" },
-        { "$ref": "#/definitions/multiaryRule" },
-        { "$ref": "#/definitions/unaryTemporalRule" },
-        { "$ref": "#/definitions/binaryTemporalRule" }
+        { "$ref": "#/$defs/identifier" },
+        { "$ref": "#/$defs/expression" },
+        { "$ref": "#/$defs/predicateRule" },
+        { "$ref": "#/$defs/unaryRule" },
+        { "$ref": "#/$defs/multiaryRule" },
+        { "$ref": "#/$defs/unaryTemporalRule" },
+        { "$ref": "#/$defs/binaryTemporalRule" }
       ]
     },
     "unaryOperator": {
@@ -342,8 +349,8 @@
       "title": "Unary rule",
       "type": "array",
       "items": [
-        { "$ref": "#/definitions/unaryOperator" },
-        { "$ref": "#/definitions/rule" }
+        { "$ref": "#/$defs/unaryOperator" },
+        { "$ref": "#/$defs/rule" }
       ],
       "minItems": 2,
       "maxItems": 2,
@@ -353,20 +360,20 @@
       "title": "Unary temporal rule",
       "type": "array",
       "items": [
-        { "$ref": "#/definitions/unaryTemporalOperator" },
-        { "$ref": "#/definitions/rule" }
+        { "$ref": "#/$defs/unaryTemporalOperator" },
+        { "$ref": "#/$defs/rule" }
       ],
       "minItems": 2,
       "maxItems": 3,
-      "additionalItems": { "$ref": "#/definitions/bound" }
+      "additionalItems": { "$ref": "#/$defs/bound" }
     },
     "predicateRule": {
       "title": "Comparison predicate",
       "type": "array",
       "items": [
-        { "$ref": "#/definitions/comparisonOperator" },
-        { "$ref": "#/definitions/identifier" },
-        { "$ref": "#/definitions/parameter" }
+        { "$ref": "#/$defs/comparisonOperator" },
+        { "$ref": "#/$defs/identifier" },
+        { "$ref": "#/$defs/parameter" }
       ],
       "minItems": 3,
       "maxItems": 3,
@@ -376,30 +383,30 @@
       "title": "N-ary rule",
       "type": "array",
       "items": [
-        { "$ref": "#/definitions/multiaryOperator" },
-        { "$ref": "#/definitions/rule" },
-        { "$ref": "#/definitions/rule" }
+        { "$ref": "#/$defs/multiaryOperator" },
+        { "$ref": "#/$defs/rule" },
+        { "$ref": "#/$defs/rule" }
       ],
       "minItems": 3,
-      "additionalItems": { "$ref": "#/definitions/rule" }
+      "additionalItems": { "$ref": "#/$defs/rule" }
     },
     "binaryTemporalRule": {
       "title": "Binary temporal rule",
       "type": "array",
       "items": [
-        { "$ref": "#/definitions/binaryTemporalOperator" },
-        { "$ref": "#/definitions/rule" },
-        { "$ref": "#/definitions/rule" }
+        { "$ref": "#/$defs/binaryTemporalOperator" },
+        { "$ref": "#/$defs/rule" },
+        { "$ref": "#/$defs/rule" }
       ],
       "minItems": 3,
       "maxItems": 4,
-      "additionalItems": { "$ref": "#/definitions/bound" }
+      "additionalItems": { "$ref": "#/$defs/bound" }
     },
     "ruleTable": {
       "title": "Rule table",
       "type": "object",
-      "propertyNames": { "$ref": "#/definitions/identifier" },
-      "additionalProperties": { "$ref": "#/definitions/rule" }
+      "propertyNames": { "$ref": "#/$defs/identifier" },
+      "additionalProperties": { "$ref": "#/$defs/rule" }
     },
     "property": {
       "title": "Property",
@@ -408,7 +415,7 @@
       "additionalProperties": false,
       "properties": {
         "name": {
-          "$ref": "#/definitions/identifier"
+          "$ref": "#/$defs/identifier"
         },
         "title": { "type": "string" },
         "description": { "type": "string" },
@@ -438,13 +445,17 @@
           "type": "string"
         },
         "given": {
-          "$ref": "#/definitions/rule"
+          "$ref": "#/$defs/rule"
         },
         "check": {
-          "$ref": "#/definitions/rule"
+          "$ref": "#/$defs/rule"
+        },
+        "impose": {
+          "description": "RESERVED",
+          "$ref": "#/$defs/rule"
         },
         "rules": {
-          "$ref": "#/definitions/ruleTable"
+          "$ref": "#/$defs/ruleTable"
         }
       }
     }

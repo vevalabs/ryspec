@@ -1,4 +1,5 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
+version = 0
 
 # Rule 2: two [[properties]] entries sharing a name.
 

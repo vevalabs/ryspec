@@ -1,4 +1,5 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
+version = 0
 
 # Rule 9: a rule naming a text or binary variable.
 

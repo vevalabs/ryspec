@@ -28,18 +28,13 @@ Each property is evaluated independently while sharing the signals referenced by
 
 Names inside an expression are written in braces. The braces delimit a name against the operators around it, and they mark a name rather than a kind: `{p}` resolves through one namespace to a variable, a named rule or a parameter, whichever declares it. Where a field takes a bare name instead of a parenthesised formula -- `given = "subexpr1"` below -- the name is written without braces. A metric bound follows the same rule: a number is written bare and a parameter braced, as in `once[3:10]` and `once[{min_delay}:{deadline}]`.
 
-Expression strings are gated behind `allow_expressions` in the `[features]` table, and the runtime cannot execute them yet: a loader accepts the syntax and reports `not yet supported`. The prefix form below is what runs today.
-
-That gate is the loader's alone. Rules nest arbitrarily deep, so the schema cannot reach from the document root down to every place an expression might appear; it accepts expression strings wherever a rule is allowed, flag or no flag. `allow_expressions` records what the author intended, and the loader enforces it.
+Expression strings are accepted by the schema wherever a rule is allowed, but the runtime cannot execute them yet: a loader accepts the syntax and reports `not yet supported`. The prefix form below is what runs today.
 
 Expression form is also a subset of prefix form. Comparisons such as `["gt", "speed", "speed_max"]`, the `prev` operator, and `equiv` have no infix spelling, so a property needing any of them writes that rule in prefix form.
 
 Every property carries a `name`, which is unique across the file and addresses its verdict. A property may also separate its antecedent condition (`given`) from the checked condition (`check`):
 
 ```toml
-[features]
-allow_expressions = true
-
 [meta]
 title = ""
 description = ""
@@ -228,25 +223,27 @@ A verdict's *value* is derived, never declared -- it follows from the property, 
 
 ## Document Structure
 
-Eight top-level keys, of which only `properties` is required:
+Nine top-level keys, of which `version` and `properties` are required:
 
 | key | holds |
 | --- | --- |
+| `version` | **required.** The ryspec schema version this document targets -- `0`, today |
 | `properties` | **required.** The properties, each yielding one verdict |
 | `rules` | file-level named subformulas, shared across properties |
 | `variables` | the value space, keyed by name |
 | `monitor` | the interface: the three partition lists, plus `[monitor.runtime]` sizing |
-| `features` | format flags -- currently only `allow_expressions` |
-| `namespace` | a URI reference identifying this file's names; an identity, never fetched |
+| `features` | format flags -- currently none active; `disable_expressions` is reserved |
+| `namespace` | a dotted name identifying this file's names; an identity, never resolved |
 | `meta` | free-form document metadata |
 | `extras` | free-form data outside the document's metadata |
 
 The document root is closed: anything else is rejected, which is what catches a
 misspelled or retired table name. `meta` and `extras` are the deliberate
 exceptions -- each takes arbitrary keys, `meta` beyond the `title`, `author`,
-`license` and `description` it names. `meta` is the place for facts about the
-document; `extras` is the place for anything else the format has no opinion
-about.
+`license`, `description` and `url` it names. `meta` is the place for facts
+about the document; `extras` is the place for anything else the format has
+no opinion about. `meta.url` is the document's own canonical location --
+where the authoritative copy of this file lives, not necessarily fetched.
 
 ## What the schema cannot check
 
@@ -264,7 +261,6 @@ about which partition it is in, so everything that turns on a partition is here:
 - `min` greater than `max`, on a parameter or on a metric bound
 - a `source` path whose head is undeclared, or declares no `format`
 - a rule naming a `text` or `binary` variable -- there is no value there to compare
-- an expression string where `allow_expressions` is not set
 - two sources of value sharing one name
 
 ## Check with schema

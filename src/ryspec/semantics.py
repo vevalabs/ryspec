@@ -337,21 +337,6 @@ def _check_rule_text_binary(ctx: Context) -> list[SemanticError]:
     return errors
 
 
-def _check_expression_flag(ctx: Context) -> list[SemanticError]:
-    if ctx.document.get("features", {}).get("allow_expressions") is True:
-        return []
-    for rule, pointer, scope in _all_rule_positions(ctx.document):
-        for event in _walk_rule(rule, pointer, scope):
-            if isinstance(event, ExpressionUse):
-                return [
-                    SemanticError(
-                        event.pointer,
-                        "expression syntax used but 'features.allow_expressions' is not set",
-                    )
-                ]
-    return []
-
-
 def _check_source_of_value_collisions(ctx: Context) -> list[SemanticError]:
     """Two rules, a rule and a property, or a rule and an input cannot share a name.
 
@@ -442,7 +427,6 @@ _CHECKS = (
     _check_min_max,
     _check_source_paths,
     _check_rule_text_binary,
-    _check_expression_flag,
     _check_source_of_value_collisions,
 )
 

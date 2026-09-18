@@ -1,4 +1,5 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
+version = 0
 
 # Rule 1: a name in two [monitor] lists at once.
 

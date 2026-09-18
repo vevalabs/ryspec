@@ -1,4 +1,5 @@
 #:schema ../schemas/v0/ryspec.schema.json
+version = 0
 
 # Naming `guard` in both `[rules]` and `[variables]` is not two definitions:
 # the rule is the value, and `[variables]` declares it part of the interface.

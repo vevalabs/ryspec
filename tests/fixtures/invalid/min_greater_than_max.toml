@@ -1,4 +1,5 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
+version = 0
 
 # Rule 7: min greater than max, on a parameter or on a metric bound.
 

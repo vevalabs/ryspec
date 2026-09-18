@@ -1,4 +1,5 @@
 #:schema ../schemas/v0/ryspec.schema.json
+version = 0
 
 # `[monitor]` fixes the order of each partition; `[variables]` describes each
 # name -- its type, unit and (for a parameter) starting value.

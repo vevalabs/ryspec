@@ -1,4 +1,5 @@
 #:schema ../schemas/v0/ryspec.schema.json
+version = 0
 
 # Prefix form represents a rule as an operator followed by its operands, with
 # no infix syntax or precedence rules. `[properties.rules]` holds subformulas

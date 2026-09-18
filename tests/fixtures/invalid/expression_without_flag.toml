@@ -1,7 +1,0 @@
-#:schema ../../../schemas/v0/ryspec.schema.json
-
-# Rule 10: an expression string where allow_expressions is not set.
-
-[[properties]]
-name = "p"
-check = "(a -> b)"

@@ -1,14 +1,16 @@
 #:schema ../schemas/v0/ryspec.schema.json
+version = 0
 
 # `meta` records facts about the document; `extras` is free-form data outside
 # the document's metadata. Both take arbitrary keys beyond the ones shown here.
-namespace = "https://example.com/ryspec/vehicle-braking"
+namespace = "com.example.ryspec.vehicle_braking"
 
 [meta]
 title = "Vehicle braking properties"
 description = "Braking response checks for the reference vehicle model."
 author = "John Doe"
 license = "MIT"
+url = "https://example.com/ryspec/vehicle-braking.toml"
 
 [extras]
 owner_team = "safety"

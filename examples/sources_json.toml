@@ -1,4 +1,5 @@
 #:schema ../schemas/v0/ryspec.schema.json
+version = 0
 
 # A `text` variable decoded as JSON lets other variables read fields out of it
 # through a dotted `source` path, without claiming an input slot of their own.
