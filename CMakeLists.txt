@@ -9,11 +9,21 @@ project(ryspec
 include(CTest)
 include(GNUInstallDirs)
 
+# Building the Python package means running this file: py-build-cmake configures
+# and builds it, and takes the wheel's contents from its install rules. That
+# build wants one thing out of this project -- the library beside the package,
+# with the schema it reads -- so RYSPEC_PYTHON_MODULE says to make that and
+# stop: no applications, no tests, no installed headers. It is the only
+# difference between the two builds; the C is the same C either way.
+option(RYSPEC_PYTHON_MODULE
+  "Build only what the Python package holds, and install it into the package" OFF)
+
 find_program(TREE_SITTER_CLI tree-sitter
   DOC "The tree-sitter CLI, needed to regenerate the parser and to run the corpus")
 
 # src/parser.c is generated and src/scanner.c is written by hand; both are
-# committed, so a build needs a C compiler and nothing else.
+# committed, so nothing has to be generated to build. The runtime below is
+# fetched, so a first configure wants the network.
 add_library(ryspec SHARED
   src/parser.c
   src/scanner.c)
@@ -24,15 +34,23 @@ set_target_properties(ryspec PROPERTIES
   C_STANDARD 23
   C_STANDARD_REQUIRED ON
   POSITION_INDEPENDENT_CODE ON
+  # Straight into the build directory, which is where the Python test suite
+  # and anyone loading the parser by hand expect to find it.
+  LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+
+if(NOT RYSPEC_PYTHON_MODULE)
   # libryspec.so -> libryspec.so.0 -> libryspec.so.0.1.0. The soname is the
   # major version, so everything built against 0.x keeps linking until the
   # parser's ABI -- the tree_sitter_ryspec symbol and the node types behind
   # it -- changes shape.
-  VERSION ${PROJECT_VERSION}
-  SOVERSION ${PROJECT_VERSION_MAJOR}
-  # Straight into the build directory, which is where the Python test suite
-  # and anyone loading the parser by hand expect to find it.
-  LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+  #
+  # The wheel's copy is one plain libryspec.so instead. Nothing links against
+  # it: ryspec.semantics opens it by path with ctypes, so a soname would buy a
+  # version chain no one reads and two symlinks a wheel has no way to carry.
+  set_target_properties(ryspec PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR})
+endif()
 
 # Everything is worth hearing about, except the parameters two files are
 # obliged to take and have no use for: generated code, and the external
@@ -49,23 +67,26 @@ set_source_files_properties(src/parser.c src/scanner.c PROPERTIES
 # The tree-sitter runtime.
 #
 # Generated code builds against nothing, but *running* a parser needs the
-# runtime, and so does the database below. It is vendored at
-# vendor/tree-sitter, so this build needs a C compiler and nothing else -- no
-# network, no host package. A runtime installed on the host is used in
-# preference, so a distribution packaging ryspec against its own copy gets what
-# it expects; RYSPEC_VENDORED_TREE_SITTER forces the vendored one either way.
+# runtime, and so does the database below. It is fetched from upstream at the
+# pinned tag and linked statically, so it leaves nothing behind for the
+# installed library to depend on. A runtime already installed on the host is
+# used in preference, so a distribution packaging ryspec against its own copy
+# gets what it expects; RYSPEC_FETCH_TREE_SITTER forces the fetched one either
+# way.
 
-option(RYSPEC_VENDORED_TREE_SITTER
-  "Compile the vendored tree-sitter runtime even where the host has one" OFF)
+option(RYSPEC_FETCH_TREE_SITTER
+  "Fetch and compile the tree-sitter runtime even where the host has one" OFF)
 
-# The tag vendor/tree-sitter was taken from, read from the copy itself rather
-# than repeated here, so there is nothing to keep in step: re-vendoring is the
-# whole of changing it. src/parser.c is generated at language ABI 14 and this
-# runtime speaks 13 through 15, so the two agree; a runtime is only obliged to
-# load the ABIs it was built for, which is what the pin is holding.
-file(STRINGS ${PROJECT_SOURCE_DIR}/vendor/tree-sitter/VERSION TREE_SITTER_VERSION LIMIT_COUNT 1)
+# The pin: the tag, and the SHA-256 of that tag's tarball. These two lines are
+# where the runtime's version is recorded, and setup.py reads them back out of
+# this file for its own download, so both builds compile the same source and a
+# bump is one edit here. The checksum moves with the tag -- change both
+# together, then run the suite: src/parser.c is generated at language ABI 14
+# and the runtime has to still speak it.
+set(TREE_SITTER_VERSION v0.27.0)
+set(TREE_SITTER_SHA256 d35c96e68736bd9569d2757c3cc71052485f33082c3825f1aed9d0e86013a159)
 
-if(NOT RYSPEC_VENDORED_TREE_SITTER)
+if(NOT RYSPEC_FETCH_TREE_SITTER)
   find_path(TREE_SITTER_INCLUDE_DIR tree_sitter/api.h
     DOC "The tree-sitter runtime headers")
   find_library(TREE_SITTER_LIBRARY tree-sitter
@@ -78,18 +99,32 @@ if(TREE_SITTER_INCLUDE_DIR AND TREE_SITTER_LIBRARY)
   target_include_directories(tree-sitter-runtime SYSTEM INTERFACE ${TREE_SITTER_INCLUDE_DIR})
   target_link_libraries(tree-sitter-runtime INTERFACE ${TREE_SITTER_LIBRARY})
 else()
-  message(STATUS "tree-sitter runtime: ${TREE_SITTER_VERSION} (vendored)")
+  message(STATUS "tree-sitter runtime: ${TREE_SITTER_VERSION} (fetched)")
+  include(FetchContent)
+  FetchContent_Declare(tree-sitter
+    URL https://github.com/tree-sitter/tree-sitter/archive/refs/tags/${TREE_SITTER_VERSION}.tar.gz
+    URL_HASH SHA256=${TREE_SITTER_SHA256}
+    DOWNLOAD_EXTRACT_TIMESTAMP ON
+    # lib/ carries no CMakeLists.txt, so MakeAvailable unpacks the tree and
+    # stops there -- upstream's own build, a shared library with its own
+    # install rules, is no part of this one. We compile lib.c ourselves, which
+    # is also the file setup.py compiles.
+    SOURCE_SUBDIR lib)
+  FetchContent_MakeAvailable(tree-sitter)
+
   # lib.c is the runtime's own amalgamation -- it includes every other source,
-  # so one translation unit is the whole library.
-  add_library(tree-sitter-runtime STATIC ${PROJECT_SOURCE_DIR}/vendor/tree-sitter/src/lib.c)
+  # so one translation unit is the whole library. Static, and linked PRIVATE
+  # below: what libryspec needs of it is inside libryspec, and nothing of the
+  # runtime is installed or has to be found again at load time.
+  add_library(tree-sitter-runtime STATIC ${tree-sitter_SOURCE_DIR}/lib/src/lib.c)
   target_include_directories(tree-sitter-runtime
-    PRIVATE ${PROJECT_SOURCE_DIR}/vendor/tree-sitter/src
-    SYSTEM PUBLIC ${PROJECT_SOURCE_DIR}/vendor/tree-sitter/include)
+    PRIVATE ${tree-sitter_SOURCE_DIR}/lib/src
+    SYSTEM PUBLIC ${tree-sitter_SOURCE_DIR}/lib/include)
   set_target_properties(tree-sitter-runtime PROPERTIES
     C_STANDARD 11
     C_STANDARD_REQUIRED ON
     POSITION_INDEPENDENT_CODE ON)
-  # Vendored source, not ours to tidy.
+  # Upstream source, not ours to tidy.
   target_compile_options(tree-sitter-runtime PRIVATE
     $<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-w>)
 endif()
@@ -105,6 +140,27 @@ target_link_libraries(ryspec PRIVATE tree-sitter-runtime)
 target_include_directories(ryspec PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/ryspec>)
+
+# ---------------------------------------------------------------------------
+# The Python package.
+#
+# A wheel holds the library beside the package and nothing else, so the build
+# ends here when it is one being built: the applications below, the tests over
+# them and the system install rules are all outside what a wheel carries.
+# `pip install .` therefore compiles the library and no more.
+if(RYSPEC_PYTHON_MODULE)
+  # Into the package directory itself -- the install prefix is the wheel's
+  # root, so these two land beside __init__.py, which is where
+  # ryspec.semantics looks for the library and where DEFAULT_SCHEMA resolves.
+  #
+  # The schema is installed here rather than left to travel with the package
+  # sources because python/src/ryspec/schemas is a symlink out of the package,
+  # and a wheel is built by walking that directory rather than following it.
+  # So the symlink serves a checkout, and this serves a wheel, from one file.
+  install(TARGETS ryspec LIBRARY DESTINATION ryspec)
+  install(DIRECTORY schemas/v0 DESTINATION ryspec/schemas)
+  return()
+endif()
 
 # ---------------------------------------------------------------------------
 # The two applications over it.

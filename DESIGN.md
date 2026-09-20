@@ -89,7 +89,8 @@ variable is not bound.
 
 The grammar is authored by hand as `src/grammar.json`, not as `grammar.js`, so
 that generating the parser needs no Node. The generated `src/parser.c` is
-committed, so building needs a C compiler and nothing else.
+committed, so building needs neither Node nor the tree-sitter CLI: a C
+compiler, and the runtime fetched at the pin.
 
 **Every ryspec table is its own node type.** `[[properties]]` parses as
 `property`, `[properties.rules]` as `property_rules_table`, `[variables.x]` as
@@ -244,21 +245,57 @@ The diagnostic wording is the contract between the two implementations, pinned
 from both sides: `EXPECTED` in `python/tests/test_semantics.py`, and the
 `#:expect-semantic-error` headers under `data/`.
 
-## The vendored runtime
+## One build system
 
-The tree-sitter runtime is vendored at `vendor/tree-sitter`, not fetched.
+`pip install .` runs `CMakeLists.txt`. py-build-cmake is the PEP 517 backend
+that does it: it configures, builds and installs the same build system `make`
+drives, and the wheel is whatever CMake's install rules put in the staging
+directory.
 
-The Python package compiles it. A wheel is built from an sdist, an sdist cannot
-download anything, and walking a parse tree needs a runtime -- so the runtime
-has to be in the tree. CMake compiles the same copy, which is the point: `make`
-and `pip install .` build identical source, and neither needs the network or a
-host package. A runtime already installed on the host is used in preference, so
-a distribution packaging `ryspec` against its own copy gets what it expects.
+The alternative, and what this replaced, was a `setup.py` naming the sources,
+the include directories and the C standard over again for setuptools to
+compile. That is a second description of one thing. It compiled `-std=gnu23`
+because CMake did, fetched the runtime because CMake did, and every one of
+those agreements was one an edit could break silently -- a library that builds
+and then behaves differently from the one `make` produces, which is the worst
+shape a bug can take in a package whose whole claim is that it is a binding
+over that library.
 
-The cost is ~800K of MIT-licensed C that has to be refreshed deliberately, which
-`scripts/vendor-tree-sitter.sh` does. The version is recorded once, in
-`vendor/tree-sitter/VERSION`, and CMake reads it from there so there is nothing
-to keep in step.
+So the package declares two things and no more: that the library is installed
+into it, and that the build stops there. `RYSPEC_PYTHON_MODULE` is the whole of
+the second -- under it `CMakeLists.txt` returns before the applications, the
+tests and the system install rules, because none of that is in a wheel.
+
+The one thing CMake does not do is carry the Python sources; the backend copies
+those. That is why the schema is installed by CMake rather than left beside
+them: `python/src/ryspec/schemas` is a symlink to the schemas at the root,
+which serves a checkout, and a wheel is built by walking that directory rather
+than following it. `test_cmake_installs_the_schema_where_the_package_reads_it`
+is what holds the two ends together.
+
+## The fetched runtime
+
+The tree-sitter runtime is fetched at a pinned tag and linked statically. It is
+not in this repository, and it is not a dependency of what ships either.
+
+Both halves of that matter. Fetching keeps ~800K of someone else's C out of the
+tree, out of the diffs and out of the sdist, and makes a bump one edit rather
+than a re-import. Linking statically means the runtime is *inside* `libryspec`:
+an installed library has no `libtree-sitter.so` to find, `make install`
+installs this project and no more, and none of the runtime's own build or
+install rules is part of this build, because only its sources are read.
+
+The pin lives once, as two `set()` lines in `CMakeLists.txt` -- a tag and the
+SHA-256 of its tarball. That is where it belongs: the build system is what
+people read to learn what a project builds against, and it is the only thing
+that fetches, since the Python package is built by running this same file. The
+checksum is what makes fetching as reproducible as carrying a copy would be.
+
+What it costs is the network, once per build tree, where vendoring cost
+nothing. Two escapes: `-DFETCHCONTENT_SOURCE_DIR_TREE-SITTER` names a runtime
+already on disk, and a runtime installed on the host is used in preference to
+fetching one, which is what a distribution packaging `ryspec` wants. Both are
+CMake's, and reach the Python build through it.
 
 ## Known tensions
 

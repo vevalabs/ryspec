@@ -44,7 +44,7 @@ class LibraryNotFound(RuntimeError):
 def _candidates() -> list[Path]:
     override = os.environ.get("RYSPEC_LIBRARY")
     found = [Path(override)] if override else []
-    # Beside this file: what setup.py builds into the package, and what a wheel
+    # Beside this file: what CMake installs into the package, and what a wheel
     # carries. First, so an installed package never reaches out of itself.
     found.append(_PACKAGE_DIR / _LIBRARY_NAME)
     # The repository's own build tree, so the test suite and anyone working in

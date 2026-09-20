@@ -1,32 +1,26 @@
 """What has to ship with the package, as against only with the repo.
 
 Two things, and a wheel missing either imports cleanly and fails later.
-DEFAULT_SCHEMA resolves inside the installed package, so the declared
-package-data patterns have to match it. And `ryspec.semantics` is a binding
-over libryspec, so the library has to be found -- from beside the package in a
-wheel, or from the repository's build tree in a checkout.
+DEFAULT_SCHEMA resolves inside the installed package, and in a checkout it gets
+there through a symlink a wheel cannot carry, so CMake has to install the
+schema to the same place the symlink points. And `ryspec.semantics` is a
+binding over libryspec, so the library has to be found -- from beside the
+package in a wheel, or from the repository's build tree in a checkout.
 """
 
 from __future__ import annotations
 
-import glob
-import os
-import tomllib
+import re
 from pathlib import Path
 
 import ryspec
 from ryspec import DEFAULT_SCHEMA
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-# Where setuptools globs package-data from. Taken from the module rather than
-# from DEFAULT_SCHEMA, whose resolved path leaves the package through the
-# schemas symlink and lands wherever the checkout happens to be.
+# Taken from the module rather than from DEFAULT_SCHEMA, whose resolved path
+# leaves the package through the schemas symlink and lands wherever the
+# checkout happens to be.
 PACKAGE_DIR = Path(ryspec.__file__).resolve().parent
-
-
-def _package_data_patterns() -> list[str]:
-    pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
-    return pyproject["tool"]["setuptools"]["package-data"]["ryspec"]
 
 
 def test_default_schema_lives_inside_the_package():
@@ -38,8 +32,8 @@ def test_the_library_is_found():
     """The binding has something to bind to.
 
     In a checkout this is build/libryspec.so, which `make` puts there and the
-    session fixture builds if it is missing; in a wheel it is the copy setup.py
-    compiled into the package. Either way ryspec.semantics resolves it, and the
+    session fixture builds if it is missing; in a wheel it is the copy CMake
+    installed into the package. Either way ryspec.semantics resolves it, and the
     error when it cannot names everywhere it looked.
     """
     from ryspec.semantics import library_path
@@ -61,18 +55,28 @@ def test_the_library_answers():
     assert error is not None and "is greater than max" in error, error
 
 
-def test_package_data_patterns_match_the_default_schema():
-    # setuptools globs package-data relative to the package directory; a
-    # pattern such as "schemas/**.json" reads as recursive but glob treats
-    # ** inside a path segment as a plain *, silently matching nothing.
-    matched = set()
-    for pattern in _package_data_patterns():
-        matched.update(
-            (PACKAGE_DIR / hit).resolve()
-            for hit in glob.glob(pattern, root_dir=os.fspath(PACKAGE_DIR), recursive=True)
-        )
+def test_cmake_installs_the_schema_where_the_package_reads_it():
+    """The wheel's half of the schema, which the suite cannot otherwise see.
 
-    assert DEFAULT_SCHEMA.resolve() in matched, (
-        f"no package-data pattern matches {DEFAULT_SCHEMA.name}; "
-        f"patterns={_package_data_patterns()}, matched={sorted(matched)}"
+    In a checkout DEFAULT_SCHEMA resolves through python/src/ryspec/schemas, a
+    symlink to the schemas at the repository root. A wheel is built by walking
+    the package directory, which does not follow that symlink, so CMake
+    installs the schema instead -- and the two have to agree on where it lands.
+    Nothing else pins them together, and a wheel with the schema in the wrong
+    place still imports.
+    """
+    rule = re.search(
+        r"install\(DIRECTORY\s+(\S+)\s+DESTINATION\s+(\S+)\)",
+        (REPO_ROOT / "CMakeLists.txt").read_text(),
+    )
+    assert rule, "CMakeLists.txt installs no directory into the package"
+
+    source, destination = Path(rule.group(1)), Path(rule.group(2))
+    # The destination is relative to the wheel root, so its first component is
+    # the package itself; the rest is where the schema sits inside the package.
+    installed = destination.relative_to(ryspec.__name__) / source.name
+
+    assert DEFAULT_SCHEMA.relative_to(PACKAGE_DIR).is_relative_to(installed), (
+        f"CMake installs {source} to {destination}, which is not where "
+        f"DEFAULT_SCHEMA reads it from ({DEFAULT_SCHEMA.relative_to(PACKAGE_DIR)})"
     )

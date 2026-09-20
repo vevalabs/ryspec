@@ -349,13 +349,17 @@ holds no rules of its own. So `ryspec validate` and `ryspec-db` reach one
 verdict because they are one implementation, and there is no second copy of
 the checks to drift.
 
-That makes the package a compiled one. Installing it builds `libryspec` from
-the C sources at the root and the tree-sitter runtime vendored beside them, and
-puts the result inside the package, so an installed `ryspec` needs no CMake, no
-runtime on the host and no network -- but it does need a C compiler at install
-time. In a checkout the package finds the library CMake builds into `build/`
-instead, so `pytest` works after `make` and needs no `pip install`.
-`$RYSPEC_LIBRARY` names a library explicitly and overrides both.
+That makes the package a compiled one, and it is compiled by this repository's
+own build system: `pip install .` runs `CMakeLists.txt` through
+[py-build-cmake][], which puts `libryspec` and the schema inside the package.
+So there is one description of how the C is built rather than two that could
+drift, and an installed `ryspec` needs no CMake afterwards and no runtime on
+the host -- though installing it needs a C compiler, CMake, and the network for
+the runtime the build fetches. In a checkout the package finds the library
+CMake builds into `build/` instead, so `pytest` works after `make` and needs no
+`pip install`. `$RYSPEC_LIBRARY` names a library explicitly and overrides both.
+
+[py-build-cmake]: https://tttapa.github.io/py-build-cmake/
 
 See [`examples/`](examples/) for a working `*.toml` file per topic covered above --
 `ryspec validate examples` checks them all against the schema.
@@ -418,10 +422,10 @@ ctest --test-dir build
 cmake --install build
 ```
 
-Building needs a C compiler and nothing else: the generated `src/parser.c` is
-committed beside the grammar. The `generate` target and the `grammar-corpus`
-test are the two things that need the [tree-sitter CLI][], and both drop out of
-the build when it is absent.
+Nothing has to be generated to build: `src/parser.c` is committed beside the
+grammar, so a C compiler and the runtime fetched below are the whole of it. The
+`generate` target and the `grammar-corpus` test are the two things that need
+the [tree-sitter CLI][], and both drop out of the build when it is absent.
 
 A document that parses is well-formed; whether its names resolve is still the
 loader's question, and none of it -- whether two properties share a name,
@@ -457,24 +461,34 @@ goes through in one command, and `data-valid`, `data-malformed` and
 `data-corpus` under `ctest` are that command and its two halves.
 
 Generated code builds against nothing, but *running* a parser needs the
-tree-sitter runtime, and so does the database below. It is vendored at
-[`vendor/tree-sitter`](vendor/tree-sitter) -- only what its own `lib.c`
-amalgamation pulls in, at a version that speaks the language ABI `src/parser.c`
-is generated at. So a build needs a C compiler and nothing else: no network, no
-host package. Nothing of the runtime's own build or install rules comes with
-it, so `make install` installs this project and no more.
+tree-sitter runtime, and so does the database below. CMake fetches it with
+`FetchContent`, at the tag and checksum two `set()` lines in
+[`CMakeLists.txt`](CMakeLists.txt) pin -- a version that speaks the language
+ABI `src/parser.c` is generated at -- and compiles its own `lib.c`
+amalgamation into a static library, which
+goes inside `libryspec`. So the shipped library carries the runtime rather than
+linking against one, and `make install` installs this project and no more:
+nothing of the runtime's own build or install rules is part of this build,
+because only its sources are read.
 
 A runtime already installed on the host is used in preference, so a
 distribution packaging `ryspec` against its own copy gets what it expects.
 
 ```sh
-cmake -S . -B build -DRYSPEC_VENDORED_TREE_SITTER=ON
+cmake -S . -B build -DRYSPEC_FETCH_TREE_SITTER=ON    # fetch it regardless
+cmake -S . -B build -DFETCHCONTENT_FULLY_DISCONNECTED=ON \
+      -DFETCHCONTENT_SOURCE_DIR_TREE-SITTER=/path/to/tree-sitter    # or no network at all
 ```
 
-compiles the vendored one regardless. The Python package compiles it too, which
-is why it is vendored rather than fetched: a wheel is built from an sdist, and
-an sdist cannot download anything. `scripts/vendor-tree-sitter.sh` is what
-refreshes the copy.
+The Python package fetches the same runtime at the same pin, because building
+it *is* running this file -- so `make` and `pip install .` compile identical
+source, and the second line above is how a package build with no network gets
+one:
+
+```sh
+pip install . -C override=cmake.options.FETCHCONTENT_FULLY_DISCONNECTED=ON \
+              -C override=cmake.options.FETCHCONTENT_SOURCE_DIR_TREE-SITTER=/path/to/tree-sitter
+```
 
 ## The database
 

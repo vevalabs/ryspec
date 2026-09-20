@@ -17,9 +17,8 @@ generated from it. Everything else hangs off it.
 | `schemas/v0/` | the JSON Schema |
 | `DESIGN.md` | why the format and the code are shaped as they are, and the tensions still open |
 | `data/`, `examples/` | the document corpus and the documented examples |
-| `vendor/tree-sitter` | the tree-sitter runtime, vendored so both builds compile it from the tree. Refreshed by `scripts/vendor-tree-sitter.sh`; never edited |
 | `python/src/ryspec` | the `ryspec` validator: `jsonschema` for the schema layer, and a `ctypes` binding over `libryspec` for the loader's. It holds no checks of its own |
-| `setup.py`, `MANIFEST.in` | the C library, built into the Python package. Everything else about the package is in the root `pyproject.toml` |
+| `pyproject.toml` | the whole of the package, including how it is built: py-build-cmake runs `CMakeLists.txt` with `RYSPEC_PYTHON_MODULE=ON`, so `pip install .` compiles the same C `make` does. There is no `setup.py` |
 | `python/tests` | the Python test suite: `pytest` from the root |
 
 ## Guidelines
@@ -62,7 +61,11 @@ generated from it. Everything else hangs off it.
   installed header promises.
 - `cli/ryspec-parse.c` predates this and uses CamelCase types and four-space
   indentation. Leave it as it is; new code follows the above.
-- `vendor/` is upstream source. Never edit it; re-vendor instead.
+- The tree-sitter runtime is fetched and linked statically; no copy of it is in
+  this repository. Bumping it is editing `TREE_SITTER_VERSION` and
+  `TREE_SITTER_SHA256` in `CMakeLists.txt`. Nothing else records the version.
+  Run the suite afterwards -- `src/parser.c` is generated at language ABI 14
+  and the runtime has to still speak it.
 - `ryspec.semantics` binds seven functions of `src/database.h` by signature and
   mirrors no struct, so adding a field to one breaks nothing. Changing one of
   those seven signatures means changing the binding in the same commit.
