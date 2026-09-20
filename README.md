@@ -410,6 +410,7 @@ make             # configure and build build/libryspec.so and build/ryspec-parse
 make generate    # src/grammar.json -> src/parser.c
 make test        # the corpus under test/, the corpus under data/, and the Python suite
 make wheel       # the Python package into dist/
+make sdist       # the source distribution into dist/
 make install     # PREFIX=/usr/local by default
 ```
 

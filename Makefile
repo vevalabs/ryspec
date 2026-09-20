@@ -5,6 +5,7 @@
 #   make generate   regenerate src/parser.c from src/grammar.json
 #   make test       ctest: the grammar corpus, the data corpus, and the Python suite
 #   make wheel      build the Python package into dist/
+#   make sdist      build the source distribution into dist/
 #   make install    install the library, ryspec-parse and the queries under $(PREFIX)
 #   make clean      drop the build directory and dist/
 #
@@ -23,7 +24,7 @@ DIST_DIR ?= dist
 BUILD_TYPE ?= Release
 PREFIX ?= /usr/local
 
-.PHONY: all configure build generate test wheel install clean
+.PHONY: all configure build generate test wheel sdist install clean
 
 all: build
 
@@ -50,6 +51,14 @@ test: build
 # rather than pip so the backend runs in the isolated environment it declares.
 wheel:
 	$(PYTHON) -m build --wheel --outdir $(DIST_DIR) .
+
+# What `pip install` off the sdist compiles, which is a subset of this
+# repository: CMakeLists.txt, src/ and schemas/, listed under
+# [tool.py-build-cmake.sdist] and not the applications, the corpus or the
+# grammar tests. So the honest check of that list is building the sdist and
+# then a wheel out of it, which `$(PYTHON) -m build` with neither flag does.
+sdist:
+	$(PYTHON) -m build --sdist --outdir $(DIST_DIR) .
 
 install: build
 	$(CMAKE) --install $(BUILD_DIR) --prefix $(PREFIX)
