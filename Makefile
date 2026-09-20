@@ -4,8 +4,9 @@
 #   make            configure and build build/libryspec.so and build/ryspec-parse
 #   make generate   regenerate src/parser.c from src/grammar.json
 #   make test       ctest: the grammar corpus, the data corpus, and the Python suite
+#   make wheel      build the Python package into dist/
 #   make install    install the library, ryspec-parse and the queries under $(PREFIX)
-#   make clean      drop the build directory
+#   make clean      drop the build directory and dist/
 #
 # Every variable below is overridable: `make BUILD_TYPE=Debug`, `make install
 # PREFIX=$HOME/.local`, `make BUILD_DIR=build-clang CC=clang`.
@@ -16,11 +17,13 @@ MAKEFLAGS += --no-print-directory
 
 CMAKE ?= cmake
 CTEST ?= ctest
+PYTHON ?= python3
 BUILD_DIR ?= build
+DIST_DIR ?= dist
 BUILD_TYPE ?= Release
 PREFIX ?= /usr/local
 
-.PHONY: all configure build generate test install clean
+.PHONY: all configure build generate test wheel install clean
 
 all: build
 
@@ -41,8 +44,17 @@ generate: configure
 test: build
 	$(CTEST) --test-dir $(BUILD_DIR) --output-on-failure
 
+# The wheel is CMake's too -- py-build-cmake runs CMakeLists.txt with
+# RYSPEC_PYTHON_MODULE=ON, in a build tree of its own under build/, so this
+# neither uses nor disturbs the one above. It goes through `python -m build`
+# rather than pip so the backend runs in the isolated environment it declares.
+wheel:
+	$(PYTHON) -m build --wheel --outdir $(DIST_DIR) .
+
 install: build
 	$(CMAKE) --install $(BUILD_DIR) --prefix $(PREFIX)
 
+# build/ holds both trees when BUILD_DIR is the default: the one above, and
+# py-build-cmake's cache under build/wheel.
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR) $(DIST_DIR)
