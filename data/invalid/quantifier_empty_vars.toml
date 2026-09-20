@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error /properties/0/check
+version = 0
+
+# A quantifier binding no names quantifies over nothing, so `vars` is required
+# to be non-empty.
+[[properties]]
+name = "p1"
+check = ["forall", ["lt", "reading", 120], { vars = [] }]

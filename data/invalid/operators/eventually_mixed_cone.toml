@@ -1,0 +1,10 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['eventually', ['once', 'p']] is not valid
+
+# `eventually` looks forward, so its operand is a future-time rule. `once`
+# looks backward.
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = ["eventually", ["once", "p"]]

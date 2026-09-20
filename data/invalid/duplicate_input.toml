@@ -1,0 +1,17 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error has non-unique elements
+
+# A partition list's order is that partition's order, so a name appears in it
+# once. Listing `speed` twice would claim two input slots for one variable.
+version = 0
+
+[monitor]
+inputs = ["speed", "speed"]
+outputs = ["p"]
+
+[variables]
+speed = {}
+
+[[properties]]
+name = "p"
+check = ["gt", "speed", 0]

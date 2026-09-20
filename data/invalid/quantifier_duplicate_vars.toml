@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error /properties/0/check
+version = 0
+
+# One quantifier cannot bind the same name twice.
+[[properties]]
+name = "p1"
+check = ["forall", ["eq", "sensor_id", "s"], { vars = ["s", "s"] }]

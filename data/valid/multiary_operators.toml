@@ -1,0 +1,16 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = 0
+
+# The n-ary boolean operators: and, or, xor, equiv and implies. Each takes two
+# operands or more -- `all_three` and `chain` below take three -- and none
+# carries a time direction, so each stands in either cone.
+[[properties]]
+name = "redundancy_agrees"
+check = ["and", "all_three", "any_of", "exactly_one", "same_truth", "chain"]
+
+[properties.rules]
+all_three = ["and", "sensor_a", "sensor_b", "sensor_c"]
+any_of = ["or", "sensor_a", "sensor_b", "sensor_c"]
+exactly_one = ["xor", "primary_active", "backup_active"]
+same_truth = ["equiv", "sensor_a", "sensor_b", "sensor_c"]
+chain = ["implies", "primary_active", "sensor_a", "sensor_b"]

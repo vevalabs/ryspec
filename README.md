@@ -2,7 +2,7 @@
 
 The Reelay Specification (`ryspec`) Format is a declarative specification format focused on expressing multiple temporal logic properties. It is based on the TOML specification format and is designed to provide a simple, human-readable representation of temporal logic specifications consumed by runtime verification tools and reasoning agents.
 
-A `ryspec` document can contain one or more temporal logic properties. Each property is declared using a TOML `[[properties]]` array-of-tables entry and specifies a temporal logic formula through the `check` field.
+A `ryspec` document can contain any number of temporal logic properties. Each property is declared using a TOML `[[properties]]` array-of-tables entry and specifies a temporal logic formula through the `check` field.
 
 A single property can be expressed as follows:
 
@@ -30,7 +30,7 @@ Names inside an expression are written in braces. The braces delimit a name agai
 
 Expression strings are accepted by the schema wherever a rule is allowed, but the runtime cannot execute them yet: a loader accepts the syntax and reports `not yet supported`. The prefix form below is what runs today.
 
-Expression form is also a subset of prefix form. Comparisons such as `["gt", "speed", "speed_max"]`, the `prev` operator, and `equiv` have no infix spelling, so a property needing any of them writes that rule in prefix form.
+Expression form is also a subset of prefix form. The `prev` operator and `equiv` have no infix spelling, so a property needing either writes that rule in prefix form. The six comparisons are spelled `<`, `<=`, `>`, `>=`, `==` and `!=` between a braced name and a number or another braced name -- `({speed} > {speed_max})` is `["gt", "speed", "speed_max"]`. Neither side of a comparison is a formula, in either spelling.
 
 Every property carries a `name`, which is unique across the file and addresses its verdict. A property may also separate its antecedent condition (`given`) from the checked condition (`check`):
 
@@ -93,6 +93,46 @@ check = "subexpr3"
 ```
 
 Document-level rules provide a mechanism for defining common subformulas once and reusing them across multiple properties. This is particularly useful when a specification contains repeated temporal patterns or when properties are constructed from a common set of domain-specific conditions.
+
+## Quantifiers
+
+`forall` and `exists` quantify a rule over values rather than over time. Each binds one or more names and holds when the rule it quantifies holds for every binding, or for at least one:
+
+```toml
+[monitor]
+inputs = ["sensor_id", "reading"]
+
+[rules]
+every_sensor_in_band = [
+  "forall",
+  ["implies", ["eq", "sensor_id", "s"], ["lt", "reading", 120]],
+  { vars = ["s"] },
+]
+```
+
+The trailing table is the binding, and it sits where a metric bound sits on a temporal operator. It is required and takes exactly one key, `vars`, holding at least one name: a quantifier binding nothing quantifies over nothing.
+
+A quantified name ranges over the **active domain** -- the values that name's position has actually carried in the trace so far, not every value its type could hold. `every_sensor_in_band` above therefore says *of the sensor ids seen so far, each one's readings have stayed under 120*, and says nothing about a sensor that has not yet reported. Neither quantifier needs a domain declared anywhere, because the trace is the domain.
+
+**A quantified name is local.** It is bound by the quantifier that lists it and by nothing else: it is not a variable, it is declared in no table, it takes no slot in any `[monitor]` list, and it is not an implicit input the way an undeclared name in a rule otherwise is. Three things follow, and the loader reports each:
+
+- the name must be free where it is bound -- neither shadowing a variable, rule or property, nor rebound by a quantifier already inside one that binds it, so that every name in a rule means one thing;
+- it must be read by the rule it quantifies, a quantifier that binds a name the rule never mentions being a typo more often than an intention;
+- and it must be read *as a value*, on one side of a comparison. A quantified name holds a value drawn from the trace, so it is neither a rule in its own right nor something a metric bound can be sized by.
+
+Quantification does not reach through a name. A rule referred to by name is resolved where it was declared, and the quantifier's names are not bound there, so `["forall", "some_rule", { vars = ["s"] }]` binds an `s` that `some_rule` cannot see. That is a binding nothing reads, and the second check above reports it.
+
+A quantifier carries no time direction of its own. Like `not`, it takes the cone of the rule beneath it and may stand in either, so a quantified rule nests under `once` and over `always` alike.
+
+Expression form spells a quantifier with its bound names in braces and a dot before the rule they range over:
+
+```toml
+[[properties]]
+name = "every_sensor_in_band"
+check = "(forall {s} . (({sensor_id} == {s}) -> ({reading} < 120)))"
+```
+
+The runtime cannot execute a quantifier yet, in either spelling: the schema accepts both, the checks above are made, and a loader reports `not yet supported`.
 
 ## Variables, Partitions and Sources
 
@@ -221,6 +261,12 @@ That is what makes `[properties.rules]` a visibility boundary rather than a conv
 
 A verdict's *value* is derived, never declared -- it follows from the property, and no table states it. What a file may declare is that the verdict is published, which is naming it in an `outputs` list; a `[variables]` entry beside it, as above, is optional and describes the published signal rather than defining it. The default published set is every property in declaration order, and `outputs` REPLACES that set when present.
 
+A name also carries its rule's **time cone**. Every rule sits in one: `prev`, `once`, `historically` and `since` look backward, `next`, `eventually`, `always` and `until` look forward, and a rule holding both is rejected -- by the schema where both are written out, as in `["always", ["once", "p"]]`, and by the loader where a name hides one. `check = ["always", "looks_back"]` is a future-time rule over an identifier, and if `looks_back` is `["once", "p"]` the two cones meet just the same. The resolution follows names as far as they go, through `[rules]`, through a property's private table, and through a property named for its verdict, which carries the cone of that property's `check`.
+
+A rule built only from names, comparisons, quantifiers and the boolean operators has no direction of its own. It reads in either cone, which is what lets one shared rule serve a past-time property and a future-time one. Expression form is where this stops: an expression is an opaque string to the loader, so the cones inside one are the parser's to judge and are not resolved here.
+
+The same walk answers one more question. A rule defined in terms of itself -- directly, or around a ring of names -- never reaches a value, and the loader reports it where the ring closes.
+
 ## Document Structure
 
 Nine top-level keys, of which `version` and `properties` are required:
@@ -228,7 +274,7 @@ Nine top-level keys, of which `version` and `properties` are required:
 | key | holds |
 | --- | --- |
 | `version` | **required.** The ryspec schema version this document targets -- `0`, today |
-| `properties` | **required.** The properties, each yielding one verdict |
+| `properties` | **required**, and may be empty. The properties, each yielding one verdict |
 | `rules` | file-level named subformulas, shared across properties |
 | `variables` | the value space, keyed by name |
 | `monitor` | the interface: the three partition lists, plus `[monitor.runtime]` sizing |
@@ -244,6 +290,9 @@ exceptions -- each takes arbitrary keys, `meta` beyond the `title`, `author`,
 about the document; `extras` is the place for anything else the format has
 no opinion about. `meta.url` is the document's own canonical location --
 where the authoritative copy of this file lives, not necessarily fetched.
+
+[`DESIGN.md`](DESIGN.md) records why the format is shaped this way -- one
+namespace, three partitions, two spellings -- and what each decision rules out.
 
 ## What the schema cannot check
 
@@ -265,15 +314,25 @@ about which partition it is in, so everything that turns on a partition is here:
 - a `source` path whose head is undeclared, or declares no `format`
 - a rule naming a `text` or `binary` variable -- there is no value there to compare
 - two sources of value sharing one name
+- a quantifier variable shadowing a declared name, or rebound by a quantifier
+  nested inside the one that binds it
+- a quantifier variable the quantified rule never reads
+- a quantifier variable read as a rule or as a metric bound rather than as a
+  value on one side of a comparison
+- a rule mixing the two time cones behind a name -- a past-time rule read
+  inside a future-time one, or the two combined
+- a rule defined in terms of itself, directly or around a ring of names
 
 ## Check with schema
 
-Install the validator with `pip install git+<repo-url>`, which provides a
-`ryspec` command. `ryspec validate` checks every `*.toml` under a directory
+The validator is a Python package under [`python/`](python/) -- source at
+`python/src/ryspec`, its test suite at `python/tests` -- packaged from the
+`pyproject.toml` at the root, so `pip install git+<repo-url>` installs it and
+provides a `ryspec` command. `ryspec validate` checks every `*.toml` under a directory
 against the bundled schema:
 
 ```sh
-ryspec validate data
+ryspec validate data/valid
 ```
 
 It exits non-zero on the first file that fails, reporting the JSON Pointer to the
@@ -283,5 +342,242 @@ of the two fails first. `--expect-invalid` inverts the assertion, for a
 directory of negative fixtures. Editors read the `#:schema` header at the top
 of each file for the same checks inline.
 
+Only the first of those two is Python's. The schema layer is `jsonschema`
+reading `schemas/v0/ryspec.schema.json`; the loader layer is the C library
+below, which `ryspec.semantics` binds with `ctypes` and over which the package
+holds no rules of its own. So `ryspec validate` and `ryspec-db` reach one
+verdict because they are one implementation, and there is no second copy of
+the checks to drift.
+
+That makes the package a compiled one. Installing it builds `libryspec` from
+the C sources at the root and the tree-sitter runtime vendored beside them, and
+puts the result inside the package, so an installed `ryspec` needs no CMake, no
+runtime on the host and no network -- but it does need a C compiler at install
+time. In a checkout the package finds the library CMake builds into `build/`
+instead, so `pytest` works after `make` and needs no `pip install`.
+`$RYSPEC_LIBRARY` names a library explicitly and overrides both.
+
 See [`examples/`](examples/) for a working `*.toml` file per topic covered above --
 `ryspec validate examples` checks them all against the schema.
+
+[`data/`](data/) holds the corpus the test suite runs, one directory per
+verdict: `data/valid/` is what every layer accepts, `data/invalid/` is what the
+schema or the loader rejects, and `data/malformed/` is what only the grammar
+rejects. Each negative declares the diagnostic it expects in a header comment.
+The first two are checked in opposite directions:
+
+```sh
+ryspec validate data/valid
+ryspec validate data/invalid --expect-invalid
+```
+
+`data/malformed/` passes `ryspec validate` and is meant to -- an expression is
+an opaque string to the schema and the loader alike, so a malformed one is well
+formed to both and only the parser sees it. Under `operators/` on each side sits
+a document per temporal operator, written in prefix form and expression form
+both; see [`data/README.md`](data/README.md).
+
+## Parse with tree-sitter
+
+The repository root is the parser: a [tree-sitter][] grammar and the C parser
+generated from it. It reads a document one level finer than the schema does:
+`[monitor]`, `[variables]`, `[rules]` and `[[properties]]` parse into nodes of
+their own, a prefix rule parses into an operator with its operands, and a rule
+in expression form parses into an expression tree rather than a string. That is
+what an editor colours, what a language server queries, and what a tool walks
+when it wants the structure of a file rather than its value. `ryspec` is TOML,
+so this is a TOML grammar with the format's own structure named on top of it,
+and everywhere the format has no opinion -- `[extras]` above all -- the generic
+TOML rules apply.
+
+| path | holds |
+| --- | --- |
+| [`src/grammar.json`](src/grammar.json) | **the grammar.** Authored by hand, and what `tree-sitter generate` reads and the CLI loads. No `grammar.js`, and so no Node |
+| `src/parser.c`, `src/node-types.json` | generated; do not edit |
+| `src/scanner.c` | the external scanner: line endings and multi-line string delimiters |
+| [`cli/ryspec-parse.c`](cli/ryspec-parse.c) | the application over the parser |
+| [`test/corpus/`](test/corpus/) | `tree-sitter test` cases |
+| [`queries/highlights.scm`](queries/highlights.scm) | syntax highlighting |
+
+The build is [CMake][], with a `Makefile` over it for the commands people type:
+
+```sh
+make             # configure and build build/libryspec.so and build/ryspec-parse
+make generate    # src/grammar.json -> src/parser.c
+make test        # the corpus under test/, the corpus under data/, and the Python suite
+make install     # PREFIX=/usr/local by default
+```
+
+which is the same as driving CMake directly:
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+cmake --build build -t generate
+ctest --test-dir build
+cmake --install build
+```
+
+Building needs a C compiler and nothing else: the generated `src/parser.c` is
+committed beside the grammar. The `generate` target and the `grammar-corpus`
+test are the two things that need the [tree-sitter CLI][], and both drop out of
+the build when it is absent.
+
+A document that parses is well-formed; whether its names resolve is still the
+loader's question, and none of it -- whether two properties share a name,
+whether a parameter has an `initial_value` -- is visible to a context-free
+grammar. So the parser accepts every fixture under
+[`python/tests/fixtures/invalid/`](python/tests/fixtures/invalid/) that `ryspec
+validate` rejects, and every `data/invalid/` document rejected for a semantic
+reason rather than a schema one. The other direction is
+[`data/malformed/`](data/malformed/), where the parser is the only layer that
+rejects anything: a document may satisfy the schema and still hold an
+expression that is not one.
+
+### `ryspec-parse`
+
+[`cli/ryspec-parse.c`](cli/ryspec-parse.c) is what runs the parser: `ryspec
+validate` one layer down, answering the question neither the schema nor the
+loader can reach.
+
+```sh
+build/ryspec-parse data/valid                         # every file must parse
+build/ryspec-parse --expect-malformed data/malformed  # every file must not
+build/ryspec-parse --corpus data                      # each file's header decides
+build/ryspec-parse --print-tree examples/quantifiers.toml   # the tree, as an s-expression
+```
+
+A path is a file or a directory to recurse into, and a failure is reported with
+the position of the first ERROR or missing node. `--corpus` is the paragraph
+above made runnable: a file declaring `#:expect-grammar-error` owes the parser a
+rejection, one declaring `#:expect-semantic-error` owes it a clean parse, and
+one declaring `#:expect-schema-error` owes it neither, a bad operator being
+something the grammar may reject or may leave to the schema. So the whole corpus
+goes through in one command, and `data-valid`, `data-malformed` and
+`data-corpus` under `ctest` are that command and its two halves.
+
+Generated code builds against nothing, but *running* a parser needs the
+tree-sitter runtime, and so does the database below. It is vendored at
+[`vendor/tree-sitter`](vendor/tree-sitter) -- only what its own `lib.c`
+amalgamation pulls in, at a version that speaks the language ABI `src/parser.c`
+is generated at. So a build needs a C compiler and nothing else: no network, no
+host package. Nothing of the runtime's own build or install rules comes with
+it, so `make install` installs this project and no more.
+
+A runtime already installed on the host is used in preference, so a
+distribution packaging `ryspec` against its own copy gets what it expects.
+
+```sh
+cmake -S . -B build -DRYSPEC_VENDORED_TREE_SITTER=ON
+```
+
+compiles the vendored one regardless. The Python package compiles it too, which
+is why it is vendored rather than fetched: a wheel is built from an sdist, and
+an sdist cannot download anything. `scripts/vendor-tree-sitter.sh` is what
+refreshes the copy.
+
+## The database
+
+A parse tree is a shape. What a document *means* -- which names it declares,
+what rule each one stands for, and whether the two hold together -- is a second
+reading, and [`src/database.h`](src/database.h) is where it lives. It is part
+of `libryspec` wherever a tree-sitter runtime is present, so a C consumer can
+ask what a name means without going through Python.
+
+```c
+ryspec_database *db = ryspec_database_new();
+ryspec_database_load(db, "data/valid/published_values.toml");
+ryspec_database_check(db);
+
+ryspec_symbol_id id = ryspec_lookup(db, ryspec_intern(db, "guard", 5));
+const ryspec_symbol *guard = ryspec_symbol_at(db, id);   // roles, type, rule
+```
+
+Two things shape it.
+
+**One name space, under the document's namespace.** Variables, rules and
+properties share one namespace, so the database holds them in one table, keyed
+by `<namespace>.<name>` -- and a rule private to a property by
+`<namespace>.<property>.<rule>`, which is the qualified `outputs` form with the
+namespace in front. That key is the whole of the visibility rule: two
+properties may each declare an `rhs` because their keys differ, and
+`guard_holds.rhs` in `outputs` reaches one of them in a single lookup. It is
+also what lets one database hold many documents at once. `namespace` has been
+inert until now -- an identity the format declares and nothing reads. This is
+what reads it.
+
+A name is one record however many times it is written, and the roles it plays
+are a bitset on that record. That is why `guard` in `[rules]` and `guard` in
+`[variables]` are not two definitions of anything -- one symbol, two roles --
+while a rule and an input of one name are two sources of value and an error.
+
+**Rules are deduplicated, and so are strings.** A rule is interned: a
+structurally identical rule written in five places is one term, and both
+spellings lower into the same representation, so `["not", "p"]` and `"(not
+{p})"` are the same rule. Names are resolved to their qualified form before
+interning, so `["once", "rhs"]` in two properties correctly stays two rules.
+Every string the database keeps is interned too.
+
+```sh
+build/ryspec-db data/valid                    # every file must check out
+build/ryspec-db --expect-invalid data/invalid # every file must report
+build/ryspec-db --corpus data                 # each file's header decides
+build/ryspec-db --together --stats data/valid # what a whole corpus shares
+```
+
+A file at a time by default, each in a database of its own, because that is
+what a document means on its own terms. `--together` puts every file named into
+one database instead, which is the mode the namespace exists for: two
+documents' names meet under theirs, a rule both state is stored once, and two
+documents sharing a namespace are checked against each other. Pointed at
+documents that declare no namespace -- most of `data/` -- `--together` reads
+them as one document, which by the format's rules they are, and the collisions
+it reports are real.
+
+`--dump-symbols`, `--dump-rules` and `--dump-strings` print the three tables;
+`--stats` prints what the sharing comes to. On
+[`data/valid/operators/once.toml`](data/valid/operators/once.toml), which
+writes nine rules twice over -- prefix form and expression form, under eighteen
+names -- the dump shows `plain` and `expr_plain` resolving to the same term,
+and seven more pairs behind them.
+
+The database also carries the checks of "What the schema cannot check" above.
+They were written in Python first and are now here alone:
+[`python/src/ryspec/semantics.py`](python/src/ryspec/semantics.py) binds this
+library rather than repeating it, so `ryspec validate` and `ryspec-db` reach
+one verdict because they run one implementation. `db-valid`, `db-semantic`,
+`db-fixtures` and `db-namespaces` under `ctest` hold it to the corpus, and the
+Python suite holds it to the same fixtures from the other side.
+
+Moving the checks down a layer changed one verdict, and deliberately. The
+Python loader treated a rule in expression form as an opaque string and did not
+look inside one, so a cone mixed inside an expression --
+`"({looks_back} and {looks_ahead})"`, where those two names resolve to a
+past-time and a future-time rule -- passed it. This one lowers both spellings
+into the same rules, so it resolves those names and reports what the README
+forbids anywhere else. Every document in `data/` and `examples/` is accepted
+either way; `test_a_cone_mixed_inside_an_expression_is_reported` is where the
+change is recorded.
+
+Because `[extras]` takes arbitrary keys, the TOML underneath has to be the
+whole of TOML. [`python/tests/test_toml_conformance.py`](python/tests/test_toml_conformance.py)
+re-roots every file of the standard [toml-test][] suite under `[extras]` and
+parses it:
+
+- all 208 valid TOML 1.0.0 documents parse clean, and each one decodes to the
+  same value re-rooted as it does standalone;
+- 432 of the 501 invalid ones are rejected. The other 69 are listed, with the
+  reason, in `python/tests/toml-test-semantic.txt`: a key or table defined
+  twice, or a date that is well-formed but not on the calendar. Both are
+  questions about meaning rather than shape, and neither is answerable here.
+
+Run [`scripts/fetch-toml-test.sh`](scripts/fetch-toml-test.sh) once to fetch
+the suite; the conformance test skips without it.
+
+`src/scanner.c` is adapted from [tree-sitter-toml][] (MIT).
+
+[CMake]: https://cmake.org/
+[tree-sitter]: https://tree-sitter.github.io/tree-sitter/
+[tree-sitter CLI]: https://github.com/tree-sitter/tree-sitter/tree/master/cli
+[tree-sitter-toml]: https://github.com/tree-sitter-grammars/tree-sitter-toml
+[toml-test]: https://github.com/toml-lang/toml-test

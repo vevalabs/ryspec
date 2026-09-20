@@ -1,0 +1,11 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+
+# A metric bound has two ends and a colon between them, so the end that is
+# meant has to be named: `[3:]` reaches back at least 3 steps and `[:3]` at
+# most 3. A bare `[3]` says neither.
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = "(historically[3] {p})"

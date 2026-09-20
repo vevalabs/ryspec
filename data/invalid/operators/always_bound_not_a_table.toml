@@ -1,0 +1,10 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['always', 'p', 3] is not valid
+
+# A bound is a table with named ends, so that `{ max = 3 }` and `{ min = 3 }`
+# cannot be confused. A bare 3 after the operand says neither.
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = ["always", "p", 3]

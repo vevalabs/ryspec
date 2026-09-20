@@ -1,0 +1,10 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['until', 'p'] is not valid
+
+# `until` is binary: the condition that holds throughout, and the one that
+# ends the stretch.
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = ["until", "p"]

@@ -1,0 +1,14 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error should not be valid under {'required': ['format']}
+
+# `format` says how to decode a value other variables read fields out of, so
+# only a text or binary variable may carry one -- there is nothing to decode in
+# a number.
+version = 0
+
+[variables]
+speed = { type = "number", format = "json" }
+
+[[properties]]
+name = "p"
+check = ["gt", "speed", 0]

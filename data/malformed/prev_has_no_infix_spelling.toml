@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+
+# `prev` appears nowhere in the infix grammar, so this is not a rule with a
+# bad operand -- it is not an expression at all. A rule that needs `prev` is
+# written in prefix form. Its forward twin `next` is the exception, and
+# ../valid/operators/next.toml writes it both ways.
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = "(prev {p})"

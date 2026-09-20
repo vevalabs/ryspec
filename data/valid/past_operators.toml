@@ -1,0 +1,28 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = 0
+
+# Every past-time operator the format has: prev, once, historically and since,
+# each with and without a metric bound. A rule mixing these with the future
+# operators would be rejected -- see ../invalid/mixed_time_cones.toml.
+[monitor]
+inputs = ["armed", "fault", "reset"]
+outputs = ["no_fault_since_reset", "armed_recently"]
+
+[variables]
+armed = { type = "bool", description = "the system is armed" }
+fault = { type = "bool" }
+reset = { type = "bool" }
+
+[rules]
+was_armed = ["prev", "armed"]
+
+[[properties]]
+name = "no_fault_since_reset"
+criticality = "critical"
+message = "a fault was seen after the last reset"
+check = ["since", ["not", "fault"], "reset"]
+
+[[properties]]
+name = "armed_recently"
+given = "was_armed"
+check = ["and", ["once", "armed", { max = 10 }], ["historically", ["not", "fault"], { min = 1, max = 5 }]]

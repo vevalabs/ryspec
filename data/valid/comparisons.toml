@@ -1,0 +1,31 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = 0
+
+# All six comparison operators -- lt, le, gt, ge, eq, ne -- each comparing a
+# variable against a scalar operand: a number written inline, or a name
+# resolving to a parameter. Expression form spells the same six </<=/>/>=/==/!=
+# -- see ../valid/quantifiers.toml, where a quantified rule uses them.
+[monitor]
+inputs = ["speed", "gear", "temperature"]
+outputs = ["speed_in_band", "gear_sane", "top_gear_needs_speed"]
+parameters = ["speed_min", "speed_max"]
+
+[variables]
+speed = { type = "number", unit = "m/s", description = "vehicle speed" }
+gear = { type = "number", description = "selected gear, 0 for neutral" }
+temperature = { type = "number", unit = "degC" }
+speed_min = { initial_value = 5.0, min = 0.0, max = 300.0 }
+speed_max = { initial_value = 50.0, min = 0.0, max = 300.0 }
+
+[[properties]]
+name = "speed_in_band"
+check = ["and", ["ge", "speed", "speed_min"], ["le", "speed", "speed_max"]]
+
+[[properties]]
+name = "gear_sane"
+check = ["and", ["ne", "gear", 0], ["lt", "gear", 8], ["gt", "temperature", -40.0]]
+
+[[properties]]
+name = "top_gear_needs_speed"
+given = ["eq", "gear", 7]
+check = ["gt", "speed", "speed_min"]

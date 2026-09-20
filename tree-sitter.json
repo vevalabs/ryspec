@@ -1,0 +1,25 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
+  "grammars": [
+    {
+      "name": "ryspec",
+      "camelcase": "Ryspec",
+      "scope": "source.ryspec",
+      "path": ".",
+      "file-types": [
+        "toml"
+      ],
+      "injection-regex": "^ryspec$"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MPL-2.0",
+    "description": "ryspec grammar for tree-sitter",
+    "authors": [
+      {
+        "name": "Dogan Ulus"
+      }
+    ]
+  }
+}

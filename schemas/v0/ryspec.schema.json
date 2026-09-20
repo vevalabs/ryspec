@@ -98,8 +98,8 @@
     },
     "properties": {
       "title": "Properties",
+      "description": "The properties this document declares, each yielding one verdict. The table is required and may be empty: a document that declares none is well-formed and checks nothing.",
       "type": "array",
-      "minItems": 1,
       "items": { "$ref": "#/$defs/property" }
     }
   },
@@ -251,66 +251,25 @@
     },
     "rule": {
       "title": "Rule",
+      "description": "Every rule sits in one time cone. The past operators (prev, once, historically, since) and the future ones (next, eventually, always, until) may not be mixed inside a single rule. A rule built only from names, expressions, comparisons, the quantifiers and the boolean operators carries no direction and belongs to both.",
+      "anyOf": [
+        { "$ref": "#/$defs/pastRule" },
+        { "$ref": "#/$defs/futureRule" }
+      ]
+    },
+    "atomRule": {
+      "title": "Cone-free rule",
+      "description": "A rule carrying no time direction of its own -- a name, an expression, or a comparison. It stands in either cone. A name resolving to a rule declared elsewhere carries that rule's direction, which the schema cannot follow; the semantic pass checks it.",
       "anyOf": [
         { "$ref": "#/$defs/identifier" },
         { "$ref": "#/$defs/expression" },
-        { "$ref": "#/$defs/predicateRule" },
-        { "$ref": "#/$defs/unaryRule" },
-        { "$ref": "#/$defs/multiaryRule" },
-        { "$ref": "#/$defs/unaryTemporalRule" },
-        { "$ref": "#/$defs/binaryTemporalRule" }
+        { "$ref": "#/$defs/predicateRule" }
       ]
     },
-    "unaryOperator": {
-      "title": "Unary operator",
-      "anyOf": [
-        {
-          "const": "not",
-          "description": "Logical negation. Holds exactly when its operand does not."
-        },
-        {
-          "const": "prev",
-          "description": "The operand's value at the previous step. Past-time; has no infix spelling, so a property using it writes that rule in prefix form."
-        },
-        {
-          "const": "next",
-          "description": "The operand's value at the next step. Future-time."
-        }
-      ]
-    },
-    "unaryTemporalOperator": {
-      "title": "Unary temporal operator",
-      "anyOf": [
-        {
-          "const": "once",
-          "description": "The operand held at some point in the past. Takes an optional metric bound narrowing how far back to look."
-        },
-        {
-          "const": "historically",
-          "description": "The operand held at every point in the past. Takes an optional metric bound narrowing how far back to look."
-        },
-        {
-          "const": "eventually",
-          "description": "The operand holds at some point in the future. Takes an optional metric bound narrowing how far ahead to look."
-        },
-        {
-          "const": "always",
-          "description": "The operand holds at every point in the future. Takes an optional metric bound narrowing how far ahead to look."
-        }
-      ]
-    },
-    "binaryTemporalOperator": {
-      "title": "Binary temporal operator",
-      "anyOf": [
-        {
-          "const": "since",
-          "description": "The second operand held at some point in the past and the first has held at every point after it. Past-time; takes an optional metric bound on when the second operand held."
-        },
-        {
-          "const": "until",
-          "description": "The second operand holds at some point in the future and the first holds at every point before it. Future-time; takes an optional metric bound on when the second operand holds."
-        }
-      ]
+    "notOperator": {
+      "title": "Negation operator",
+      "const": "not",
+      "description": "Logical negation. Holds exactly when its operand does not. Carries no time direction."
     },
     "multiaryOperator": {
       "title": "N-ary operator",
@@ -324,6 +283,10 @@
           "description": "Holds when at least one operand holds."
         },
         {
+          "const": "xor",
+          "description": "Holds when exactly one operand holds."
+        },
+        {
           "const": "equiv",
           "description": "Holds when the operands all have the same truth value. Has no infix spelling, so a property using it writes that rule in prefix form."
         },
@@ -335,7 +298,7 @@
     },
     "comparisonOperator": {
       "title": "Comparison operator",
-      "description": "Compares a variable against a scalar operand -- a number written inline, or a name resolving to a parameter or another variable. Comparisons have no infix spelling, so a property using one writes that rule in prefix form.",
+      "description": "Compares a variable against a scalar operand -- a number written inline, or a name resolving to a parameter, another variable or an enclosing quantifier's variable. Spelled lt/le/gt/ge/eq/ne in prefix form and </<=/>/>=/==/!= in expression form.",
       "anyOf": [
         { "const": "lt", "description": "Strictly less than." },
         { "const": "le", "description": "Less than or equal to." },
@@ -344,28 +307,6 @@
         { "const": "eq", "description": "Equal to." },
         { "const": "ne", "description": "Not equal to." }
       ]
-    },
-    "unaryRule": {
-      "title": "Unary rule",
-      "type": "array",
-      "items": [
-        { "$ref": "#/$defs/unaryOperator" },
-        { "$ref": "#/$defs/rule" }
-      ],
-      "minItems": 2,
-      "maxItems": 2,
-      "additionalItems": false
-    },
-    "unaryTemporalRule": {
-      "title": "Unary temporal rule",
-      "type": "array",
-      "items": [
-        { "$ref": "#/$defs/unaryTemporalOperator" },
-        { "$ref": "#/$defs/rule" }
-      ],
-      "minItems": 2,
-      "maxItems": 3,
-      "additionalItems": { "$ref": "#/$defs/bound" }
     },
     "predicateRule": {
       "title": "Comparison predicate",
@@ -379,24 +320,238 @@
       "maxItems": 3,
       "additionalItems": false
     },
-    "multiaryRule": {
-      "title": "N-ary rule",
+    "quantifierOperator": {
+      "title": "Quantifier",
+      "description": "Binds one or more names to values drawn from the trace and holds when the quantified rule holds for the right share of them. The names are local to the quantifier: they are bound here and nowhere else, and they resolve to no variable, rule or property.",
+      "anyOf": [
+        {
+          "const": "forall",
+          "description": "Holds when the quantified rule holds for every binding of the quantified names."
+        },
+        {
+          "const": "exists",
+          "description": "Holds when the quantified rule holds for at least one binding of the quantified names."
+        }
+      ]
+    },
+    "binding": {
+      "title": "Quantifier binding",
+      "description": "The names a quantifier binds. Required and non-empty: a quantifier that binds nothing quantifies over nothing.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vars"],
+      "properties": {
+        "vars": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/identifier" }
+        }
+      }
+    },
+    "pastRule": {
+      "title": "Past-time rule",
+      "description": "A rule whose temporal operators all look backward.",
+      "anyOf": [
+        { "$ref": "#/$defs/atomRule" },
+        { "$ref": "#/$defs/pastNotRule" },
+        { "$ref": "#/$defs/pastQuantifiedRule" },
+        { "$ref": "#/$defs/pastMultiaryRule" },
+        { "$ref": "#/$defs/pastStepRule" },
+        { "$ref": "#/$defs/pastUnaryTemporalRule" },
+        { "$ref": "#/$defs/pastBinaryTemporalRule" }
+      ]
+    },
+    "pastStepOperator": {
+      "title": "Past-time step operator",
+      "const": "prev",
+      "description": "The operand's value at the previous step. Has no infix spelling, so a property using it writes that rule in prefix form."
+    },
+    "pastUnaryTemporalOperator": {
+      "title": "Past-time unary temporal operator",
+      "anyOf": [
+        {
+          "const": "once",
+          "description": "The operand held at some point in the past. Takes an optional metric bound narrowing how far back to look."
+        },
+        {
+          "const": "historically",
+          "description": "The operand held at every point in the past. Takes an optional metric bound narrowing how far back to look."
+        }
+      ]
+    },
+    "pastBinaryTemporalOperator": {
+      "title": "Past-time binary temporal operator",
+      "const": "since",
+      "description": "The second operand held at some point in the past and the first has held at every point after it. Takes an optional metric bound on when the second operand held."
+    },
+    "pastQuantifiedRule": {
+      "title": "Quantified rule (past-time)",
+      "type": "array",
+      "items": [
+        { "$ref": "#/$defs/quantifierOperator" },
+        { "$ref": "#/$defs/pastRule" },
+        { "$ref": "#/$defs/binding" }
+      ],
+      "minItems": 3,
+      "maxItems": 3,
+      "additionalItems": false
+    },
+    "pastNotRule": {
+      "title": "Negation (past-time)",
+      "type": "array",
+      "items": [
+        { "$ref": "#/$defs/notOperator" },
+        { "$ref": "#/$defs/pastRule" }
+      ],
+      "minItems": 2,
+      "maxItems": 2,
+      "additionalItems": false
+    },
+    "pastStepRule": {
+      "title": "Step rule (past-time)",
+      "type": "array",
+      "items": [
+        { "$ref": "#/$defs/pastStepOperator" },
+        { "$ref": "#/$defs/pastRule" }
+      ],
+      "minItems": 2,
+      "maxItems": 2,
+      "additionalItems": false
+    },
+    "pastMultiaryRule": {
+      "title": "N-ary rule (past-time)",
       "type": "array",
       "items": [
         { "$ref": "#/$defs/multiaryOperator" },
-        { "$ref": "#/$defs/rule" },
-        { "$ref": "#/$defs/rule" }
+        { "$ref": "#/$defs/pastRule" },
+        { "$ref": "#/$defs/pastRule" }
       ],
       "minItems": 3,
-      "additionalItems": { "$ref": "#/$defs/rule" }
+      "additionalItems": { "$ref": "#/$defs/pastRule" }
     },
-    "binaryTemporalRule": {
-      "title": "Binary temporal rule",
+    "pastUnaryTemporalRule": {
+      "title": "Unary temporal rule (past-time)",
       "type": "array",
       "items": [
-        { "$ref": "#/$defs/binaryTemporalOperator" },
-        { "$ref": "#/$defs/rule" },
-        { "$ref": "#/$defs/rule" }
+        { "$ref": "#/$defs/pastUnaryTemporalOperator" },
+        { "$ref": "#/$defs/pastRule" }
+      ],
+      "minItems": 2,
+      "maxItems": 3,
+      "additionalItems": { "$ref": "#/$defs/bound" }
+    },
+    "pastBinaryTemporalRule": {
+      "title": "Binary temporal rule (past-time)",
+      "type": "array",
+      "items": [
+        { "$ref": "#/$defs/pastBinaryTemporalOperator" },
+        { "$ref": "#/$defs/pastRule" },
+        { "$ref": "#/$defs/pastRule" }
+      ],
+      "minItems": 3,
+      "maxItems": 4,
+      "additionalItems": { "$ref": "#/$defs/bound" }
+    },
+    "futureRule": {
+      "title": "Future-time rule",
+      "description": "A rule whose temporal operators all look forward.",
+      "anyOf": [
+        { "$ref": "#/$defs/atomRule" },
+        { "$ref": "#/$defs/futureNotRule" },
+        { "$ref": "#/$defs/futureQuantifiedRule" },
+        { "$ref": "#/$defs/futureMultiaryRule" },
+        { "$ref": "#/$defs/futureStepRule" },
+        { "$ref": "#/$defs/futureUnaryTemporalRule" },
+        { "$ref": "#/$defs/futureBinaryTemporalRule" }
+      ]
+    },
+    "futureStepOperator": {
+      "title": "Future-time step operator",
+      "const": "next",
+      "description": "The operand's value at the next step."
+    },
+    "futureUnaryTemporalOperator": {
+      "title": "Future-time unary temporal operator",
+      "anyOf": [
+        {
+          "const": "eventually",
+          "description": "The operand holds at some point in the future. Takes an optional metric bound narrowing how far ahead to look."
+        },
+        {
+          "const": "always",
+          "description": "The operand holds at every point in the future. Takes an optional metric bound narrowing how far ahead to look."
+        }
+      ]
+    },
+    "futureBinaryTemporalOperator": {
+      "title": "Future-time binary temporal operator",
+      "const": "until",
+      "description": "The second operand holds at some point in the future and the first holds at every point before it. Takes an optional metric bound on when the second operand holds."
+    },
+    "futureQuantifiedRule": {
+      "title": "Quantified rule (future-time)",
+      "type": "array",
+      "items": [
+        { "$ref": "#/$defs/quantifierOperator" },
+        { "$ref": "#/$defs/futureRule" },
+        { "$ref": "#/$defs/binding" }
+      ],
+      "minItems": 3,
+      "maxItems": 3,
+      "additionalItems": false
+    },
+    "futureNotRule": {
+      "title": "Negation (future-time)",
+      "type": "array",
+      "items": [
+        { "$ref": "#/$defs/notOperator" },
+        { "$ref": "#/$defs/futureRule" }
+      ],
+      "minItems": 2,
+      "maxItems": 2,
+      "additionalItems": false
+    },
+    "futureStepRule": {
+      "title": "Step rule (future-time)",
+      "type": "array",
+      "items": [
+        { "$ref": "#/$defs/futureStepOperator" },
+        { "$ref": "#/$defs/futureRule" }
+      ],
+      "minItems": 2,
+      "maxItems": 2,
+      "additionalItems": false
+    },
+    "futureMultiaryRule": {
+      "title": "N-ary rule (future-time)",
+      "type": "array",
+      "items": [
+        { "$ref": "#/$defs/multiaryOperator" },
+        { "$ref": "#/$defs/futureRule" },
+        { "$ref": "#/$defs/futureRule" }
+      ],
+      "minItems": 3,
+      "additionalItems": { "$ref": "#/$defs/futureRule" }
+    },
+    "futureUnaryTemporalRule": {
+      "title": "Unary temporal rule (future-time)",
+      "type": "array",
+      "items": [
+        { "$ref": "#/$defs/futureUnaryTemporalOperator" },
+        { "$ref": "#/$defs/futureRule" }
+      ],
+      "minItems": 2,
+      "maxItems": 3,
+      "additionalItems": { "$ref": "#/$defs/bound" }
+    },
+    "futureBinaryTemporalRule": {
+      "title": "Binary temporal rule (future-time)",
+      "type": "array",
+      "items": [
+        { "$ref": "#/$defs/futureBinaryTemporalOperator" },
+        { "$ref": "#/$defs/futureRule" },
+        { "$ref": "#/$defs/futureRule" }
       ],
       "minItems": 3,
       "maxItems": 4,

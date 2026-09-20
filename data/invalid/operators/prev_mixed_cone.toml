@@ -1,0 +1,9 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['prev', ['eventually', 'p']] is not valid
+
+# `prev` looks one step backward, so its operand is a past-time rule.
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = ["prev", ["eventually", "p"]]

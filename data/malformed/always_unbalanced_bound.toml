@@ -1,0 +1,10 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+
+# The bound is closed with `]` before the operand begins. Left open, the
+# operand is read as part of the bound and the expression never closes.
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = "(always[3:10 {p})"

@@ -1,0 +1,21 @@
+#:schema ../../../../schemas/v0/ryspec.schema.json
+version = 0
+
+# Rule 12, verdict form: a name resolving to a property reaches its verdict,
+# which is what its 'check' computes -- so the verdict carries that rule's
+# cone into wherever the property is named.
+
+[monitor]
+inputs = ["p"]
+outputs = ["backward", "mixed"]
+
+[variables]
+p = { type = "bool" }
+
+[[properties]]
+name = "backward"
+check = ["once", "p"]
+
+[[properties]]
+name = "mixed"
+check = ["always", "backward"]

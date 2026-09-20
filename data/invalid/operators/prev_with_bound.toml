@@ -1,0 +1,11 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['prev', 'p', {'max': 3}] is not valid
+
+# A metric bound narrows a window, and `prev` is a single step rather than a
+# window. Reaching three steps back is three nested `prev` rules, or a bounded
+# `once` if what is wanted is "at some point in the last three".
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = ["prev", "p", { max = 3 }]

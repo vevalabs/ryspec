@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['and', ['once', 'q'], ['eventually', 'r']] is not valid
+
+# Every rule sits in one time cone. `once` looks backward and `eventually`
+# looks forward, so neither the past-time nor the future-time shape of `and`
+# accepts both operands. Two properties, one per cone, is how a document says
+# this -- see ../valid/past_operators.toml and ../valid/future_operators.toml.
+version = 0
+
+[[properties]]
+name = "p"
+check = ["and", ["once", "q"], ["eventually", "r"]]

@@ -1,0 +1,86 @@
+# Tests from the standard TOML suite that the ryspec grammar accepts.
+#
+# Each one is invalid TOML for a reason no context-free grammar can see:
+# every file here parses cleanly and is the loader's to reject. A file
+# that is invalid for a reason the grammar CAN see does not belong here --
+# fix the grammar instead. tests/test_toml_conformance.py holds this list
+# to the suite in both directions, so a grammar that starts rejecting one
+# of these fails until the entry is removed.
+
+# A key or a table defined twice, or a table redefined as something else.
+# Whether a name is already taken is not a question about syntax: the
+# parser reads the same shape either way, and the loader holds the
+# namespace that says which of the two is the duplicate.
+invalid/array/extend-defined-aot.toml
+invalid/array/extending-table.toml
+invalid/array/tables-01.toml
+invalid/array/tables-02.toml
+invalid/inline-table/duplicate-key-01.toml
+invalid/inline-table/duplicate-key-02.toml
+invalid/inline-table/duplicate-key-03.toml
+invalid/inline-table/duplicate-key-04.toml
+invalid/inline-table/overwrite-01.toml
+invalid/inline-table/overwrite-02.toml
+invalid/inline-table/overwrite-03.toml
+invalid/inline-table/overwrite-04.toml
+invalid/inline-table/overwrite-05.toml
+invalid/inline-table/overwrite-06.toml
+invalid/inline-table/overwrite-07.toml
+invalid/inline-table/overwrite-08.toml
+invalid/inline-table/overwrite-09.toml
+invalid/inline-table/overwrite-10.toml
+invalid/key/dotted-redefine-table-01.toml
+invalid/key/dotted-redefine-table-02.toml
+invalid/key/duplicate-keys-01.toml
+invalid/key/duplicate-keys-02.toml
+invalid/key/duplicate-keys-03.toml
+invalid/key/duplicate-keys-04.toml
+invalid/key/duplicate-keys-05.toml
+invalid/key/duplicate-keys-06.toml
+invalid/key/duplicate-keys-07.toml
+invalid/key/duplicate-keys-08.toml
+invalid/key/duplicate-keys-09.toml
+invalid/spec-1.0.0/inline-table-2-0.toml
+invalid/spec-1.0.0/inline-table-3-0.toml
+invalid/spec-1.0.0/table-9-0.toml
+invalid/spec-1.0.0/table-9-1.toml
+invalid/table/append-with-dotted-keys-01.toml
+invalid/table/append-with-dotted-keys-02.toml
+invalid/table/append-with-dotted-keys-03.toml
+invalid/table/append-with-dotted-keys-04.toml
+invalid/table/append-with-dotted-keys-05.toml
+invalid/table/append-with-dotted-keys-06.toml
+invalid/table/append-with-dotted-keys-07.toml
+invalid/table/append-with-dotted-keys-08.toml
+invalid/table/array-implicit.toml
+invalid/table/duplicate-key-01.toml
+invalid/table/duplicate-key-02.toml
+invalid/table/duplicate-key-03.toml
+invalid/table/duplicate-key-04.toml
+invalid/table/duplicate-key-05.toml
+invalid/table/duplicate-key-06.toml
+invalid/table/duplicate-key-07.toml
+invalid/table/duplicate-key-08.toml
+invalid/table/duplicate-key-09.toml
+invalid/table/duplicate-key-10.toml
+invalid/table/duplicate-key-11.toml
+invalid/table/duplicate-key-12.toml
+invalid/table/duplicate-key-13.toml
+invalid/table/duplicate-key-14.toml
+invalid/table/overwrite-array-in-parent.toml
+invalid/table/overwrite-bool-with-array.toml
+invalid/table/overwrite-with-deep-table.toml
+invalid/table/redefine-01.toml
+invalid/table/redefine-02.toml
+invalid/table/redefine-03.toml
+invalid/table/super-twice.toml
+
+# A date that is well-formed but not on the calendar. The grammar checks
+# the shape of a date, and February 30th has that shape; knowing that
+# February is short, and how short it is this year, is the loader's.
+invalid/datetime/feb-29.toml
+invalid/datetime/feb-30.toml
+invalid/local-date/feb-29.toml
+invalid/local-date/feb-30.toml
+invalid/local-datetime/feb-29.toml
+invalid/local-datetime/feb-30.toml

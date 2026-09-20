@@ -1,0 +1,11 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['once', 'p', {}] is not valid
+
+# A metric bound narrows the window with at least one of min and max. A bound
+# with neither end narrows nothing, and the way to write an unbounded `once` is
+# to leave the bound off.
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = ["once", "p", {}]

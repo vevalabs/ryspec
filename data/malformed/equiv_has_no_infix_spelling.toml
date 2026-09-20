@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+
+# `equiv` has no infix spelling, so a property needing it writes that
+# rule in prefix form, as ["equiv", "p", "q"]. The infix vocabulary is `not`,
+# `next`, the four unary temporal operators, `since`, `until`, `and`, `or`,
+# `xor`, `implies`, `->`, the six comparisons and the two quantifiers.
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = "({p} equiv {q})"

@@ -1,0 +1,19 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error is not of type
+
+# A parameter's initial_value has the variable's own type. `fail_open` is a
+# bool, so its starting value is `true` or `false`, not 1.
+version = 0
+
+[monitor]
+inputs = ["pressure"]
+outputs = ["p"]
+parameters = ["fail_open"]
+
+[variables]
+pressure = {}
+fail_open = { type = "bool", initial_value = 1 }
+
+[[properties]]
+name = "p"
+check = ["gt", "pressure", 0]

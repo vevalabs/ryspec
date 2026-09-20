@@ -1,0 +1,11 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+
+# An infix comparison takes a name on the left and a name or a number on the
+# right, exactly as its prefix spelling does. Neither side is a formula, so a
+# parenthesised expression cannot stand in one.
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = "({speed} > ({gear} and {brake}))"

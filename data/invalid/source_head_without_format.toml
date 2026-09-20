@@ -1,0 +1,21 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-semantic-error declares no format
+
+# The segments after the first address a field within the head variable's
+# value, which means the head has to be decodable. `frame` here declares no
+# format, so there is no document for `.speed` to reach into. A one-segment
+# source is the degenerate case and needs no format -- see
+# ../valid/structured_sources.toml.
+version = 0
+
+[monitor]
+inputs = ["frame"]
+outputs = ["p"]
+
+[variables]
+frame = { type = "text" }
+speed = { type = "number", source = "frame.speed" }
+
+[[properties]]
+name = "p"
+check = ["gt", "speed", 0]

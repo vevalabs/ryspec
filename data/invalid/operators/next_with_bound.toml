@@ -1,0 +1,11 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['next', 'p', {'max': 3}] is not valid
+
+# `next` is a single step rather than a window, so it takes no metric bound.
+# Reaching three steps ahead is three nested `next` rules, or a bounded
+# `eventually` if what is wanted is "at some point in the next three".
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = ["next", "p", { max = 3 }]

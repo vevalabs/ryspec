@@ -1,0 +1,36 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = 0
+
+# outputs REPLACES the default published set, which is every property in
+# declaration order. Each of the four ways to name a published value appears
+# here: a [variables] declaration, a property verdict, a file-level rule, and a
+# rule private to a property written <property>.<rule>. Naming `guard` in both
+# [rules] and [variables] is not two definitions -- the rule is the value and
+# the declaration is what gives the published signal a type and a description.
+[monitor]
+inputs = ["q", "r"]
+outputs = ["guard", "guard_holds", "guard_holds.rhs", "late_q"]
+
+[variables]
+q = { type = "bool" }
+r = { type = "bool" }
+guard = { type = "bool", description = "the published guard" }
+
+[rules]
+once_q = ["once", "q"]
+r_and_not_q = ["and", "r", ["not", "q"]]
+guard = ["and", "r_and_not_q", "once_q"]
+late_q = ["eventually", "q"]
+
+# `never_published` has no place in outputs, so its verdict is computed and
+# kept. Replacing the default set is how a file says which verdicts matter.
+[[properties]]
+name = "guard_holds"
+check = ["and", "guard", "rhs"]
+
+[properties.rules]
+rhs = ["or", "q", "r"]
+
+[[properties]]
+name = "never_published"
+check = ["once", "r"]

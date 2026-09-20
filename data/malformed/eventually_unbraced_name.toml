@@ -1,0 +1,11 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+
+# A name inside an expression is braced. The braces delimit it against the
+# operators around it, which is what lets `eventually` be read as an operator
+# here rather than as another name.
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = "(eventually p)"

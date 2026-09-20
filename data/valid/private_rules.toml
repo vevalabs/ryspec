@@ -1,0 +1,28 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = 0
+
+# [properties.rules] is a visibility boundary, not a convenience: each property
+# below declares its own `rhs` without the two colliding. Publishing one
+# without moving it to file level means naming it qualified in outputs.
+[monitor]
+inputs = ["p", "q", "r"]
+outputs = ["left_holds", "left_holds.rhs", "right_holds.rhs"]
+
+[variables]
+p = { type = "bool" }
+q = { type = "bool" }
+r = { type = "bool" }
+
+[[properties]]
+name = "left_holds"
+check = ["and", "p", "rhs"]
+
+[properties.rules]
+rhs = ["once", "q"]
+
+[[properties]]
+name = "right_holds"
+check = ["and", "r", "rhs"]
+
+[properties.rules]
+rhs = ["historically", "q"]

@@ -12,7 +12,25 @@ dependencies = ["jsonschema>=4"]
 ryspec = "ryspec:main"
 
 [project.optional-dependencies]
-test = ["pytest>=8"]
+test = ["pytest>=8", "tree-sitter>=0.23"]
+
+# The package is a binding over the C library, so installing it compiles one:
+# setup.py builds src/*.c and the vendored tree-sitter runtime into
+# ryspec/libryspec.so, which means a C compiler at install time and a
+# platform-specific wheel out of it.
+#
+# The Python package is one subproject of a repository whose root is the C
+# parser: src/ at the root is the generated parser, and the package lives at
+# python/src/ryspec.
+[tool.setuptools]
+package-dir = { "" = "python/src" }
+
+[tool.setuptools.packages.find]
+where = ["python/src"]
 
 [tool.setuptools.package-data]
 ryspec = ["schemas/**/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["python/tests"]
+pythonpath = ["python/src"]

@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error /properties/0/check
+version = 0
+
+# The binding table is closed, and `vars` is the only key it takes.
+[[properties]]
+name = "p1"
+check = ["forall", ["eq", "sensor_id", "s"], { vars = ["s"], over = "sensor_id" }]

@@ -1,0 +1,33 @@
+#:schema ../schemas/v0/ryspec.schema.json
+version = 0
+
+# forall and exists quantify a rule over values rather than over time. Each
+# binds names local to itself -- declared in no table, taking no slot -- and
+# ranges them over the active domain: the values that position has carried in
+# the trace so far.
+[monitor]
+inputs = ["sensor_id", "reading"]
+outputs = ["every_sensor_in_band"]
+
+[variables]
+sensor_id = { type = "number" }
+reading = { type = "number" }
+
+[rules]
+# Of the sensor ids seen so far, every one has read under the limit. The
+# binding table sits where a metric bound sits, and `vars` is its only key.
+every_sensor_in_band = [
+  "forall",
+  ["implies", ["eq", "sensor_id", "s"], ["lt", "reading", 120]],
+  { vars = ["s"] },
+]
+
+[[properties]]
+name = "band_holds"
+check = "every_sensor_in_band"
+
+[[properties]]
+name = "some_sensor_reported_twice"
+# The same shape in expression form: the bound names in braces, a dot, then
+# the rule they range over.
+check = "(exists {a} . (({sensor_id} == {a}) and (once ({sensor_id} == {a}))))"

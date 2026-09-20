@@ -1,0 +1,29 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = 0
+
+# Every shape a metric bound takes: max alone, min alone, both, and a bound
+# whose ends name parameters rather than numbers. A bound on `since` constrains
+# when the second operand held.
+[monitor]
+inputs = ["trigger", "ack"]
+outputs = ["ack_in_window"]
+parameters = ["deadline"]
+
+[monitor.runtime]
+buffer_size = 1024
+
+[variables]
+trigger = { type = "bool" }
+ack = { type = "bool" }
+deadline = { initial_value = 10, min = 0, max = 60 }
+
+[rules]
+seen_recently = ["once", "ack", { max = 5 }]
+seen_a_while_back = ["once", "ack", { min = 2 }]
+seen_in_window = ["once", "ack", { min = 2, max = "deadline" }]
+held_since_trigger = ["since", "ack", "trigger", { max = "deadline" }]
+
+[[properties]]
+name = "ack_in_window"
+given = "trigger"
+check = ["and", "seen_recently", "seen_a_while_back", "seen_in_window", "held_since_trigger"]

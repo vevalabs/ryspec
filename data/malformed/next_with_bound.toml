@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+
+# `next` is a single step rather than a window, in both forms, so it takes no
+# metric bound. Reaching three steps ahead is three nested `next` rules, or
+# `(eventually[:3] {p})` if what is wanted is "at some point in the next
+# three".
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = "(next[3] {p})"

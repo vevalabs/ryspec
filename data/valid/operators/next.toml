@@ -1,0 +1,50 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+version = 0
+
+# `next` is the operand's value one step ahead -- the forward-looking twin of
+# `prev`. It is a step, not a window, so it takes no metric bound, and nesting
+# it is how a rule reaches further ahead. Unlike `prev` it does have an infix
+# spelling, so both forms appear below.
+#
+# Both spellings appear below. Prefix form is an operator followed by its
+# operands; expression form is the infix spelling, where a name is braced and a
+# metric bound is written [min:max] after the operator. The two are the same
+# rule written two ways, so every prefix rule here has an expression twin --
+# except `over_comparison`, because a comparison has no infix spelling.
+
+[monitor]
+inputs = ["p", "q", "speed"]
+outputs = ["next_prefix", "next_expression"]
+
+[variables]
+p = { type = "bool" }
+q = { type = "bool" }
+speed = { type = "number", unit = "m/s" }
+
+[rules]
+# Prefix form.
+plain = ["next", "p"]
+twice = ["next", ["next", "p"]]
+over_boolean = ["next", ["or", "p", "q"]]
+over_comparison = ["next", ["lt", "speed", 30]]
+over_future = ["next", ["eventually", "p"]]
+under_future = ["always", ["next", "p"]]
+
+# Expression form -- the same rules, infix.
+expr_plain = "(next {p})"
+expr_twice = "(next (next {p}))"
+expr_over_boolean = "(next ({p} or {q}))"
+expr_over_future = "(next (eventually {p}))"
+expr_under_future = "(always (next {p}))"
+
+[[properties]]
+name = "next_prefix"
+given = "plain"
+check = ["and", "twice", "over_boolean", "over_comparison", "over_future", "under_future"]
+
+# The property itself is written in expression form too: a bare name in `given`
+# is a reference and takes no braces, while a name inside an expression does.
+[[properties]]
+name = "next_expression"
+given = "expr_plain"
+check = "({expr_twice} and {expr_over_boolean} and {expr_over_future} and {expr_under_future})"

@@ -1,0 +1,20 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-semantic-error may not declare source
+
+# Only an input carries a source: an output is computed and a parameter is set
+# before the run. A [variables] entry says nothing about its partition, so the
+# schema cannot see which list `threshold` is in -- the loader can.
+version = 0
+
+[monitor]
+inputs = ["speed"]
+outputs = ["p"]
+parameters = ["threshold"]
+
+[variables]
+speed = {}
+threshold = { source = "speed", initial_value = 5 }
+
+[[properties]]
+name = "p"
+check = ["gt", "speed", "threshold"]

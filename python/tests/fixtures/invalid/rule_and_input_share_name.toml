@@ -1,0 +1,21 @@
+#:schema ../../../../schemas/v0/ryspec.schema.json
+version = 0
+
+# Rule 11, rule and input: 'guard' arrives as an input and is also computed by
+# a file-level rule. Only outputs sanctions a shared name -- an input already
+# carries a value, so the rule is a second source for it.
+
+[monitor]
+inputs = ["p", "guard"]
+outputs = ["guard_holds"]
+
+[variables]
+p = { type = "bool" }
+guard = { type = "bool" }
+
+[rules]
+guard = ["not", "p"]
+
+[[properties]]
+name = "guard_holds"
+check = "guard"

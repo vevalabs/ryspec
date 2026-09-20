@@ -1,0 +1,10 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['since', 'p'] is not valid
+
+# `since` is binary: the condition that has held throughout, and the one that
+# started the stretch. With one operand there is no stretch to speak of.
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = ["since", "p"]

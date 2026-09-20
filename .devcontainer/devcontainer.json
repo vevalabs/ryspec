@@ -4,7 +4,17 @@
   "customizations": {
     "vscode": {
       "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "llvm-vs-code-extensions.vscode-clangd",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "redhat.vscode-xml",
+        "redhat.vscode-yaml",
+        "Ollama.ollama",
+        "ms-vscode.makefile-tools",
         "Anthropic.claude-code",
+        "esbenp.prettier-vscode",
         "tamasfe.even-better-toml"
       ]
     }

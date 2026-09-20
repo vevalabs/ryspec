@@ -1,0 +1,11 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['gt', 'speed'] is not valid
+
+# A comparison takes exactly three items: the operator, the variable it reads
+# and the scalar it compares against. There is nothing here for `speed` to be
+# greater than.
+version = 0
+
+[[properties]]
+name = "p"
+check = ["gt", "speed"]

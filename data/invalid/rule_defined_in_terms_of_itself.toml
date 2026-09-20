@@ -1,0 +1,21 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-semantic-error is defined in terms of itself
+
+# `a` is defined through `b` and `b` through `a`, so neither ever reaches a
+# value. Both rules are well-formed on their own, which is all the schema sees.
+version = 0
+
+[monitor]
+inputs = ["p"]
+outputs = ["loops"]
+
+[variables]
+p = { type = "bool" }
+
+[rules]
+a = ["and", "b", "p"]
+b = ["or", "a", "p"]
+
+[[properties]]
+name = "loops"
+check = "a"

@@ -1,0 +1,10 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['not', 'q', {'max': 3}] is not valid
+
+# A metric bound narrows how far a temporal operator looks. `not` looks
+# nowhere, so it takes its operand and nothing else.
+version = 0
+
+[[properties]]
+name = "p"
+check = ["not", "q", { max = 3 }]

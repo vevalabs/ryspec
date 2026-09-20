@@ -1,0 +1,83 @@
+====================================
+Temporal operators and metric bounds
+====================================
+
+version = 0
+
+[[properties]]
+name = "p1"
+given = "(once[:10] {q})"
+check = "((not {p}) since {q})"
+impose = "(always[{min_delay}:{deadline}] {p})"
+
+---
+
+(document
+  (version
+    value: (integer))
+  (property
+    (name
+      value: (identifier))
+    (given
+      value: (expression
+        (unary_temporal_expression
+          bound: (metric_bound
+            max: (integer))
+          operand: (name_reference))))
+    (check
+      value: (expression
+        (binary_temporal_expression
+          left: (parenthesized_expression
+            (unary_expression
+              operand: (name_reference)))
+          right: (name_reference))))
+    (impose
+      value: (expression
+        (unary_temporal_expression
+          bound: (metric_bound
+            min: (name_reference)
+            max: (name_reference))
+          operand: (name_reference))))))
+
+==========================================
+Quantifiers and comparisons in infix form
+==========================================
+
+version = 0
+
+[[properties]]
+name = "p1"
+check = "(forall {s} . (({sensor_id} == {s}) -> ({reading} < 120)))"
+given = "(exists {a}, {b} . ({a} != {b}))"
+
+---
+
+(document
+  (version
+    value: (integer))
+  (property
+    (name
+      value: (identifier))
+    (check
+      value: (expression
+        (quantified_expression
+          variable: (name_reference)
+          operand: (parenthesized_expression
+            (binary_expression
+              left: (parenthesized_expression
+                (comparison_expression
+                  left: (name_reference)
+                  right: (name_reference)))
+              right: (parenthesized_expression
+                (comparison_expression
+                  left: (name_reference)
+                  right: (integer))))))))
+    (given
+      value: (expression
+        (quantified_expression
+          variable: (name_reference)
+          variable: (name_reference)
+          operand: (parenthesized_expression
+            (comparison_expression
+              left: (name_reference)
+              right: (name_reference))))))))

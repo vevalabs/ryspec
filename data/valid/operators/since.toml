@@ -1,0 +1,58 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+version = 0
+
+# `since` holds when its second operand held at some point in the past and its
+# first has held at every point after it. The optional metric bound constrains
+# when that second operand held. In expression form the operator sits between
+# the operands and the bound follows it, as in `({p} since[2:30] {q})`.
+#
+# Both spellings appear below. Prefix form is an operator followed by its
+# operands; expression form is the infix spelling, where a name is braced and a
+# metric bound is written [min:max] after the operator. The two are the same
+# rule written two ways, so every prefix rule here has an expression twin --
+# except `over_comparison`, because a comparison has no infix spelling.
+
+[monitor]
+inputs = ["p", "q", "speed"]
+outputs = ["since_prefix", "since_expression"]
+parameters = ["window"]
+
+[variables]
+p = { type = "bool" }
+q = { type = "bool" }
+speed = { type = "number", unit = "m/s" }
+window = { initial_value = 20, min = 0, description = "how far the bound reaches" }
+
+[rules]
+# Prefix form.
+plain = ["since", "p", "q"]
+max_only = ["since", "p", "q", { max = 30 }]
+min_only = ["since", "p", "q", { min = 2 }]
+both_ends = ["since", "p", "q", { min = 2, max = 30 }]
+by_parameter = ["since", "p", "q", { max = "window" }]
+over_boolean = ["since", ["not", "q"], ["and", "p", "q"]]
+over_comparison = ["since", ["ge", "speed", 0], "q"]
+over_past = ["since", "p", ["once", "q"]]
+under_past = ["once", ["since", "p", "q"]]
+
+# Expression form -- the same rules, infix.
+expr_plain = "({p} since {q})"
+expr_max_only = "({p} since[:30] {q})"
+expr_min_only = "({p} since[2:] {q})"
+expr_both_ends = "({p} since[2:30] {q})"
+expr_by_parameter = "({p} since[:{window}] {q})"
+expr_over_boolean = "((not {q}) since ({p} and {q}))"
+expr_over_past = "({p} since (once {q}))"
+expr_under_past = "(once ({p} since {q}))"
+
+[[properties]]
+name = "since_prefix"
+given = "plain"
+check = ["and", "max_only", "min_only", "both_ends", "by_parameter", "over_boolean", "over_comparison", "over_past", "under_past"]
+
+# The property itself is written in expression form too: a bare name in `given`
+# is a reference and takes no braces, while a name inside an expression does.
+[[properties]]
+name = "since_expression"
+given = "expr_plain"
+check = "({expr_max_only} and {expr_min_only} and {expr_both_ends} and {expr_by_parameter} and {expr_over_boolean} and {expr_over_past} and {expr_under_past})"

@@ -1,0 +1,10 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['once'] is not valid
+
+# `once` takes an operand. Alone it says there is something that held in the
+# past without saying what.
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = ["once"]

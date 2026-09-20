@@ -1,0 +1,11 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['once', ['eventually', 'p']] is not valid
+
+# Every rule sits in one time cone, and `once` looks backward, so its operand
+# is a past-time rule. Asking whether something will eventually hold was once
+# true of the past is not a question this logic has.
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = ["once", ["eventually", "p"]]

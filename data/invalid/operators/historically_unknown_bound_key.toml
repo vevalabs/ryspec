@@ -1,0 +1,10 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['historically', 'p', {'from': 3, 'to': 10}] is not valid
+
+# A bound has two ends, spelt `min` and `max`, and nothing else. `from` and
+# `to` are how a different format writes this one.
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = ["historically", "p", { from = 3, to = 10 }]

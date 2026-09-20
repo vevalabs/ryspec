@@ -1,0 +1,10 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+
+# `once` takes an operand in either form. A bound alone narrows a window over
+# nothing.
+version = 0
+
+[[properties]]
+name = "p_holds"
+check = "(once[3:10])"

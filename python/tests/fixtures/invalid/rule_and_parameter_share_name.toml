@@ -1,0 +1,21 @@
+#:schema ../../../../schemas/v0/ryspec.schema.json
+version = 0
+
+# Rule 11, rule and parameter: a parameter is a source of value like an input
+# is -- its initial_value is the value -- so a rule may not take its name.
+
+[monitor]
+inputs = ["p"]
+outputs = ["limit_holds"]
+parameters = ["limit"]
+
+[variables]
+p = { type = "bool" }
+limit = { type = "number", initial_value = 3 }
+
+[rules]
+limit = ["once", "p"]
+
+[[properties]]
+name = "limit_holds"
+check = "limit"

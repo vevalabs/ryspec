@@ -1,0 +1,57 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+version = 0
+
+# `always` holds when its operand holds at every point in the future -- the
+# forward-looking twin of `historically`. Its optional metric bound narrows how
+# far ahead that reaches.
+#
+# Both spellings appear below. Prefix form is an operator followed by its
+# operands; expression form is the infix spelling, where a name is braced and a
+# metric bound is written [min:max] after the operator. The two are the same
+# rule written two ways, so every prefix rule here has an expression twin --
+# except `over_comparison`, because a comparison has no infix spelling.
+
+[monitor]
+inputs = ["p", "q", "speed"]
+outputs = ["always_prefix", "always_expression"]
+parameters = ["window"]
+
+[variables]
+p = { type = "bool" }
+q = { type = "bool" }
+speed = { type = "number", unit = "m/s" }
+window = { initial_value = 20, min = 0, description = "how far the bound reaches" }
+
+[rules]
+# Prefix form.
+plain = ["always", "p"]
+max_only = ["always", "p", { max = 10 }]
+min_only = ["always", "p", { min = 3 }]
+both_ends = ["always", "p", { min = 3, max = 10 }]
+by_parameter = ["always", "p", { max = "window" }]
+over_boolean = ["always", ["or", "p", "q"]]
+over_comparison = ["always", ["le", "speed", 30]]
+over_future = ["always", ["until", "p", "q"]]
+under_future = ["eventually", ["always", "p"]]
+
+# Expression form -- the same rules, infix.
+expr_plain = "(always {p})"
+expr_max_only = "(always[:10] {p})"
+expr_min_only = "(always[3:] {p})"
+expr_both_ends = "(always[3:10] {p})"
+expr_by_parameter = "(always[:{window}] {p})"
+expr_over_boolean = "(always ({p} or {q}))"
+expr_over_future = "(always ({p} until {q}))"
+expr_under_future = "(eventually (always {p}))"
+
+[[properties]]
+name = "always_prefix"
+given = "plain"
+check = ["and", "max_only", "min_only", "both_ends", "by_parameter", "over_boolean", "over_comparison", "over_future", "under_future"]
+
+# The property itself is written in expression form too: a bare name in `given`
+# is a reference and takes no braces, while a name inside an expression does.
+[[properties]]
+name = "always_expression"
+given = "expr_plain"
+check = "({expr_max_only} and {expr_min_only} and {expr_both_ends} and {expr_by_parameter} and {expr_over_boolean} and {expr_over_future} and {expr_under_future})"

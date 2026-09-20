@@ -1,0 +1,17 @@
+# An sdist has to carry everything `pip install .` compiles. setuptools takes
+# the sources named in setup.py and no more, so the headers beside them and
+# the runtime that lib.c includes are listed here.
+
+include src/*.h
+include src/tree_sitter/*.h
+recursive-include vendor/tree-sitter *
+
+include schemas/v0/*.json
+include LICENSE README.md AGENTS.md VERSIONING.md
+
+# Not part of what gets built or installed.
+prune build
+prune python/build
+prune python/tests/vendor
+prune test
+prune queries

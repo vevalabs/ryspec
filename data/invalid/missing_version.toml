@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'version' is a required property
+
+# `version` is one of the two required top-level keys. A document that omits it
+# does not say which schema version it targets.
+
+[[properties]]
+name = "p"
+check = "q"

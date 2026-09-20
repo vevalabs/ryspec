@@ -1,0 +1,11 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-semantic-error is greater than max
+
+# A bound's ends are each well-formed on their own, so the schema sees nothing
+# wrong; what it cannot see is the two together. A window from 10 steps back to
+# 3 steps back is empty.
+version = 0
+
+[[properties]]
+name = "p"
+check = ["once", "q", { min = 10, max = 3 }]

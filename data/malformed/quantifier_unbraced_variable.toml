@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+version = 0
+
+# A name inside an expression is written in braces, and a quantifier's bound
+# names are no exception.
+[[properties]]
+name = "p1"
+check = "(forall s . ({sensor_id} == {s}))"

@@ -1,0 +1,14 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error should not be valid under {'anyOf': [{'required': ['min']}, {'required': ['max']}]}
+
+# min and max bound a numeric value. A text variable is a document: it holds no
+# value to bound, which is also why a rule may not name one.
+version = 0
+
+[variables]
+frame = { type = "text", format = "json", min = 0, max = 100 }
+speed = { type = "number", source = "frame.speed" }
+
+[[properties]]
+name = "p"
+check = ["gt", "speed", 0]

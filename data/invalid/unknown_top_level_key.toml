@@ -1,0 +1,15 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ('montior' was unexpected)
+
+# The document root is closed, which is what catches a misspelled or retired
+# table name. `meta` and `extras` are the deliberate exceptions, and `montior`
+# is neither.
+version = 0
+
+[montior]
+inputs = ["p"]
+outputs = ["q"]
+
+[[properties]]
+name = "q"
+check = "p"

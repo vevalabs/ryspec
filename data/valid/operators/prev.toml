@@ -1,0 +1,33 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+version = 0
+
+# `prev` is the operand's value one step back. It is a step, not a window, so
+# it takes no metric bound -- nesting it is how a rule reaches further.
+#
+# Prefix form is the only spelling prev has: it appears nowhere in the infix
+# grammar, so `(prev {p})` does not parse. See
+# ../../malformed/prev_has_no_infix_spelling.toml. Its twin `next` is the
+# exception -- that one does have an infix spelling.
+
+[monitor]
+inputs = ["p", "q", "speed"]
+outputs = ["prev_prefix"]
+
+[variables]
+p = { type = "bool" }
+q = { type = "bool" }
+speed = { type = "number", unit = "m/s" }
+
+[rules]
+# Prefix form.
+plain = ["prev", "p"]
+twice = ["prev", ["prev", "p"]]
+over_boolean = ["prev", ["or", "p", "q"]]
+over_comparison = ["prev", ["lt", "speed", 30]]
+over_past = ["prev", ["once", "p"]]
+under_past = ["historically", ["prev", "p"]]
+
+[[properties]]
+name = "prev_prefix"
+given = "plain"
+check = ["and", "twice", "over_boolean", "over_comparison", "over_past", "under_past"]
