@@ -1,0 +1,18 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# `[extras]` is the document's free-form table: any key, any TOML value, nested
+# as deep as a tool likes. It is the one place a TOML datetime is accepted,
+# because it is the one place the format reads nothing. Without it a tool would
+# have to put its settings under a namespace name.
+[extras]
+generated = 2026-09-25T10:30:00Z
+reviewed_on = 2026-09-01
+revision = 7
+
+[extras.acme-runner]
+workers = 4
+tags = ["nightly", { lane = "fast" }]
+
+[properties.stays_alive]
+check = "heartbeat"

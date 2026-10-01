@@ -1,9 +1,8 @@
 #:schema ../../schemas/v0/ryspec.schema.json
 #:expect-semantic-error is already bound by an enclosing quantifier
-version = 0
+version = "0"
 
 # Nested quantifiers bind distinct names: rebinding `s` inside the forall that
 # already binds it would leave the inner uses with two readings.
-[[properties]]
-name = "p1"
-check = ["forall", ["exists", ["eq", "sensor_id", "s"], { vars = ["s"] }], { vars = ["s"] }]
+[properties.p1]
+check = ["forall", ["exists", ["assign", "sensor_id", { qvar = "s" }], { qvars = ["s"] }], { qvars = ["s"] }]

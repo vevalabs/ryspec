@@ -1,0 +1,18 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Rule 12, private form: a name inside a property reaches that property's own
+# rule table first, so the cone is resolved there before [<ns>.rules].
+
+[[monitors]]
+inputs = ["p"]
+outputs = ["mixed"]
+
+[variables]
+p = { type = "bool" }
+
+[properties.mixed]
+check = ["once", "ahead"]
+
+[properties.mixed.where]
+ahead = ["next", "p"]

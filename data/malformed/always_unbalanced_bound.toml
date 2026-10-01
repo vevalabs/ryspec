@@ -3,8 +3,7 @@
 
 # The bound is closed with `]` before the operand begins. Left open, the
 # operand is read as part of the bound and the expression never closes.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p_holds"
+[properties.p_holds]
 check = "(always[3:10 {p})"

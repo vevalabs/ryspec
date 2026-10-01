@@ -1,0 +1,20 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# A property has its own `extras`: free-form, like the document's, and read by
+# nothing, so it leaves `given -> check` as it is. It is where a tool keeps what
+# it knows about one property, such as a criticality the format has no key for.
+[properties.stays_alive]
+check = "heartbeat"
+
+[properties.stays_alive.extras]
+criticality = "critical"
+last_violated = 2026-09-25T10:30:00Z
+
+[properties.stays_alive.extras.acme-runner]
+retries = 3
+lanes = ["nightly", { lane = "fast" }]
+
+[a.properties.p]
+check = "q"
+extras = { owner = "team-a" }

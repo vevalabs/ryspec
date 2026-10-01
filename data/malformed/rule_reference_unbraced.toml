@@ -1,0 +1,17 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+
+# A rule named inside an expression is an atom, so it stands in braces, as
+# `{guard}`. Only where a whole rule is expected -- `given = "guard"` -- is a
+# name written bare, because there it is a reference rather than an expression.
+version = "0"
+
+[variables]
+armed = { type = "bool" }
+p = { type = "bool" }
+
+[rules]
+guard = "armed"
+
+[properties.p_holds]
+check = "(guard and {p})"

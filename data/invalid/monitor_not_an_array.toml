@@ -1,0 +1,14 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error is not of type 'array'
+
+# `monitors` is an array of tables, so a document declaring one writes
+# [[monitors]]. A single [monitors] table is the shape the format used to take
+# and is now a type error rather than a quietly accepted one.
+version = "0"
+
+[monitors]
+inputs = ["p"]
+outputs = ["q"]
+
+[properties.q]
+check = "p"

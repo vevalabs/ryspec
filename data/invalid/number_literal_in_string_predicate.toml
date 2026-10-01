@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['contains', 'label', {'value': 3}] is not valid
+
+# A string predicate tests text, so its literal is a string.
+version = "0"
+
+[properties.p]
+check = ["contains", "label", { value = 3 }]

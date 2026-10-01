@@ -1,24 +1,21 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-version = 0
+version = "0"
 
 # The other half. Same local names as `plant_north.toml`, a different
 # namespace, and a rule written differently so that the two files share the
-# names without sharing the rules behind them.
-namespace = "com.example.plant.south"
-
-[monitor]
+# names without sharing the rules behind them. The two columns they read
+# share a name too, each file declaring them in its own `[variables]`.
+[[monitors]]
 inputs = ["door_open", "arm_moving"]
-outputs = ["door_interlock"]
+outputs = ["com.example.plant.south.door_interlock"]
 
 [variables]
 door_open = { type = "bool", description = "the cell door is open" }
 arm_moving = { type = "bool", description = "the arm is under power" }
 
-[rules]
+[com.example.plant.south.rules]
 interlock = ["or", ["not", "door_open"], ["not", "arm_moving"]]
 
-[[properties]]
-name = "door_interlock"
-criticality = "critical"
+[com.example.plant.south.properties.door_interlock]
 message = "cell door opened while the arm was moving"
 check = ["historically", "interlock"]

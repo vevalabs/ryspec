@@ -1,0 +1,16 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error does not match
+
+# A variable is named bare everywhere, by the name it is declared under. `@`
+# is part of no name, so `frame` names nothing.
+version = "0"
+
+[[monitors]]
+inputs = ["@frame"]
+outputs = ["p"]
+
+[variables]
+frame = { type = "bool" }
+
+[properties.p]
+check = "frame"

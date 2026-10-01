@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+version = "0"
+
+# A quantifier binding no names quantifies over nothing, so its brackets are
+# never empty -- as the prefix form's `qvars` is never empty either.
+[properties.p1]
+check = "(forall[] {sensor_id == reading})"

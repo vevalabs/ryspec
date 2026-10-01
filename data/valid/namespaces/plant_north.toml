@@ -1,29 +1,28 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-version = 0
+version = "0"
 
 # Half of a pair. This file and `plant_south.toml` beside it declare the same
-# local names -- `door_open`, `arm_moving`, `interlock`, `door_interlock` --
-# under different namespaces, so a tool holding both at once keeps them apart:
+# local names -- `interlock`, `door_interlock` -- under different namespaces,
+# so a tool holding both at once keeps them apart:
 # `com.example.plant.north.interlock` is not
 # `com.example.plant.south.interlock`, and neither shadows the other.
 #
-# Each file also stands alone, which is what the rest of `data/valid` asks of
-# it. The namespace does no work until something reads two documents together.
-namespace = "com.example.plant.north"
-
-[monitor]
+# The namespace is the table the rules and properties sit under, so nothing
+# beyond TOML's own nesting says it. What it does not divide is the value
+# space: `[variables]` is the document's one table, and a rule in any namespace
+# names a variable bare, by the name it is declared under. Each file also stands alone, which is what the rest of
+# `data/valid` asks of it.
+[[monitors]]
 inputs = ["door_open", "arm_moving"]
-outputs = ["door_interlock"]
+outputs = ["com.example.plant.north.door_interlock"]
 
 [variables]
 door_open = { type = "bool", description = "the cell door is open" }
 arm_moving = { type = "bool", description = "the arm is under power" }
 
-[rules]
+[com.example.plant.north.rules]
 interlock = ["not", ["and", "door_open", "arm_moving"]]
 
-[[properties]]
-name = "door_interlock"
-criticality = "critical"
+[com.example.plant.north.properties.door_interlock]
 message = "cell door opened while the arm was moving"
 check = ["historically", "interlock"]

@@ -1,0 +1,20 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Rule 3, rule form: 'guard' is a namespace-level rule, and a monitor names
+# properties and variables only. The rule is how 'p' is written rather than
+# something the interface offers, and publishing what it computes means giving
+# it a property of its own.
+
+[[monitors]]
+inputs = ["x"]
+outputs = ["guard"]
+
+[variables]
+x = {}
+
+[rules]
+guard = ["gt", "x", { value = 0 }]
+
+[properties.p]
+check = ["historically", "guard"]

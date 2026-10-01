@@ -1,10 +1,9 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['until', 'p', ['prev', 'q']] is not valid
+#:expect-semantic-error 'until' looks to the future
 
 # `until` looks forward, so both operands are future-time rules -- including
 # the second, which is the one that ends the stretch. `prev` looks backward.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p_holds"
+[properties.p_holds]
 check = ["until", "p", ["prev", "q"]]

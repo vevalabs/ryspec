@@ -1,9 +1,9 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-semantic-error stands where a rule is expected
-version = 0
+#:expect-schema-error ['forall', ['and', ['assign', 'sensor_id', {'qvar': 's'}], {'qvar': 's'}]
+version = "0"
 
 # A quantifier variable holds a value drawn from the trace, not a truth value,
-# so it cannot stand as a rule of its own.
-[[properties]]
-name = "p1"
-check = ["forall", ["and", ["eq", "sensor_id", "s"], "s"], { vars = ["s"] }]
+# so it cannot stand as a rule of its own. Its marker says so, and the schema
+# refuses `{ qvar = "s" }` where a rule is expected.
+[properties.p1]
+check = ["forall", ["and", ["assign", "sensor_id", { qvar = "s" }], { qvar = "s" }], { qvars = ["s"] }]

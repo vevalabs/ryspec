@@ -1,5 +1,5 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-version = 0
+version = "0"
 
 # `until` holds when its second operand holds at some point in the future and
 # its first holds at every point before it -- the forward-looking twin of
@@ -7,12 +7,11 @@ version = 0
 # bound follows it, as in `({p} until[2:30] {q})`.
 #
 # Both spellings appear below. Prefix form is an operator followed by its
-# operands; expression form is the infix spelling, where a name is braced and a
+# operands; expression form is the infix spelling, where an atom is braced and a
 # metric bound is written [min:max] after the operator. The two are the same
-# rule written two ways, so every prefix rule here has an expression twin --
-# except `over_comparison`, because a comparison has no infix spelling.
+# rule written two ways, so every prefix rule here has an expression twin.
 
-[monitor]
+[[monitors]]
 inputs = ["p", "q", "speed"]
 outputs = ["until_prefix", "until_expression"]
 parameters = ["window"]
@@ -20,8 +19,8 @@ parameters = ["window"]
 [variables]
 p = { type = "bool" }
 q = { type = "bool" }
-speed = { type = "number", unit = "m/s" }
-window = { initial_value = 20, min = 0, description = "how far the bound reaches" }
+speed = { type = "number" }
+window = { type = "number", initial_value = 20, min = 0, description = "how far the bound reaches" }
 
 [rules]
 # Prefix form.
@@ -31,7 +30,7 @@ min_only = ["until", "p", "q", { min = 2 }]
 both_ends = ["until", "p", "q", { min = 2, max = 30 }]
 by_parameter = ["until", "p", "q", { max = "window" }]
 over_boolean = ["until", ["not", "q"], ["and", "p", "q"]]
-over_comparison = ["until", ["ge", "speed", 0], "q"]
+over_comparison = ["until", ["ge", "speed", { value = 0 }], "q"]
 over_future = ["until", "p", ["eventually", "q"]]
 under_future = ["eventually", ["until", "p", "q"]]
 
@@ -40,19 +39,18 @@ expr_plain = "({p} until {q})"
 expr_max_only = "({p} until[:30] {q})"
 expr_min_only = "({p} until[2:] {q})"
 expr_both_ends = "({p} until[2:30] {q})"
-expr_by_parameter = "({p} until[:{window}] {q})"
+expr_by_parameter = "({p} until[:window] {q})"
 expr_over_boolean = "((not {q}) until ({p} and {q}))"
+expr_over_comparison = "({speed >= 0} until {q})"
 expr_over_future = "({p} until (eventually {q}))"
 expr_under_future = "(eventually ({p} until {q}))"
 
-[[properties]]
-name = "until_prefix"
+[properties.until_prefix]
 given = "plain"
 check = ["and", "max_only", "min_only", "both_ends", "by_parameter", "over_boolean", "over_comparison", "over_future", "under_future"]
 
 # The property itself is written in expression form too: a bare name in `given`
 # is a reference and takes no braces, while a name inside an expression does.
-[[properties]]
-name = "until_expression"
+[properties.until_expression]
 given = "expr_plain"
-check = "({expr_max_only} and {expr_min_only} and {expr_both_ends} and {expr_by_parameter} and {expr_over_boolean} and {expr_over_future} and {expr_under_future})"
+check = "({expr_max_only} and {expr_min_only} and {expr_both_ends} and {expr_by_parameter} and {expr_over_boolean} and {expr_over_comparison} and {expr_over_future} and {expr_under_future})"

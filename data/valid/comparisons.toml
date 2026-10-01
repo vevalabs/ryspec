@@ -1,31 +1,33 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-version = 0
+version = "0"
 
 # All six comparison operators -- lt, le, gt, ge, eq, ne -- each comparing a
-# variable against a scalar operand: a number written inline, or a name
-# resolving to a parameter. Expression form spells the same six </<=/>/>=/==/!=
+# variable against an operand: a number written `{ value = ... }`, or another
+# variable named bare -- a parameter, or an input such as
+# `requested_gear` below. Expression form spells the same six </<=/>/>=/==/!=
 # -- see ../valid/quantifiers.toml, where a quantified rule uses them.
-[monitor]
-inputs = ["speed", "gear", "temperature"]
-outputs = ["speed_in_band", "gear_sane", "top_gear_needs_speed"]
+[[monitors]]
+inputs = ["speed", "gear", "requested_gear", "temperature"]
+outputs = ["speed_in_band", "gear_sane", "top_gear_needs_speed", "gear_as_requested"]
 parameters = ["speed_min", "speed_max"]
 
 [variables]
-speed = { type = "number", unit = "m/s", description = "vehicle speed" }
+speed = { type = "number", description = "vehicle speed" }
 gear = { type = "number", description = "selected gear, 0 for neutral" }
-temperature = { type = "number", unit = "degC" }
-speed_min = { initial_value = 5.0, min = 0.0, max = 300.0 }
-speed_max = { initial_value = 50.0, min = 0.0, max = 300.0 }
+requested_gear = { type = "number" }
+temperature = { type = "number" }
+speed_min = { type = "number", initial_value = 5.0, min = 0.0, max = 300.0 }
+speed_max = { type = "number", initial_value = 50.0, min = 0.0, max = 300.0 }
 
-[[properties]]
-name = "speed_in_band"
+[properties.speed_in_band]
 check = ["and", ["ge", "speed", "speed_min"], ["le", "speed", "speed_max"]]
 
-[[properties]]
-name = "gear_sane"
-check = ["and", ["ne", "gear", 0], ["lt", "gear", 8], ["gt", "temperature", -40.0]]
+[properties.gear_sane]
+check = ["and", ["ne", "gear", { value = 0 }], ["lt", "gear", { value = 8 }], ["gt", "temperature", { value = -40.0 }]]
 
-[[properties]]
-name = "top_gear_needs_speed"
-given = ["eq", "gear", 7]
+[properties.top_gear_needs_speed]
+given = ["eq", "gear", { value = 7 }]
 check = ["gt", "speed", "speed_min"]
+
+[properties.gear_as_requested]
+check = ["eq", "gear", "requested_gear"]

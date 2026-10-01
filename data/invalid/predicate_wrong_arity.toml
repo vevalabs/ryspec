@@ -2,10 +2,9 @@
 #:expect-schema-error ['gt', 'speed'] is not valid
 
 # A comparison takes exactly three items: the operator, the variable it reads
-# and the scalar it compares against. There is nothing here for `speed` to be
+# and the name or literal it compares against. There is nothing here for `speed` to be
 # greater than.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p"
+[properties.p]
 check = ["gt", "speed"]

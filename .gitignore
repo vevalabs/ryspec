@@ -216,9 +216,3 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
-
-# tree-sitter parser build output
-/build/
-
-# Test fixtures fetched by scripts/fetch-toml-test.sh
-python/tests/vendor/

@@ -1,0 +1,14 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ('unit' was unexpected)
+
+# A variable has no `unit`. The key was removed: a unit string nothing reads
+# and nothing checks against its comparisons is a comment, and TOML has those.
+# A bound's `time_unit`, which says what its ends count, is a different key and
+# stays.
+version = "0"
+
+[variables]
+speed = { type = "number", unit = "m/s" }
+
+[properties.slow]
+check = ["lt", "speed", { value = 30 }]

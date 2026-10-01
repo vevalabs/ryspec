@@ -3,8 +3,7 @@
 
 # A metric bound narrows how far a temporal operator looks. `not` looks
 # nowhere, so it takes its operand and nothing else.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p"
+[properties.p]
 check = ["not", "q", { max = 3 }]

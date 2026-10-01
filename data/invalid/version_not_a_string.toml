@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error is not of type 'string'
+
+# `version` is a string. The number 0 is not the version "0".
+version = 0
+
+[properties.p]
+check = "q"

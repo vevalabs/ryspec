@@ -1,0 +1,15 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'msec' is not valid
+
+# A monitor's time unit is one of the units a bound takes: ns, us, ms, s, min
+# and h.
+version = "0"
+
+[[monitors]]
+inputs = ["p"]
+
+[monitors.runtime]
+time_unit = "msec"
+
+[properties.p_seen]
+check = ["once", "p", { max = 10 }]

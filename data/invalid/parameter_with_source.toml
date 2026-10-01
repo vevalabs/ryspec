@@ -2,19 +2,18 @@
 #:expect-semantic-error may not declare source
 
 # Only an input carries a source: an output is computed and a parameter is set
-# before the run. A [variables] entry says nothing about its partition, so the
+# before the run. A `variables` entry says nothing about its partition, so the
 # schema cannot see which list `threshold` is in -- the loader can.
-version = 0
+version = "0"
 
-[monitor]
+[[monitors]]
 inputs = ["speed"]
 outputs = ["p"]
 parameters = ["threshold"]
 
 [variables]
-speed = {}
-threshold = { source = "speed", initial_value = 5 }
+speed = { type = "number" }
+threshold = { type = "number", source = "speed", initial_value = 5 }
 
-[[properties]]
-name = "p"
+[properties.p]
 check = ["gt", "speed", "threshold"]

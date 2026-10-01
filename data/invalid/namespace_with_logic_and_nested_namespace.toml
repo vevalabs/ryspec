@@ -1,0 +1,20 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error Additional properties are not allowed ('b' was unexpected)
+
+# Logic sits in the leaves. A namespace holding `rules` or `properties` holds
+# no nested namespace, so `a` below may declare `interlock` or may hold `a.b`,
+# and not both. What the rule buys is a dotted name that resolves one way:
+# were `a` allowed both, `a.b.interlock` would name the rule of the namespace
+# `a.b` and the rule private to a property `b` of `a`, and nothing would say
+# which. The document root is the one exception -- it is the anonymous
+# namespace and the parent of the named ones at once.
+version = "0"
+
+[variables]
+door_open = { type = "bool", description = "the cell door is open" }
+
+[a.rules]
+interlock = ["not", "door_open"]
+
+[a.b.rules]
+also_interlock = ["not", "door_open"]

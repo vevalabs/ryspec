@@ -1,0 +1,29 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# A document that needs no namespace writes `[rules]` and `[properties.<name>]`
+# at the root. The root is the anonymous namespace, and its names key bare: an
+# output names the property below as `guard_holds` where a named namespace
+# would have said `a.b.guard_holds`. The rules -- `guard` at namespace level
+# and `rhs` private to the property -- are named from neither, a monitor
+# naming no rule wherever it sits.
+[[monitors]]
+inputs = ["q", "r"]
+outputs = ["guard_holds"]
+
+[variables]
+q = { type = "bool" }
+r = { type = "bool" }
+
+[rules]
+once_q = ["once", "q"]
+guard = ["and", ["and", "r", ["not", "q"]], "once_q"]
+
+[properties.guard_holds]
+check = ["and", "guard", "rhs"]
+
+# Private to the property above, exactly as `[<ns>.properties.<name>.where]`
+# is under a named namespace. The anonymity is the namespace's; the boundary
+# stays.
+[properties.guard_holds.where]
+rhs = ["or", "q", "r"]

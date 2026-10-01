@@ -1,0 +1,14 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error should not be valid under {}
+
+# `meta` is reserved in every namespace for a later version, which may let a
+# namespace describe itself the way `[meta]` describes the document. Until
+# then it admits no value, even as a nested namespace under one that holds no
+# logic, which is where any other name would be accepted.
+version = "0"
+
+[a.meta.rules]
+r = "x"
+
+[a.meta.properties.p]
+check = "r"

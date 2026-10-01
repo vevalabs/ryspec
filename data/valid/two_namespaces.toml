@@ -1,0 +1,38 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# A namespace is a table, so one document may hold several. Both namespaces
+# below declare a rule named `interlock` and a property named `door_interlock`
+# without colliding: `north.interlock` is not `south.interlock`, and a
+# [monitors] list names the one it means.
+#
+# The value space does not divide with them. `[variables]` is the document's
+# one table, so the four columns below are four names rather than two declared
+# twice -- these are two cells, and the north door is not the south door. Two
+# namespaces reading one column would name that column once.
+[[monitors]]
+inputs = [
+  "north_door_open",
+  "north_arm_moving",
+  "south_door_open",
+  "south_arm_moving",
+]
+outputs = ["north.door_interlock", "south.door_interlock"]
+
+[variables]
+north_door_open = { type = "bool", description = "the north cell door is open" }
+north_arm_moving = { type = "bool", description = "the north arm is under power" }
+south_door_open = { type = "bool", description = "the south cell door is open" }
+south_arm_moving = { type = "bool", description = "the south arm is under power" }
+
+[north.rules]
+interlock = ["not", ["and", "north_door_open", "north_arm_moving"]]
+
+[north.properties.door_interlock]
+check = ["historically", "interlock"]
+
+[south.rules]
+interlock = ["or", ["not", "south_door_open"], ["not", "south_arm_moving"]]
+
+[south.properties.door_interlock]
+check = ["historically", "interlock"]

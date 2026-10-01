@@ -1,0 +1,24 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# A rule or a property in another namespace is named by its dotted path,
+# <namespace>.<name>, in prefix form as anywhere else. `plant.cell` builds on
+# `plant.shared.arm_idle` and on the verdict of `plant.shared.door_closed`
+# without either being declared twice.
+[[monitors]]
+inputs = ["door_open", "arm_moving"]
+outputs = ["plant.cell.safe_to_enter"]
+
+[variables]
+door_open = { type = "bool" }
+arm_moving = { type = "bool" }
+
+[plant.shared.rules]
+arm_idle = ["not", "arm_moving"]
+
+[plant.shared.properties.door_closed]
+check = ["not", "door_open"]
+
+[plant.cell.properties.safe_to_enter]
+given = "plant.shared.door_closed"
+check = ["historically", "plant.shared.arm_idle", { max = 5 }]

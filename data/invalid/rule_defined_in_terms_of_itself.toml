@@ -3,9 +3,9 @@
 
 # `a` is defined through `b` and `b` through `a`, so neither ever reaches a
 # value. Both rules are well-formed on their own, which is all the schema sees.
-version = 0
+version = "0"
 
-[monitor]
+[[monitors]]
 inputs = ["p"]
 outputs = ["loops"]
 
@@ -16,6 +16,5 @@ p = { type = "bool" }
 a = ["and", "b", "p"]
 b = ["or", "a", "p"]
 
-[[properties]]
-name = "loops"
+[properties.loops]
 check = "a"

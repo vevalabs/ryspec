@@ -3,8 +3,7 @@
 
 # The same check, in the forward cone: each end is well-formed on its own, so
 # the schema sees nothing wrong, and it is the two together that are empty.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p_holds"
+[properties.p_holds]
 check = ["until", "p", "q", { min = 30, max = 2 }]

@@ -1,9 +1,8 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['once', 'q', {'max': -1}] is not valid
+#:expect-schema-error -1 is less than the minimum of 0
 
 # A bound measures a distance in steps, so neither end may be negative.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p"
+[properties.p]
 check = ["once", "q", { max = -1 }]

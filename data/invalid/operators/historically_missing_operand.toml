@@ -2,8 +2,7 @@
 #:expect-schema-error ['historically'] is not valid
 
 # `historically` takes an operand -- the thing that has held at every point.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p_holds"
+[properties.p_holds]
 check = ["historically"]

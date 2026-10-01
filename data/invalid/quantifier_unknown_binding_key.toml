@@ -1,8 +1,7 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error /properties/0/check
-version = 0
+#:expect-schema-error /properties/p1/check
+version = "0"
 
-# The binding table is closed, and `vars` is the only key it takes.
-[[properties]]
-name = "p1"
-check = ["forall", ["eq", "sensor_id", "s"], { vars = ["s"], over = "sensor_id" }]
+# The binding table is closed, and `qvars` is the only key it takes.
+[properties.p1]
+check = ["forall", ["assign", "sensor_id", { qvar = "s" }], { qvars = ["s"], over = "sensor_id" }]

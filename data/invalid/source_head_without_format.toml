@@ -6,9 +6,9 @@
 # format, so there is no document for `.speed` to reach into. A one-segment
 # source is the degenerate case and needs no format -- see
 # ../valid/structured_sources.toml.
-version = 0
+version = "0"
 
-[monitor]
+[[monitors]]
 inputs = ["frame"]
 outputs = ["p"]
 
@@ -16,6 +16,5 @@ outputs = ["p"]
 frame = { type = "text" }
 speed = { type = "number", source = "frame.speed" }
 
-[[properties]]
-name = "p"
-check = ["gt", "speed", 0]
+[properties.p]
+check = ["gt", "speed", { value = 0 }]

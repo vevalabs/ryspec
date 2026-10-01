@@ -1,10 +1,10 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-version = 0
+version = "0"
 
 # Every future-time operator: next, eventually, always and until. A document
 # may hold past-time and future-time properties side by side; what may not be
 # mixed is the two cones inside one rule.
-[monitor]
+[[monitors]]
 inputs = ["request", "grant", "shutdown"]
 outputs = ["grant_follows_request", "no_grant_before_shutdown", "quiet_after_shutdown"]
 
@@ -16,16 +16,13 @@ shutdown = { type = "bool" }
 [rules]
 stays_quiet = ["always", ["not", "grant"]]
 
-[[properties]]
-name = "grant_follows_request"
+[properties.grant_follows_request]
 given = "request"
 check = ["eventually", "grant", { max = 20 }]
 
-[[properties]]
-name = "no_grant_before_shutdown"
+[properties.no_grant_before_shutdown]
 check = ["until", ["not", "grant"], ["next", "shutdown"]]
 
-[[properties]]
-name = "quiet_after_shutdown"
+[properties.quiet_after_shutdown]
 given = "shutdown"
 check = "stays_quiet"

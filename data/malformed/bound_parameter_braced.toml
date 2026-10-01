@@ -1,0 +1,13 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+
+# A bound is not an atom, so nothing in it is braced: a parameter is written
+# `once[:window]`. Braces mark an atom, and a bound holds none.
+version = "0"
+
+[variables]
+p = { type = "bool" }
+window = { type = "number", initial_value = 10 }
+
+[properties.p_holds]
+check = "(once[:{window}] {p})"

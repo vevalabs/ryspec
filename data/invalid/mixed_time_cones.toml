@@ -1,12 +1,13 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['and', ['once', 'q'], ['eventually', 'r']] is not valid
+#:expect-semantic-error is a past-time rule and the operand at
 
 # Every rule sits in one time cone. `once` looks backward and `eventually`
-# looks forward, so neither the past-time nor the future-time shape of `and`
-# accepts both operands. Two properties, one per cone, is how a document says
-# this -- see ../valid/past_operators.toml and ../valid/future_operators.toml.
-version = 0
+# looks forward, so `and` here holds one operand of each. The schema settles
+# shape and no longer mirrors the rule definitions into a past-time and a
+# future-time set, so it accepts this; the rule stands and nothing enforces
+# it. Two properties, one per cone, is how a document says this -- see
+# ../valid/past_operators.toml and ../valid/future_operators.toml.
+version = "0"
 
-[[properties]]
-name = "p"
+[properties.p]
 check = ["and", ["once", "q"], ["eventually", "r"]]

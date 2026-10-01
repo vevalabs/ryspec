@@ -1,0 +1,15 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 0 is less than or equal to the minimum of 0
+
+# A base period is the length of one step, and a step takes some time.
+version = "0"
+
+[[monitors]]
+inputs = ["p"]
+
+[monitors.runtime]
+time_unit = "ms"
+base_period = 0
+
+[properties.p_seen]
+check = ["once", "p", { max = 10 }]

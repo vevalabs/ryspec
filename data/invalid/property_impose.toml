@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ('impose' was unexpected)
+
+# `impose` was a reserved third rule key beside `given` and `check`, shape with
+# no meaning behind it. It is out of the format, and a property carrying one is
+# rejected rather than quietly accepted -- which is what a reserved key cannot
+# tell you.
+version = "0"
+
+[properties.p]
+check = "q"
+impose = ["always", "r"]

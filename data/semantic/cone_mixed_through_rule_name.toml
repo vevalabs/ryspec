@@ -1,0 +1,19 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Rule 12: 'always' is a future-time operator and 'looks_back' resolves to a
+# past-time rule. Written out in full the schema would reject it; behind a
+# name the cone is only visible once the name is resolved.
+
+[[monitors]]
+inputs = ["p"]
+outputs = ["mixed"]
+
+[variables]
+p = { type = "bool" }
+
+[rules]
+looks_back = ["once", "p"]
+
+[properties.mixed]
+check = ["always", "looks_back"]

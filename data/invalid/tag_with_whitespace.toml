@@ -1,0 +1,10 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error does not match
+
+# A tag is one word, so a tool can select by it without quoting. Two words are
+# two tags.
+version = "0"
+
+[properties.p]
+check = "q"
+tags = ["functional safety"]

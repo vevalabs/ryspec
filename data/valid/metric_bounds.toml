@@ -1,29 +1,63 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-version = 0
+version = "0"
 
 # Every shape a metric bound takes: max alone, min alone, both, and a bound
 # whose ends name parameters rather than numbers. A bound on `since` constrains
-# when the second operand held.
-[monitor]
+# when the second operand held. A bound may give a time unit, which both of its
+# ends count in; without one, the ends take the property's `time_unit`, and
+# without that the monitor's -- here milliseconds, what its timestamps count.
+#
+# Expression form gives a bound three fields, `[min:max:unit]`, each optional
+# but the colons that place them: `[:5:s]`, `[200:1500:ms]`, `[1::s]`,
+# `[:deadline:s]`. The unit counts both ends, as prefix form's `time_unit` does, and
+# a bound without one is `[min:max]` as before. Position alone says which field
+# a name fills, so `[:s]` bounds by a parameter named `s` and `[::s]` is a unit
+# with no end to count.
+[[monitors]]
 inputs = ["trigger", "ack"]
-outputs = ["ack_in_window"]
+outputs = ["ack_in_window", "ack_in_seconds"]
 parameters = ["deadline"]
 
-[monitor.runtime]
+[monitors.runtime]
 buffer_size = 1024
+time_unit = "ms"
+# One sample every 10 ms.
+base_period = 10
 
 [variables]
 trigger = { type = "bool" }
 ack = { type = "bool" }
-deadline = { initial_value = 10, min = 0, max = 60 }
+deadline = { type = "number", initial_value = 10, min = 0, max = 60 }
 
 [rules]
 seen_recently = ["once", "ack", { max = 5 }]
 seen_a_while_back = ["once", "ack", { min = 2 }]
 seen_in_window = ["once", "ack", { min = 2, max = "deadline" }]
 held_since_trigger = ["since", "ack", "trigger", { max = "deadline" }]
+seen_within_seconds = ["once", "ack", { max = 5, time_unit = "s" }]
+seen_in_ms_window = ["once", "ack", { min = 200, max = 1500, time_unit = "ms" }]
+held_since_trigger_s = ["since", "ack", "trigger", { max = "deadline", time_unit = "s" }]
+seen_over_a_second_ago = ["once", "ack", { min = 1, time_unit = "s" }]
 
-[[properties]]
-name = "ack_in_window"
+expr_within_seconds = "(once[:5:s] {ack})"
+expr_in_ms_window = "(once[200:1500:ms] {ack})"
+expr_over_a_second_ago = "(once[1::s] {ack})"
+expr_in_minutes = "({ack} since[1:2:min] {trigger})"
+expr_since_trigger_s = "({ack} since[:deadline:s] {trigger})"
+
+[properties.ack_in_window]
 given = "trigger"
-check = ["and", "seen_recently", "seen_a_while_back", "seen_in_window", "held_since_trigger"]
+check = ["and", "seen_recently", "seen_a_while_back", "seen_in_window", "held_since_trigger", "seen_within_seconds", "seen_in_ms_window", "held_since_trigger_s", "seen_over_a_second_ago", "expr_within_seconds", "expr_in_ms_window", "expr_over_a_second_ago", "expr_in_minutes", "expr_since_trigger_s"]
+
+# A default for the bounds written in this property. `recent` and the bound in
+# `given` count seconds; `quick` names its own unit and keeps it; the shared
+# `seen_recently` it could name would keep the monitor's milliseconds.
+[properties.ack_in_seconds]
+time_unit = "s"
+given = ["once", "trigger", { max = 30 }]
+check = ["and", "recent", "quick", "quick_expr"]
+
+[properties.ack_in_seconds.where]
+recent = ["once", "ack", { max = 5 }]
+quick = ["once", "ack", { max = 250, time_unit = "ms" }]
+quick_expr = "(once[:250:ms] {ack})"

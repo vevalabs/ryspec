@@ -5,8 +5,7 @@
 # rule in prefix form, as ["equiv", "p", "q"]. The infix vocabulary is `not`,
 # `next`, the four unary temporal operators, `since`, `until`, `and`, `or`,
 # `xor`, `implies`, `->`, the six comparisons and the two quantifiers.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p_holds"
+[properties.p_holds]
 check = "({p} equiv {q})"

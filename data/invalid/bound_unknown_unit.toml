@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'sec' is not valid
+
+# A time unit is one of ns, us, ms, s, min and h. `sec` is how a different
+# format spells seconds.
+version = "0"
+
+[properties.p_seen]
+check = ["once", "p", { max = 10, time_unit = "sec" }]

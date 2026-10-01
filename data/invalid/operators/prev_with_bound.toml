@@ -4,8 +4,7 @@
 # A metric bound narrows a window, and `prev` is a single step rather than a
 # window. Reaching three steps back is three nested `prev` rules, or a bounded
 # `once` if what is wanted is "at some point in the last three".
-version = 0
+version = "0"
 
-[[properties]]
-name = "p_holds"
+[properties.p_holds]
 check = ["prev", "p", { max = 3 }]

@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['eq', 'label', {'value': 'a', 'time_unit': 'ms'}] is not valid
+
+# A literal table is closed, and `value` is its only key.
+version = "0"
+
+[properties.p]
+check = ["eq", "label", { value = "a", time_unit = "ms" }]

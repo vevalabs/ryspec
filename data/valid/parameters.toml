@@ -1,29 +1,26 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-version = 0
+version = "0"
 
 # A parameter is set before the run and held. It cannot be deduced -- a
-# threshold has no sensible default -- so every name in [monitor].parameters
+# threshold has no sensible default -- so every name in a monitor's parameters
 # carries an initial_value, optionally bounded by min and max for an embedding
 # that exposes it. `fail_open` shows the boolean case, which takes no bounds.
 # The 0 inside `pressure_bounded` is an anonymous parameter: the loader gives
 # it a slot exactly as if it had been declared.
-[monitor]
+[[monitors]]
 inputs = ["pressure", "valve_open"]
 outputs = ["pressure_bounded"]
 parameters = ["pressure_max", "fail_open"]
 
-[monitor.runtime]
+[monitors.runtime]
 allocation_size = 32768
 buffer_size = 2048
 
 [variables]
-pressure = { type = "number", unit = "bar" }
+pressure = { type = "number" }
 valve_open = { type = "bool" }
-pressure_max = { initial_value = 12.5, min = 0.0, max = 20.0, description = "relief threshold" }
+pressure_max = { type = "number", initial_value = 12.5, min = 0.0, max = 20.0, description = "relief threshold" }
 fail_open = { type = "bool", initial_value = true, description = "whether the valve defaults to open" }
-pressure_bounded = { type = "bool", description = "the relief path is doing its job" }
 
-[[properties]]
-name = "pressure_bounded"
-criticality = "critical"
-check = ["or", ["le", "pressure", "pressure_max"], "valve_open", ["gt", "pressure", 0]]
+[properties.pressure_bounded]
+check = ["or", ["le", "pressure", "pressure_max"], "valve_open", ["gt", "pressure", { value = 0 }]]

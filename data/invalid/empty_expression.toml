@@ -2,9 +2,9 @@
 #:expect-schema-error '()' is not valid
 
 # An expression is a parenthesised formula, and a pair of parentheses with
-# nothing in them is not one.
-version = 0
+# nothing in them is not one. It is not a name either -- the other spelling a
+# rule can take in this position -- which is the branch the report lands on.
+version = "0"
 
-[[properties]]
-name = "p"
+[properties.p]
 check = "()"

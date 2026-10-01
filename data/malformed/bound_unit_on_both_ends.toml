@@ -1,0 +1,13 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+
+# A bound has one unit, which counts both of its ends, so it has one unit
+# field: `[3:10:s]`. A fourth field would give a second unit, which prefix
+# form, with its single `time_unit`, cannot say.
+version = "0"
+
+[variables]
+ack = { type = "bool" }
+
+[properties.p1]
+check = "(once[3:10:s:ms] {ack})"

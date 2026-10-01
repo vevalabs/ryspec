@@ -1,0 +1,10 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['forall', ['assign', {'qvar': 'a'}, {'qvar': 'b'}]
+
+# A quantified variable ranges over the values the first operand of its
+# `assign` has carried, so that operand is a variable of the trace. One
+# quantified variable assigned from another ranges over nothing.
+version = "0"
+
+[properties.p]
+check = ["forall", ["assign", { qvar = "a" }, { qvar = "b" }], { qvars = ["a", "b"] }]

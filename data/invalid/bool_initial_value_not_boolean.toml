@@ -3,17 +3,16 @@
 
 # A parameter's initial_value has the variable's own type. `fail_open` is a
 # bool, so its starting value is `true` or `false`, not 1.
-version = 0
+version = "0"
 
-[monitor]
+[[monitors]]
 inputs = ["pressure"]
 outputs = ["p"]
 parameters = ["fail_open"]
 
 [variables]
-pressure = {}
+pressure = { type = "number" }
 fail_open = { type = "bool", initial_value = 1 }
 
-[[properties]]
-name = "p"
-check = ["gt", "pressure", 0]
+[properties.p]
+check = ["gt", "pressure", { value = 0 }]

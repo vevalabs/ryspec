@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['forall', ['assign', 'sensor_id', {'value': 3}]
+
+# `assign` gives a quantified variable the value of a name. A literal is not
+# a quantified variable, and comparing with one is what `eq` is for.
+version = "0"
+
+[properties.p]
+check = ["forall", ["assign", "sensor_id", { value = 3 }], { qvars = ["s"] }]

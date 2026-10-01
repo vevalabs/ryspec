@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+version = "0"
+
+# A quantifier lists the names it binds in brackets, as `forall[s]`. The names
+# braced after it and cut off by a dot are the old spelling, and no longer
+# say what they bind.
+[properties.p1]
+check = "(forall {s} . {s := sensor_id})"

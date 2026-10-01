@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ('max', 'min' were unexpected)
+
+# A variable that names no `type` is a bool, and a bool has no range. A number
+# has to say so with `type = "number"` before it may carry `min` and `max`.
+version = "0"
+
+[variables]
+speed = { min = 0, max = 300 }
+
+[properties.p]
+check = ["lt", "speed", { value = 120 }]

@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['lt', 'reading', {'value': 'a'}] is not valid
+
+# `lt` compares numbers only, so it belongs to the number predicate, and a
+# number predicate's literal is a number.
+version = "0"
+
+[properties.p]
+check = ["lt", "reading", { value = "a" }]

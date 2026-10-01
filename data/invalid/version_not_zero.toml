@@ -1,9 +1,8 @@
 #:schema ../../schemas/v0/ryspec.schema.json
 #:expect-schema-error was expected
 
-# `version` is a const, not a minimum: 0 is the only version there is today.
-version = 1
+# `version` is a const, not a minimum: "0" is the only version there is today.
+version = "1"
 
-[[properties]]
-name = "p"
+[properties.p]
 check = "q"

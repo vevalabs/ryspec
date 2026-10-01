@@ -1,9 +1,8 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error /properties/0/check
-version = 0
+#:expect-schema-error /properties/p1/check
+version = "0"
 
 # The binding table is required: unlike a metric bound, it is what the
 # operator means rather than a narrowing of it.
-[[properties]]
-name = "p1"
-check = ["forall", ["lt", "reading", 120]]
+[properties.p1]
+check = ["forall", ["lt", "reading", { value = 120 }]]

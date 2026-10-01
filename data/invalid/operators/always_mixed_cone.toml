@@ -1,10 +1,9 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['always', ['since', 'p', 'q']] is not valid
+#:expect-semantic-error 'always' looks to the future
 
 # `always` looks forward, so its operand is a future-time rule. `since` looks
 # backward.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p_holds"
+[properties.p_holds]
 check = ["always", ["since", "p", "q"]]

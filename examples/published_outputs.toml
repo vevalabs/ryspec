@@ -1,33 +1,34 @@
 #:schema ../schemas/v0/ryspec.schema.json
-version = 0
+version = "0"
 
-# An output names the value it publishes, and there are four ways to name one:
-# a [variables] declaration, a property whose verdict is published, a
-# file-level rule, or a rule private to a property, written <property>.<rule>.
-[monitor]
-inputs = ["q", "r"]
-outputs = ["guard", "guard_holds", "guard_holds.rhs", "late_q"]
+# An output names the value it publishes, and there are two ways to name one:
+# a property, whose verdict is published, or a variable the document computes
+# rather than reads -- `speed` below, decoded out of the frame and claiming no
+# input slot of its own. A property takes the dotted form <namespace>.<name>,
+# bare in the anonymous namespace; a variable is always bare, since the value
+# space has no namespaces.
+#
+# A rule is named in neither list. `once_moving` and `guard` are how
+# `guard_holds` is written, and `rhs` is private to that property; publishing
+# what one of them computes means giving it a property of its own.
+[[monitors]]
+inputs = ["frame", "r"]
+outputs = ["guard_holds", "speed"]
 
-# Naming `guard` in both [rules] and [variables] is not two definitions: the
-# rule is the value, and [variables] declares it part of the interface. A
-# declaration is what carries a type, a unit or a description -- the three
-# outputs below it publish without one.
 [variables]
-q = { type = "bool" }
+frame = { type = "text", format = "json", description = "telemetry frame" }
 r = { type = "bool" }
-guard = { type = "bool", description = "the published guard" }
+speed = { source = "frame.vehicle.speed", type = "number", description = "the decoded speed" }
 
 [rules]
-once_q = ["once", "q"]
-r_and_not_q = ["and", "r", ["not", "q"]]
-guard = ["and", "r_and_not_q", "once_q"]
-late_q = ["eventually", "q"]
+once_moving = ["once", ["gt", "speed", { value = 0 }]]
+guard = ["and", ["and", "r", ["not", ["gt", "speed", { value = 0 }]]], "once_moving"]
 
-[[properties]]
-name = "guard_holds"
+[properties.guard_holds]
 check = ["and", "guard", "rhs"]
 
 # `rhs` is private to this property -- another property may declare its own.
-# The qualified name is what publishes it without moving it to file level.
-[properties.rules]
-rhs = ["or", "q", "r"]
+# Neither the boundary nor a move up to [rules] makes it publishable: what the
+# interface offers is verdicts and variables.
+[properties.guard_holds.where]
+rhs = ["or", ["gt", "speed", { value = 0 }], "r"]

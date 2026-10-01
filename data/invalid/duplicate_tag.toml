@@ -1,0 +1,10 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error has non-unique elements
+
+# A tag is a label, and a property either carries it or does not: listing one
+# twice says nothing the first did not.
+version = "0"
+
+[properties.p]
+check = "q"
+tags = ["safety", "safety"]

@@ -1,51 +1,33 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-version = 0
+version = "0"
 
-# Everything a document may say about itself. `namespace` identifies this
-# file's names and is never resolved; `meta` holds facts about the document and
-# takes arbitrary keys beyond the five it names; `extras` holds anything the
-# format has no opinion about, nested tables included. Each property carries
-# its own title, description, criticality and operator-facing message.
-namespace = "com.example.plant.safety"
-
+# Everything a document may say about itself, at both levels it says it.
+# `[meta]` is the file's own: two keys -- title and description --
+# describing the whole rather than any part of it. A
+# namespace holds logic and nothing else, so it says nothing about itself;
+# each property carries its own title, description, tags and
+# operator-facing message instead. Tags cut across namespaces, so two
+# properties may share one wherever they sit.
 [meta]
-title = "Plant safety properties"
-description = "Interlock and shutdown checks for the reference plant cell."
-author = "Reference plant team"
-license = "Apache-2.0"
-url = "https://example.com/specs/plant-safety.toml"
-revision = "2026-09-19"
-reviewers = ["a.hoare", "b.nakamura"]
+title = "Reference plant specification"
+description = "Every check the reference plant cell ships with."
 
-[extras]
-ticket = "PLANT-431"
-
-[extras.deployment]
-cell = "north"
-shift = 3
-
-[[properties]]
-name = "door_interlock"
+[com.example.plant.safety.properties.door_interlock]
 title = "Door interlock holds"
 description = "The cell door may not be open while the arm is moving."
-criticality = "critical"
+tags = ["safety", "iso-10218"]
 message = "cell door opened while the arm was moving"
 check = ["not", ["and", "door_open", "arm_moving"]]
 
-[[properties]]
-name = "estop_latches"
+[com.example.plant.safety.properties.estop_latches]
 title = "Emergency stop latches"
-criticality = "error"
+tags = ["safety"]
 message = "the emergency stop did not latch"
 check = ["historically", ["implies", "estop_pressed", "estop_latched"]]
 
-[[properties]]
-name = "coolant_warning"
-criticality = "warning"
+[com.example.plant.safety.properties.coolant_warning]
 message = "coolant ran low at some point in the last 100 steps"
 check = ["not", ["once", "coolant_low", { max = 100 }]]
 
-[[properties]]
-name = "cycle_counted"
-criticality = "info"
+[com.example.plant.safety.properties.cycle_counted]
 check = ["once", "cycle_complete"]

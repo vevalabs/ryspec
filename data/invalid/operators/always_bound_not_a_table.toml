@@ -3,8 +3,7 @@
 
 # A bound is a table with named ends, so that `{ max = 3 }` and `{ min = 3 }`
 # cannot be confused. A bare 3 after the operand says neither.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p_holds"
+[properties.p_holds]
 check = ["always", "p", 3]

@@ -3,8 +3,7 @@
 
 # `once` takes an operand in either form. A bound alone narrows a window over
 # nothing.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p_holds"
+[properties.p_holds]
 check = "(once[3:10])"

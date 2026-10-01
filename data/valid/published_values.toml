@@ -1,36 +1,38 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-version = 0
+version = "0"
 
 # outputs REPLACES the default published set, which is every property in
-# declaration order. Each of the four ways to name a published value appears
-# here: a [variables] declaration, a property verdict, a file-level rule, and a
-# rule private to a property written <property>.<rule>. Naming `guard` in both
-# [rules] and [variables] is not two definitions -- the rule is the value and
-# the declaration is what gives the published signal a type and a description.
-[monitor]
-inputs = ["q", "r"]
-outputs = ["guard", "guard_holds", "guard_holds.rhs", "late_q"]
+# declaration order. Both ways to name a published value appear here: a
+# property whose verdict is published, and a declared variable the document
+# computes -- `speed`, decoded out of the frame rather than fed in. The names
+# property keys bare because this file declares no namespace; under `a.b` it
+# would have been `a.b.guard_holds`, and the variable `speed` either way, a
+# value space being the document's and carrying no namespace.
+#
+# The rules are the other half of the point: `guard` at namespace level and
+# `rhs` private to the property are what `guard_holds` is built out of, and
+# neither is nameable in outputs.
+[[monitors]]
+inputs = ["frame", "r"]
+outputs = ["guard_holds", "speed"]
 
 [variables]
-q = { type = "bool" }
+frame = { type = "text", format = "json", description = "telemetry frame" }
 r = { type = "bool" }
-guard = { type = "bool", description = "the published guard" }
+speed = { source = "frame.vehicle.speed", type = "number", description = "the decoded speed" }
 
 [rules]
-once_q = ["once", "q"]
-r_and_not_q = ["and", "r", ["not", "q"]]
-guard = ["and", "r_and_not_q", "once_q"]
-late_q = ["eventually", "q"]
+moving = ["gt", "speed", { value = 0 }]
+r_and_not_moving = ["and", "r", ["not", "moving"]]
+guard = ["and", "r_and_not_moving", ["once", "moving"]]
 
 # `never_published` has no place in outputs, so its verdict is computed and
 # kept. Replacing the default set is how a file says which verdicts matter.
-[[properties]]
-name = "guard_holds"
+[properties.guard_holds]
 check = ["and", "guard", "rhs"]
 
-[properties.rules]
-rhs = ["or", "q", "r"]
+[properties.guard_holds.where]
+rhs = ["or", "moving", "r"]
 
-[[properties]]
-name = "never_published"
+[properties.never_published]
 check = ["once", "r"]

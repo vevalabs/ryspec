@@ -1,10 +1,9 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['since', ['next', 'p'], 'q'] is not valid
+#:expect-semantic-error 'since' looks to the past
 
 # `since` looks backward, so both operands are past-time rules -- including
 # the first, which is the one that has held throughout. `next` looks forward.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p_holds"
+[properties.p_holds]
 check = ["since", ["next", "p"], "q"]

@@ -1,11 +1,14 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-version = 0
+version = "0"
 
-# Expression form is the infix spelling: names in braces, operators between
-# them, and a metric bound written [min:max] after a temporal operator. A bare
-# name where a rule is expected -- `given = "guard"` -- is a reference and
-# takes no braces; a number in a bound is written bare and a parameter braced.
-[monitor]
+# Expression form is the infix spelling: atoms in braces, operators between
+# them, and a metric bound written [min:max:unit] after a temporal operator. A
+# variable and a rule are both named bare, as in prefix form, and told apart by
+# what the document declares; an atom is braced whole: `{armed}`, `{guard}`, or
+# a comparison such as `{speed < 120}`. A bare name where a rule is expected --
+# `given = "guard"` -- is a reference and takes no braces; a bound is not an
+# atom, so a parameter in one takes no braces either, as `[:window]`.
+[[monitors]]
 inputs = ["armed", "fault", "reset", "ack"]
 outputs = ["guarded_ack"]
 parameters = ["min_delay", "max_delay"]
@@ -15,15 +18,14 @@ armed = { type = "bool" }
 fault = { type = "bool" }
 reset = { type = "bool" }
 ack = { type = "bool" }
-min_delay = { initial_value = 3, min = 0 }
-max_delay = { initial_value = 10, min = 0 }
+min_delay = { type = "number", initial_value = 3, min = 0 }
+max_delay = { type = "number", initial_value = 10, min = 0 }
 
 [rules]
 guard = "({armed} and (not {fault}))"
 recent_reset = "(once[:10] {reset})"
-ack_deadline = "(once[{min_delay}:{max_delay}] {ack})"
+ack_deadline = "(once[min_delay:max_delay] {ack})"
 
-[[properties]]
-name = "guarded_ack"
+[properties.guarded_ack]
 given = "guard"
 check = "({recent_reset} -> {ack_deadline})"

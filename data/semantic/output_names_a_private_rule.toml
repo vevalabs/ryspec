@@ -1,0 +1,20 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Rule 3, private form: 'p.rhs' is a rule private to the property 'p'. The
+# qualified spelling published one once; it does not now, and the entry is a
+# dotted path the schema accepts and nothing in the document answers to -- the
+# property is 'p', and 'rhs' is a segment past it.
+
+[[monitors]]
+inputs = ["x"]
+outputs = ["p.rhs"]
+
+[variables]
+x = {}
+
+[properties.p]
+check = "rhs"
+
+[properties.p.where]
+rhs = ["gt", "x", { value = 0 }]

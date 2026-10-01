@@ -1,23 +1,21 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-version = 0
+version = "0"
 
 # A structured input takes one slot; the variables that matter to the rules are
 # the fields read out of it through a dotted `source` path. `format` is written
 # once, on the variable a path reaches into, so the frame is decoded once.
 # A one-segment source -- `speed_alias` -- reads the whole of another variable
 # and claims no slot of its own.
-[monitor]
+[[monitors]]
 inputs = ["telemetry", "camera_frame"]
 outputs = ["speed_plausible"]
 
 [variables]
 telemetry = { type = "text", format = "json", description = "one telemetry frame" }
 camera_frame = { type = "binary", description = "raw camera frame, monitored for presence only" }
-speed = { type = "number", source = "telemetry.vehicle.speed", unit = "m/s" }
-wheel_speed = { type = "number", source = "telemetry.vehicle.wheels.front_left.speed", unit = "m/s" }
-speed_alias = { type = "number", source = "speed", unit = "m/s" }
-speed_plausible = { type = "bool", description = "wheel and body speed agree in sign" }
+speed = { type = "number", source = "telemetry.vehicle.speed" }
+wheel_speed = { type = "number", source = "telemetry.vehicle.wheels.front_left.speed" }
+speed_alias = { type = "number", source = "speed" }
 
-[[properties]]
-name = "speed_plausible"
-check = ["and", ["ge", "speed", 0], ["ge", "wheel_speed", 0], ["ge", "speed_alias", 0]]
+[properties.speed_plausible]
+check = ["and", ["ge", "speed", { value = 0 }], ["ge", "wheel_speed", { value = 0 }], ["ge", "speed_alias", { value = 0 }]]

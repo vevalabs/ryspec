@@ -1,0 +1,13 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error is not of type 'string'
+
+# A TOML datetime is read as a datetime, never as a string, and no key of the
+# format takes one. `[extras]` accepts them because it reads nothing; `[meta]`
+# does, so a date written there is refused rather than quietly stringified.
+version = "0"
+
+[meta]
+title = 2026-09-25
+
+[properties.p]
+check = "q"

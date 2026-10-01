@@ -1,0 +1,10 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Rule 8: a source path whose head is undeclared, or declares no format.
+
+[variables]
+speed = { type = "number", source = "raw.speed" }
+
+[properties.p]
+check = ["gt", "speed", { value = 0 }]

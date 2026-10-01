@@ -1,0 +1,24 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Rule 11, property and input: a property verdict is a value of its own, so
+# 'guard' would name both the verdict and the input the verdict reads. Nothing
+# sanctions that: a verdict is published by naming its property in outputs and
+# needs no variable beside it, which is what 'guard_seen' shows.
+
+[[monitors]]
+inputs = ["p", "guard"]
+outputs = ["guard_seen"]
+
+[variables]
+p = { type = "bool" }
+guard = { type = "bool" }
+
+[rules]
+seen_guard = ["once", "guard"]
+
+[properties.guard_seen]
+check = "seen_guard"
+
+[properties.guard]
+check = ["and", "p", "guard"]

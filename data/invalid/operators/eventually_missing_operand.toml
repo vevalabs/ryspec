@@ -2,8 +2,7 @@
 #:expect-schema-error ['eventually'] is not valid
 
 # `eventually` takes the operand that has to hold at some point ahead.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p_holds"
+[properties.p_holds]
 check = ["eventually"]

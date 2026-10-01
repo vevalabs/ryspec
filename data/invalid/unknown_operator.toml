@@ -4,8 +4,7 @@
 # The operator picks out which of the rule shapes applies, so a name that is
 # not one of them matches no shape at all. `sometimes` is spelt `once` looking
 # backward and `eventually` looking forward.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p"
+[properties.p]
 check = ["sometimes", "q"]

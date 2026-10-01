@@ -1,14 +1,12 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-version = 0
+version = "0"
 
-# Neither [monitor] nor [variables] is written, so the loader deduces the value
-# space from the rules alone: `p` and `q` are names nothing else declares, so
-# they can only be inputs. A file owes neither table.
-[[properties]]
-name = "never_both"
+# Neither [[monitors]] nor [variables] is written, so a loader deduces the
+# value space from the rules alone: `p` and `q` are names nothing else
+# declares, so they can only be inputs. A file owes neither table.
+[properties.never_both]
 check = ["not", ["and", "p", "q"]]
 
-[[properties]]
-name = "q_follows_p"
+[properties.q_follows_p]
 given = "p"
 check = ["once", "q"]

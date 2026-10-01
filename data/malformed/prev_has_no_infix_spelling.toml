@@ -5,8 +5,7 @@
 # bad operand -- it is not an expression at all. A rule that needs `prev` is
 # written in prefix form. Its forward twin `next` is the exception, and
 # ../valid/operators/next.toml writes it both ways.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p_holds"
+[properties.p_holds]
 check = "(prev {p})"

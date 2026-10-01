@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+
+# A unit is one of ns, us, ms, s, min, h and d, as prefix form's `time_unit` is.
+# `sec` is none of them.
+version = "0"
+
+[variables]
+ack = { type = "bool" }
+
+[properties.p1]
+check = "(once[3:10:sec] {ack})"

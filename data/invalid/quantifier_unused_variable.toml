@@ -1,9 +1,8 @@
 #:schema ../../schemas/v0/ryspec.schema.json
 #:expect-semantic-error is never used in the rule it quantifies
-version = 0
+version = "0"
 
 # A quantifier that binds a name the rule it quantifies never reads quantifies
 # over nothing. `s` below is bound and then dropped.
-[[properties]]
-name = "p1"
-check = ["forall", ["lt", "reading", 120], { vars = ["s"] }]
+[properties.p1]
+check = ["forall", ["lt", "reading", { value = 120 }], { qvars = ["s"] }]

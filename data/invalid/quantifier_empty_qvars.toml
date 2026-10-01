@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error /properties/p1/check
+version = "0"
+
+# A quantifier binding no names quantifies over nothing, so `qvars` is required
+# to be non-empty.
+[properties.p1]
+check = ["forall", ["lt", "reading", { value = 120 }], { qvars = [] }]

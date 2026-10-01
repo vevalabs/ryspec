@@ -1,0 +1,14 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+
+# An assignment gives a quantified variable the value of a declared variable,
+# as `{s := sensor_id}`. A literal on the right is not a variable, and
+# comparing with one is what `==` is for -- as the prefix `assign` refuses
+# `{ value = 3 }`.
+version = "0"
+
+[variables]
+sensor_id = { type = "number" }
+
+[properties.p1]
+check = "(forall[s] {s := 3})"

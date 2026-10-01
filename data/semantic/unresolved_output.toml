@@ -1,0 +1,17 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Rule 3, outputs form: 'result' names no property and no variable, so
+# nothing in the file gives it a value. A rule of that name would not do
+# either -- a monitor names properties and variables, and a rule is the
+# document's own working.
+
+[[monitors]]
+inputs = ["x"]
+outputs = ["result"]
+
+[variables]
+x = {}
+
+[properties.p]
+check = ["gt", "x", { value = 0 }]

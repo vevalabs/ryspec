@@ -1,57 +1,75 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-version = 0
+version = "0"
 
 # The two quantifiers, forall and exists, in both spellings. Each binds names
 # that are local to it -- declared nowhere, resolving to nothing -- and ranges
 # them over the values the trace has carried so far. A quantifier carries no
-# time direction of its own, so it stands in either cone: under a past
-# operator below, and over a future one in `impose`.
-[monitor]
+# time direction of its own, so it stands in either cone: under a past operator
+# in `each_fault_was_seen`, and over a future one in the last property here.
+[[monitors]]
 inputs = ["sensor_id", "reading", "fault"]
-outputs = ["every_sensor_in_band", "two_sensors_disagreed", "each_fault_was_seen"]
+# The quantified rules below are named from no list: a monitor names
+# properties and variables, so what the interface carries is the verdicts of
+# the properties that read them.
+outputs = ["band_holds", "sensors_agree", "disagreement_stays_ahead"]
 
 [variables]
 sensor_id = { type = "number", description = "which sensor this sample came from" }
-reading = { type = "number", unit = "degC" }
+reading = { type = "number" }
 fault = { type = "bool" }
 
 [rules]
-# Bare, one name, over a comparison.
+# One name, ranging over the values `sensor_id` has carried: `assign` holds
+# when the binding of `{ qvar = "s" }`, the quantified variable its second
+# operand marks, is the value `sensor_id` has now.
 every_sensor_in_band = [
   "forall",
-  ["implies", ["eq", "sensor_id", "s"], ["lt", "reading", 120]],
-  { vars = ["s"] },
+  ["implies", ["assign", "sensor_id", { qvar = "s" }], ["lt", "reading", { value = 120 }]],
+  { qvars = ["s"] },
 ]
 
-# Two names at once, each standing on either side of a comparison.
+# Two names at once: sensor `a` reads `b` now, and some other sensor once read
+# something else. Each quantified variable is compared with a trace variable,
+# never with the other, so a negated `assign` from `sensor_id` is what says the
+# sensors differ.
 two_sensors_disagreed = [
   "exists",
-  ["and", ["ne", "a", "b"], ["eq", "sensor_id", "a"], ["once", ["eq", "sensor_id", "b"]]],
-  { vars = ["a", "b"] },
+  [
+    "and",
+    ["assign", "sensor_id", { qvar = "a" }],
+    ["assign", "reading", { qvar = "b" }],
+    ["once", ["and", ["not", ["assign", "sensor_id", { qvar = "a" }]], ["not", ["assign", "reading", { qvar = "b" }]]]],
+  ],
+  { qvars = ["a", "b"] },
 ]
 
 # One quantifier under another, and the pair under a past operator: a
 # quantifier is cone-free, so `once` above it fixes the cone for the whole.
 each_fault_was_seen = [
   "once",
-  ["forall", ["exists", ["and", ["eq", "sensor_id", "s"], ["ne", "reading", "r"]], { vars = ["r"] }], { vars = ["s"] }],
+  ["forall", ["exists", ["and", ["assign", "sensor_id", { qvar = "s" }], ["not", ["assign", "reading", { qvar = "r" }]]], { qvars = ["r"] }], { qvars = ["s"] }],
   { max = 10 },
 ]
 
-[[properties]]
-name = "band_holds"
-criticality = "critical"
+[properties.band_holds]
 message = "a sensor read above the limit"
 given = "each_fault_was_seen"
 check = "every_sensor_in_band"
 
-[[properties]]
-name = "sensors_agree"
+[properties.sensors_agree]
 check = ["not", "two_sensors_disagreed"]
 
-[[properties]]
-name = "written_in_expression_form"
-# Expression form: names in braces, the bound names listed after the
-# quantifier and separated from the rule they bind by a dot.
-check = "(forall {s} . (({sensor_id} == {s}) -> ({reading} < 120)))"
-impose = "(exists {a}, {b} . (always[:10] (({a} != {b}) and ({sensor_id} == {a}))))"
+[properties.written_in_expression_form]
+# Expression form: the bound names listed in brackets after the quantifier,
+# where a temporal operator writes its bound, and then the rule they range
+# over. An assignment is written `{s := sensor_id}`: the bound name on the left
+# and the declared variable it ranges over on the right, joined by `:=` so it
+# never reads as the comparison `==`. It is `["assign", "sensor_id", { qvar = "s" }]` spelled
+# the other way round.
+check = "(forall[s] ({s := sensor_id} -> {reading < 120}))"
+
+# The same quantifier over a future operator rather than a past one, which is
+# what carrying no direction of its own buys it. Each bound name is assigned
+# from a trace variable, never compared with the other.
+[properties.disagreement_stays_ahead]
+check = "(exists[a, b] (always[:10] ({a := sensor_id} and {b := reading})))"

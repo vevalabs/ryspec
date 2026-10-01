@@ -3,15 +3,14 @@
 
 # A partition list's order is that partition's order, so a name appears in it
 # once. Listing `speed` twice would claim two input slots for one variable.
-version = 0
+version = "0"
 
-[monitor]
+[[monitors]]
 inputs = ["speed", "speed"]
 outputs = ["p"]
 
 [variables]
-speed = {}
+speed = { type = "number" }
 
-[[properties]]
-name = "p"
-check = ["gt", "speed", 0]
+[properties.p]
+check = ["gt", "speed", { value = 0 }]

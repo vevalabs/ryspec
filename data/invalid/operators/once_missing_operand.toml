@@ -3,8 +3,7 @@
 
 # `once` takes an operand. Alone it says there is something that held in the
 # past without saying what.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p_holds"
+[properties.p_holds]
 check = ["once"]

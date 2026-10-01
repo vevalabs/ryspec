@@ -1,0 +1,10 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['forall', ['assign', 'sensor_id', 's']
+
+# The second operand of `assign` is a quantified variable, written
+# `{ qvar = "s" }`. A bare `s` names a variable, a rule or a property, never a
+# quantified variable.
+version = "0"
+
+[properties.p]
+check = ["forall", ["assign", "sensor_id", "s"], { qvars = ["s"] }]

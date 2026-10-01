@@ -1,18 +1,12 @@
 {
   "name": "ryspec",
-  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-vscode.cpptools",
-        "ms-vscode.cmake-tools",
-        "llvm-vs-code-extensions.vscode-clangd",
-        "ms-python.python",
-        "ms-python.vscode-pylance",
         "redhat.vscode-xml",
         "redhat.vscode-yaml",
         "Ollama.ollama",
-        "ms-vscode.makefile-tools",
         "Anthropic.claude-code",
         "esbenp.prettier-vscode",
         "tamasfe.even-better-toml"

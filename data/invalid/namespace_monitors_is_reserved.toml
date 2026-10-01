@@ -1,0 +1,14 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error should not be valid under {}
+
+# `monitors` is a document-root key, and it is reserved in every namespace too.
+# Otherwise it would be read as a nested namespace under one that holds no
+# logic, where any other name is accepted, and giving it a meaning there later
+# would break every document that had used the name that way.
+version = "0"
+
+[a.monitors.rules]
+r = "x"
+
+[a.monitors.properties.p]
+check = "r"

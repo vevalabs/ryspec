@@ -4,11 +4,10 @@
 # A bound's end is a number or a name resolving to a parameter. `frame` is a
 # text variable, and a document is not a distance in steps. The schema types
 # the bound as an identifier and stops there.
-version = 0
+version = "0"
 
 [variables]
 frame = { type = "text", format = "json" }
 
-[[properties]]
-name = "p"
+[properties.p]
 check = ["once", "q", { max = "frame" }]

@@ -1,13 +1,13 @@
 #:schema ../../schemas/v0/ryspec.schema.json
 #:expect-semantic-error more than one source of value
 
-# Variables, rules and properties share one namespace, and only `outputs`
-# lets two of them share a name -- there the declaration describes a value
-# the rule produces. An input already carries a value, so `guard` naming an
-# input and a rule both leaves two sources under one name.
-version = 0
+# A rule names a variable, a rule and a property alike, bare, so a name means
+# one thing in the whole document. `guard` names an input, which already
+# carries a value, and a rule that computes one -- two sources, one name, and
+# no way to tell which `check = "guard"` reads.
+version = "0"
 
-[monitor]
+[[monitors]]
 inputs = ["p", "guard"]
 outputs = ["guard_holds"]
 
@@ -18,6 +18,5 @@ guard = { type = "bool" }
 [rules]
 guard = ["not", "p"]
 
-[[properties]]
-name = "guard_holds"
+[properties.guard_holds]
 check = "guard"

@@ -1,0 +1,36 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# `monitors` is an array of tables, so one document may offer several
+# interfaces over one value space. Both entries below read the same trace and
+# publish the same verdicts; they differ in what they take and what they hand
+# back -- a full build, and a cut-down one for a target with no room for the
+# second property. The value space is written once, which is the point: two
+# documents would have two value spaces to keep in step.
+[[monitors]]
+inputs = ["door_open", "arm_moving", "estop"]
+outputs = ["door_interlock", "estop_latches"]
+
+[monitors.runtime]
+allocation_size = 65536
+buffer_size = 4096
+
+[[monitors]]
+inputs = ["door_open", "arm_moving"]
+outputs = ["door_interlock"]
+
+[monitors.runtime]
+buffer_size = 256
+
+[variables]
+door_open = { type = "bool", description = "the cell door is open" }
+arm_moving = { type = "bool", description = "the arm is under power" }
+estop = { type = "bool", description = "the emergency stop is pressed" }
+
+[properties.door_interlock]
+message = "cell door opened while the arm was moving"
+check = ["historically", ["not", ["and", "door_open", "arm_moving"]]]
+
+[properties.estop_latches]
+message = "the emergency stop did not latch"
+check = ["historically", "estop"]

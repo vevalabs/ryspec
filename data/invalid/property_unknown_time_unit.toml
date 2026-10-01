@@ -1,0 +1,10 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'seconds' is not valid
+
+# A property's default time unit is one of the units a bound takes: ns, us,
+# ms, s, min and h.
+version = "0"
+
+[properties.p_seen]
+time_unit = "seconds"
+check = ["once", "p", { max = 10 }]

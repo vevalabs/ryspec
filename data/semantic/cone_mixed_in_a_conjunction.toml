@@ -1,0 +1,19 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Rule 12, boolean form: 'and' carries no direction of its own, so it takes
+# the cone of its operands -- and here they disagree.
+
+[[monitors]]
+inputs = ["p"]
+outputs = ["mixed"]
+
+[variables]
+p = { type = "bool" }
+
+[rules]
+looks_back = ["once", "p"]
+looks_ahead = ["eventually", "p"]
+
+[properties.mixed]
+check = ["and", "looks_back", "looks_ahead"]

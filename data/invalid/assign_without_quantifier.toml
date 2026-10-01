@@ -1,0 +1,13 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-semantic-error binds no such name
+
+# `{ qvar = "s" }` says `s` is a quantifier's variable. No quantifier stands
+# above this one to bind it, so it names nobody's variable. The schema sees a
+# well-formed marker and takes it at its word.
+version = "0"
+
+[variables]
+sensor_id = { type = "number" }
+
+[properties.p]
+check = ["assign", "sensor_id", { qvar = "s" }]

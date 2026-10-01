@@ -1,9 +1,10 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-version = 0
+version = "0"
 
-# `properties` is required but may be empty. A document that declares none is
-# well-formed and checks nothing -- a generator emitting one property per
-# requirement writes this when it is handed no requirements, and a file being
-# built up has it before the first property lands. The published set defaults
-# to every property in declaration order, which here is nothing.
-properties = []
+# A document may declare no properties at all -- here the root, a namespace
+# like any other. One that declares none is well-formed and checks nothing: a
+# generator emitting one property per requirement writes this when it is
+# handed no requirements, and a file being built up has it before the first
+# property lands. The published set defaults to every property in declaration
+# order, which here is nothing.
+properties = {}

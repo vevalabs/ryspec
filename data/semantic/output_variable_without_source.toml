@@ -1,0 +1,18 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Rule 3, variable form: a variable may be published, but only one the
+# document computes -- which is one carrying a 'source'. 'result' carries
+# none, is in no inputs list, and no rule may take its name, so nothing feeds
+# it and nothing computes it.
+
+[[monitors]]
+inputs = ["x"]
+outputs = ["result"]
+
+[variables]
+x = {}
+result = { type = "bool" }
+
+[properties.p]
+check = ["gt", "x", { value = 0 }]

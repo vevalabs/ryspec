@@ -1,0 +1,25 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Text compared with text. An immediate operand is written `{ value = ... }`,
+# so an unmarked operand is always a variable: `label` against `expected_label` below
+# compares two variables, and never a variable with the literal text.
+[[monitors]]
+inputs = ["label", "expected_label"]
+outputs = ["labelled"]
+
+[variables]
+label = { type = "text" }
+expected_label = { type = "text" }
+
+[rules]
+is_sensor_7 = ["eq", "label", { value = "sensor_7" }]
+not_blank = ["ne", "label", { value = "" }]
+mentions_sensor = ["contains", "label", { value = "sensor" }]
+has_prefix = ["startswith", "label", { value = "sensor_" }]
+has_suffix = ["endswith", "label", { value = "_7" }]
+matches_expected = ["eq", "label", "expected_label"]
+extends_expected = ["startswith", "label", "expected_label"]
+
+[properties.labelled]
+check = ["and", "not_blank", "has_prefix", ["or", "is_sensor_7", "matches_expected"]]

@@ -1,9 +1,10 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-semantic-error sizes a metric bound
-version = 0
+#:expect-schema-error {'max': {'qvar': 's'}}
+version = "0"
 
 # A metric bound is fixed before the run -- a number or a parameter -- and a
 # quantifier variable follows the trace, so it cannot size one.
-[[properties]]
-name = "p1"
-check = ["forall", ["once", ["eq", "sensor_id", "s"], { max = "s" }], { vars = ["s"] }]
+# A bound names a parameter bare, so `{ qvar = "s" }` is refused by the schema
+# itself.
+[properties.p1]
+check = ["forall", ["once", ["assign", "sensor_id", { qvar = "s" }], { max = { qvar = "s" } }], { qvars = ["s"] }]

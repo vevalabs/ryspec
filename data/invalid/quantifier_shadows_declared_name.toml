@@ -1,10 +1,10 @@
 #:schema ../../schemas/v0/ryspec.schema.json
 #:expect-semantic-error shadows a declared name
-version = 0
+version = "0"
 
 # A quantifier variable is local and declared nowhere, so it may not take a
 # name the file already uses for a variable, a rule or a property.
-[monitor]
+[[monitors]]
 inputs = ["sensor_id", "reading"]
 outputs = ["p1"]
 
@@ -12,6 +12,5 @@ outputs = ["p1"]
 sensor_id = { type = "number" }
 reading = { type = "number" }
 
-[[properties]]
-name = "p1"
-check = ["forall", ["eq", "sensor_id", "reading"], { vars = ["reading"] }]
+[properties.p1]
+check = ["forall", ["assign", "sensor_id", { qvar = "reading" }], { qvars = ["reading"] }]

@@ -1,0 +1,16 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error does not match
+
+# A monitor's inputs and parameters name a variable, and a variable has no
+# namespace to be named under, so an entry is a bare identifier. `outputs` is
+# the list that takes the dotted form, naming a property where it lives. So
+# `vehicle.1speed` is refused twice over -- it is dotted where a bare name is
+# wanted, and `1speed` is not an identifier under any spelling.
+version = "0"
+
+[[monitors]]
+inputs = ["vehicle.1speed"]
+outputs = ["p"]
+
+[properties.p]
+check = "q"

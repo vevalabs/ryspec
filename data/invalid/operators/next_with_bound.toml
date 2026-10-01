@@ -4,8 +4,7 @@
 # `next` is a single step rather than a window, so it takes no metric bound.
 # Reaching three steps ahead is three nested `next` rules, or a bounded
 # `eventually` if what is wanted is "at some point in the next three".
-version = 0
+version = "0"
 
-[[properties]]
-name = "p_holds"
+[properties.p_holds]
 check = ["next", "p", { max = 3 }]

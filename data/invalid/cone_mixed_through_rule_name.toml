@@ -4,9 +4,9 @@
 # Every rule sits in one time cone, and a name does not hide which. Written
 # out as ["always", ["once", "p"]] the schema rejects this; behind the name
 # `looks_back` the mixing is only visible once the name is resolved.
-version = 0
+version = "0"
 
-[monitor]
+[[monitors]]
 inputs = ["p"]
 outputs = ["mixed"]
 
@@ -16,6 +16,5 @@ p = { type = "bool" }
 [rules]
 looks_back = ["once", "p"]
 
-[[properties]]
-name = "mixed"
+[properties.mixed]
 check = ["always", "looks_back"]

@@ -1,0 +1,16 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Rule 6: a listed parameter whose declaration carries no initial_value.
+
+[[monitors]]
+inputs = ["x"]
+outputs = ["p"]
+parameters = ["threshold"]
+
+[variables]
+x = {}
+threshold = { type = "number" }
+
+[properties.p]
+check = ["gt", "x", "threshold"]

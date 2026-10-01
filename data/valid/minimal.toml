@@ -1,10 +1,9 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-version = 0
+version = "0"
 
-# The smallest document the format admits: a version and one property. There
-# is no [monitor] and no [variables], so `heartbeat` can only be an input, and
+# The smallest document the format admits: a version and one property. There is
+# no [[monitors]] and no [variables], so `heartbeat` can only be an input, and
 # the verdict of `stays_alive` is published because the default output set is
 # every property in declaration order.
-[[properties]]
-name = "stays_alive"
+[properties.stays_alive]
 check = "heartbeat"

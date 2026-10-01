@@ -1,347 +1,582 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://raw.githubusercontent.com/vevalabs/ryspec/schemas/v0/ryspec.schema.json",
-  "title": "Reelay Specification Schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/vevalabs/ryspec/main/schemas/v0/ryspec.schema.json",
+  "title": "ryspec document",
+  "description": "A ryspec specification document.",
   "type": "object",
-  "required": ["version", "properties"],
-  "additionalProperties": false,
+  "required": ["version"],
+  "propertyNames": { "$ref": "#/$defs/identifier" },
+  "additionalProperties": { "$ref": "#/$defs/namespaceTable" },
   "properties": {
     "version": {
       "title": "Format version",
-      "description": "The ryspec schema version this document targets.",
-      "const": 0
+      "description": "The ryspec format version the document targets.",
+      "type": "string",
+      "const": "0"
     },
-    "namespace": {
-      "$ref": "#/$defs/dottedName"
-    },
-    "features": {
-      "title": "Format flags for the document",
+    "meta": {
+      "title": "Metadata",
+      "description": "Descriptive information about the document.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "disable_expressions": {
-          "description": "RESERVED"
+        "title": {
+          "title": "Title",
+          "description": "A short name for the document.",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "description": "A summary of the document.",
+          "type": "string"
         }
       }
     },
     "variables": {
-      "title": "Value space",
+      "title": "Variables",
+      "description": "Declarations of the values monitors read, publish or are configured with.",
       "type": "object",
       "propertyNames": { "$ref": "#/$defs/identifier" },
       "additionalProperties": { "$ref": "#/$defs/variable" }
     },
+    "monitors": {
+      "title": "Monitors",
+      "description": "Runtime interfaces over the document's properties.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/monitor" }
+    },
+    "rules": {
+      "title": "Rules",
+      "description": "Named rules of the anonymous namespace.",
+      "$ref": "#/$defs/ruleTable"
+    },
+    "properties": {
+      "title": "Properties",
+      "description": "Properties of the anonymous namespace.",
+      "$ref": "#/$defs/propertyTable"
+    },
+    "extras": {
+      "title": "Extras",
+      "description": "Free-form data. The format does not interpret it.",
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
     "monitor": {
-      "title": "Monitor interface",
+      "title": "Monitor",
+      "description": "A runtime interface: the variables it reads and publishes, and its runtime settings.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "runtime": {
-          "title": "Build sizing",
+          "title": "Runtime",
+          "description": "Settings of the monitor runtime.",
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "allocation_size": {
+              "title": "Allocation size",
+              "description": "Allocation size of the monitor runtime.",
               "type": "integer",
               "minimum": 1
             },
             "buffer_size": {
+              "title": "Buffer size",
+              "description": "Buffer size of the monitor runtime.",
               "type": "integer",
               "minimum": 1
+            },
+            "base_period": {
+              "title": "Base period",
+              "description": "Time between two consecutive samples, in the monitor's `time_unit`.",
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "time_unit": {
+              "title": "Time unit",
+              "description": "Unit of the monitor's timestamps, and the default unit of metric bounds.",
+              "$ref": "#/$defs/timeUnit"
             }
           }
         },
         "inputs": {
+          "title": "Inputs",
+          "description": "Variables the monitor reads.",
           "type": "array",
           "uniqueItems": true,
-          "minItems": 1,
           "items": { "$ref": "#/$defs/identifier" }
         },
         "outputs": {
+          "title": "Outputs",
+          "description": "Values the monitor publishes: property verdicts and variables.",
           "type": "array",
           "uniqueItems": true,
-          "minItems": 1,
-          "items": { "$ref": "#/$defs/dottedName" }
+          "items": { "$ref": "#/$defs/ruleRef" }
         },
         "parameters": {
+          "title": "Parameters",
+          "description": "Variables fixed before the run.",
           "type": "array",
           "uniqueItems": true,
           "items": { "$ref": "#/$defs/identifier" }
         }
-      },
-      "required": ["inputs", "outputs"]
-    },
-    "meta": {
-      "title": "Document metadata",
-      "type": "object",
-      "additionalProperties": true,
-      "properties": {
-        "title": { "type": "string" },
-        "author": { "type": "string" },
-        "license": { "type": "string" },
-        "description": { "type": "string" },
-        "url": {
-          "type": "string",
-          "format": "uri-reference",
-          "pattern": "^\\S+(?![\\s\\S])",
-          "minLength": 1
-        }
       }
     },
-    "extras": {
-      "title": "Free-form extension data",
+    "namespaceTable": {
+      "title": "Namespace",
+      "description": "A named group of rules and properties, or of nested namespaces.",
       "type": "object",
-      "additionalProperties": true
+      "propertyNames": { "$ref": "#/$defs/identifier" },
+      "properties": {
+        "variables": { "description": "Not allowed in a namespace.", "not": {} },
+        "meta": { "description": "Not allowed in a namespace.", "not": {} },
+        "version": { "description": "Not allowed in a namespace.", "not": {} },
+        "monitors": { "description": "Not allowed in a namespace.", "not": {} },
+        "extras": { "description": "Not allowed in a namespace.", "not": {} },
+        "rules": {
+          "title": "Rules",
+          "description": "Named rules of the namespace.",
+          "$ref": "#/$defs/ruleTable"
+        },
+        "properties": {
+          "title": "Properties",
+          "description": "Properties of the namespace.",
+          "$ref": "#/$defs/propertyTable"
+        }
+      },
+      "additionalProperties": { "$ref": "#/$defs/namespaceTable" },
+      "if": { "anyOf": [{ "required": ["rules"] }, { "required": ["properties"] }] },
+      "then": {
+        "title": "Namespace with logic",
+        "description": "A namespace with rules or properties has no nested namespaces. The document root is exempt.",
+        "properties": { "rules": true, "properties": true },
+        "additionalProperties": false
+      }
     },
-    "rules": {
-      "title": "File-level rules",
-      "allOf": [{ "$ref": "#/$defs/ruleTable" }]
-    },
-    "properties": {
-      "title": "Properties",
-      "description": "The properties this document declares, each yielding one verdict. The table is required and may be empty: a document that declares none is well-formed and checks nothing.",
-      "type": "array",
-      "items": { "$ref": "#/$defs/property" }
-    }
-  },
-  "$defs": {
     "identifier": {
       "title": "Identifier",
+      "description": "A letter or underscore, followed by letters, digits or underscores.",
       "type": "string",
       "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?![\\s\\S])"
     },
-    "dottedName": {
+    "dottedPath": {
       "title": "Dotted path",
+      "description": "Identifiers joined by dots.",
       "type": "string",
       "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*(?![\\s\\S])"
     },
+    "varRef": {
+      "title": "Variable reference",
+      "description": "The name of a declared variable.",
+      "$ref": "#/$defs/identifier"
+    },
+    "ruleRef": {
+      "title": "Rule reference",
+      "description": "The name of a rule or property, bare or prefixed by its namespace path.",
+      "$ref": "#/$defs/dottedPath"
+    },
     "variable": {
       "title": "Variable",
+      "description": "A variable declaration. `type` selects the keys it may carry.",
       "type": "object",
-      "additionalProperties": false,
       "properties": {
-        "source": {
-          "$ref": "#/$defs/dottedName"
-        },
-        "format": {
-          "title": "Decoded format",
-          "description": "How to decode the value a source path reads into. Only a text or binary variable may carry one -- there is nothing to decode in a number -- and only an input carries one. Decoding happens in the loader, never in the runtime core.",
-          "anyOf": [
-            {
-              "const": "json",
-              "description": "A JSON document, whose fields other variables address through a dotted source path."
-            }
-          ]
-        },
         "type": {
-          "title": "Value type",
-          "description": "Defaults to number when absent.",
+          "title": "Type",
+          "description": "The value type. Defaults to `bool`.",
           "anyOf": [
-            {
-              "const": "bool",
-              "description": "A truth value."
-            },
-            {
-              "const": "number",
-              "description": "A numeric value. The default."
-            },
+            { "const": "bool", "description": "Boolean." },
+            { "const": "number", "description": "Number." },
             {
               "const": "text",
-              "description": "A document. It holds no value a rule can compare -- give it a format and other variables read fields out of it through a source path."
+              "description": "Structured text, such as JSON."
             },
             {
               "const": "binary",
-              "description": "A blob. It holds no value a rule can compare -- give it a format and other variables read fields out of it through a source path."
+              "description": "Binary data, such as FlatBuffers."
             }
           ]
-        },
-        "unit": {
-          "type": "string",
-          "minLength": 1
-        },
-        "title": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "initial_value": {
-          "type": ["number", "boolean"]
-        },
-        "min": {
-          "type": "number"
-        },
-        "max": {
-          "type": "number"
         }
       },
       "allOf": [
         {
           "if": {
-            "required": ["type"],
-            "properties": { "type": { "const": "bool" } }
-          },
-          "then": {
-            "properties": { "initial_value": { "type": "boolean" } }
-          }
-        },
-        {
-          "if": {
             "anyOf": [
-              { "not": { "required": ["type"] } },
-              { "properties": { "type": { "const": "number" } } }
+              {
+                "not": { "required": ["type"] }
+              },
+              {
+                "properties": {
+                  "type": { "const": "bool" }
+                }
+              }
             ]
           },
-          "then": {
-            "properties": { "initial_value": { "type": "number" } }
-          }
+          "then": { "$ref": "#/$defs/boolVariable" }
         },
         {
           "if": {
             "required": ["type"],
-            "properties": { "type": { "enum": ["text", "binary"] } }
+            "properties": {
+              "type": { "const": "number" }
+            }
           },
-          "then": {
-            "not": { "required": ["initial_value"] }
-          }
+          "then": { "$ref": "#/$defs/numberVariable" }
         },
         {
           "if": {
             "required": ["type"],
-            "properties": { "type": { "enum": ["bool", "text", "binary"] } }
+            "properties": {
+              "type": { "const": "text" }
+            }
           },
-          "then": {
-            "not": { "anyOf": [{ "required": ["min"] }, { "required": ["max"] }] }
-          }
+          "then": { "$ref": "#/$defs/textVariable" }
         },
         {
           "if": {
-            "anyOf": [
-              { "not": { "required": ["type"] } },
-              { "properties": { "type": { "enum": ["bool", "number"] } } }
-            ]
+            "required": ["type"],
+            "properties": {
+              "type": { "const": "binary" }
+            }
           },
-          "then": {
-            "not": { "required": ["format"] }
-          }
+          "then": { "$ref": "#/$defs/binaryVariable" }
         }
       ]
     },
+    "variableCommon": {
+      "title": "Common variable keys",
+      "description": "Keys every variable may carry.",
+      "type": "object",
+      "properties": {
+        "type": true,
+        "source": {
+          "title": "Source",
+          "description": "Path to the value inside a text or binary variable.",
+          "$ref": "#/$defs/dottedPath"
+        },
+        "title": {
+          "title": "Title",
+          "description": "A short name.",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "description": "A longer explanation.",
+          "type": "string"
+        }
+      }
+    },
+    "boolVariable": {
+      "title": "Boolean variable",
+      "type": "object",
+      "$ref": "#/$defs/variableCommon",
+      "properties": {
+        "initial_value": {
+          "title": "Initial value",
+          "description": "Value before the first sample.",
+          "type": "boolean"
+        }
+      },
+      "unevaluatedProperties": false
+    },
+    "numberVariable": {
+      "title": "Number variable",
+      "type": "object",
+      "$ref": "#/$defs/variableCommon",
+      "properties": {
+        "initial_value": {
+          "title": "Initial value",
+          "description": "Value before the first sample.",
+          "type": "number"
+        },
+        "min": {
+          "title": "Minimum",
+          "description": "Smallest value the variable takes.",
+          "type": "number"
+        },
+        "max": {
+          "title": "Maximum",
+          "description": "Largest value the variable takes.",
+          "type": "number"
+        }
+      },
+      "unevaluatedProperties": false
+    },
+    "textVariable": {
+      "title": "Text variable",
+      "type": "object",
+      "$ref": "#/$defs/variableCommon",
+      "properties": {
+        "format": {
+          "title": "Format",
+          "description": "Encoding of the text.",
+          "$ref": "#/$defs/textFormat"
+        }
+      },
+      "unevaluatedProperties": false
+    },
+    "binaryVariable": {
+      "title": "Binary variable",
+      "type": "object",
+      "$ref": "#/$defs/variableCommon",
+      "properties": {
+        "format": {
+          "title": "Format",
+          "description": "Encoding of the data.",
+          "$ref": "#/$defs/binaryFormat"
+        }
+      },
+      "unevaluatedProperties": false
+    },
+    "textFormat": { "title": "Text format", "anyOf": [{ "const": "json", "description": "JSON." }] },
+    "binaryFormat": {
+      "title": "Binary format",
+      "anyOf": [{ "const": "flatbuffers", "description": "FlatBuffers." }]
+    },
     "expression": {
       "title": "Expression",
+      "description": "A rule in expression syntax, enclosed in parentheses. Atoms are braced: `{p}`, `{guard}`, `{speed < 30}`, `{s := sensor_id}`. A metric bound follows its operator as `[min:max:unit]`, each field optional. A quantifier lists its names in brackets, as `forall[s]`. The schema checks only the parentheses.",
       "type": "string",
       "pattern": "^\\([\\s\\S]*\\S[\\s\\S]*\\)(?![\\s\\S])"
     },
-    "parameter": {
-      "title": "Scalar operand",
-      "anyOf": [{ "type": "number" }, { "$ref": "#/$defs/identifier" }]
+    "timeBoundValue": {
+      "title": "Bound value",
+      "description": "A non-negative number or a parameter.",
+      "anyOf": [{ "type": "number", "minimum": 0 }, { "$ref": "#/$defs/varRef" }]
     },
-    "boundValue": {
-      "title": "Metric bound value",
-      "anyOf": [{ "type": "number", "minimum": 0 }, { "$ref": "#/$defs/identifier" }]
-    },
-    "bound": {
+    "timeBound": {
       "title": "Metric bound",
+      "description": "Time window of a temporal operator.",
       "type": "object",
       "additionalProperties": false,
       "minProperties": 1,
       "properties": {
-        "min": { "$ref": "#/$defs/boundValue" },
-        "max": { "$ref": "#/$defs/boundValue" }
+        "min": { "title": "Lower end", "$ref": "#/$defs/timeBoundValue" },
+        "max": { "title": "Upper end", "$ref": "#/$defs/timeBoundValue" },
+        "time_unit": {
+          "title": "Time unit",
+          "description": "Unit of both ends. Defaults to the property's `time_unit`, then the monitor's.",
+          "$ref": "#/$defs/timeUnit"
+        }
+      },
+      "dependentSchemas": {
+        "time_unit": {
+          "title": "Unit needs an end",
+          "description": "A bound with `time_unit` has `min` or `max`.",
+          "anyOf": [{ "required": ["min"] }, { "required": ["max"] }]
+        }
       }
+    },
+    "timeUnit": {
+      "title": "Time unit",
+      "anyOf": [
+        { "const": "ns", "description": "Nanoseconds." },
+        { "const": "us", "description": "Microseconds." },
+        { "const": "ms", "description": "Milliseconds." },
+        { "const": "s", "description": "Seconds." },
+        { "const": "min", "description": "Minutes." },
+        { "const": "h", "description": "Hours." },
+        { "const": "d", "description": "Days." }
+      ]
     },
     "rule": {
       "title": "Rule",
-      "description": "Every rule sits in one time cone. The past operators (prev, once, historically, since) and the future ones (next, eventually, always, until) may not be mixed inside a single rule. A rule built only from names, expressions, comparisons, the quantifiers and the boolean operators carries no direction and belongs to both.",
+      "description": "A rule in prefix or expression syntax.",
+      "anyOf": [{ "$ref": "#/$defs/expression" }, { "$ref": "#/$defs/prefixRule" }]
+    },
+    "prefixRule": {
+      "title": "Prefix rule",
+      "description": "A reference, or an array: an operator followed by its operands.",
       "anyOf": [
-        { "$ref": "#/$defs/pastRule" },
-        { "$ref": "#/$defs/futureRule" }
+        { "$ref": "#/$defs/ruleRef" },
+        { "$ref": "#/$defs/varRef" },
+        { "$ref": "#/$defs/numberPredicateRule" },
+        { "$ref": "#/$defs/stringPredicateRule" },
+        { "$ref": "#/$defs/quantifiedAssignmentRule" },
+        { "$ref": "#/$defs/quantifiedRule" },
+        { "$ref": "#/$defs/multiaryRule" },
+        { "$ref": "#/$defs/unaryRule" },
+        { "$ref": "#/$defs/stepTemporalRule" },
+        { "$ref": "#/$defs/unaryTemporalRule" },
+        { "$ref": "#/$defs/binaryTemporalRule" }
       ]
     },
-    "atomRule": {
-      "title": "Cone-free rule",
-      "description": "A rule carrying no time direction of its own -- a name, an expression, or a comparison. It stands in either cone. A name resolving to a rule declared elsewhere carries that rule's direction, which the schema cannot follow; the semantic pass checks it.",
-      "anyOf": [
-        { "$ref": "#/$defs/identifier" },
-        { "$ref": "#/$defs/expression" },
-        { "$ref": "#/$defs/predicateRule" }
-      ]
+    "unaryOperator": {
+      "title": "Unary operator",
+      "anyOf": [{ "const": "not", "description": "Negation." }]
     },
-    "notOperator": {
-      "title": "Negation operator",
-      "const": "not",
-      "description": "Logical negation. Holds exactly when its operand does not. Carries no time direction."
+    "stepTemporalOperator": {
+      "title": "Step temporal operator",
+      "anyOf": [
+        {
+          "const": "prev",
+          "description": "Holds if the operand held at the previous step."
+        },
+        {
+          "const": "next",
+          "description": "Holds if the operand holds at the next step."
+        }
+      ]
     },
     "multiaryOperator": {
       "title": "N-ary operator",
       "anyOf": [
         {
           "const": "and",
-          "description": "Holds when every operand holds."
+          "description": "Holds if every operand holds."
         },
         {
           "const": "or",
-          "description": "Holds when at least one operand holds."
+          "description": "Holds if at least one operand holds."
         },
         {
           "const": "xor",
-          "description": "Holds when exactly one operand holds."
+          "description": "Holds if an odd number of operands hold."
         },
         {
           "const": "equiv",
-          "description": "Holds when the operands all have the same truth value. Has no infix spelling, so a property using it writes that rule in prefix form."
+          "description": "Holds if all operands have the same truth value."
         },
         {
           "const": "implies",
-          "description": "Holds when each operand implies the next; the first is the antecedent and the last the consequent."
+          "description": "Holds if each operand implies the next, associating to the right."
         }
       ]
     },
-    "comparisonOperator": {
-      "title": "Comparison operator",
-      "description": "Compares a variable against a scalar operand -- a number written inline, or a name resolving to a parameter, another variable or an enclosing quantifier's variable. Spelled lt/le/gt/ge/eq/ne in prefix form and </<=/>/>=/==/!= in expression form.",
+    "numberPredicateOperator": {
+      "title": "Number comparison operator",
       "anyOf": [
         { "const": "lt", "description": "Strictly less than." },
         { "const": "le", "description": "Less than or equal to." },
         { "const": "gt", "description": "Strictly greater than." },
-        { "const": "ge", "description": "Greater than or equal to." },
+        {
+          "const": "ge",
+          "description": "Greater than or equal to."
+        },
         { "const": "eq", "description": "Equal to." },
         { "const": "ne", "description": "Not equal to." }
       ]
     },
-    "predicateRule": {
-      "title": "Comparison predicate",
+    "numberPredicateRule": {
+      "title": "Number comparison",
+      "description": "`[operator, variable, variable or number literal]`.",
       "type": "array",
-      "items": [
-        { "$ref": "#/$defs/comparisonOperator" },
-        { "$ref": "#/$defs/identifier" },
-        { "$ref": "#/$defs/parameter" }
+      "prefixItems": [
+        { "$ref": "#/$defs/numberPredicateOperator" },
+        { "$ref": "#/$defs/varRef" },
+        { "anyOf": [{ "$ref": "#/$defs/varRef" }, { "$ref": "#/$defs/numberLiteral" }] }
       ],
       "minItems": 3,
       "maxItems": 3,
-      "additionalItems": false
+      "items": false
+    },
+    "stringPredicateOperator": {
+      "title": "String comparison operator",
+      "anyOf": [
+        { "const": "eq", "description": "Equal to." },
+        { "const": "ne", "description": "Not equal to." },
+        {
+          "const": "contains",
+          "description": "Contains the operand as a substring."
+        },
+        {
+          "const": "startswith",
+          "description": "Begins with the operand."
+        },
+        {
+          "const": "endswith",
+          "description": "Ends with the operand."
+        }
+      ]
+    },
+    "stringPredicateRule": {
+      "title": "String comparison",
+      "description": "`[operator, variable, variable or string literal]`.",
+      "type": "array",
+      "prefixItems": [
+        { "$ref": "#/$defs/stringPredicateOperator" },
+        { "$ref": "#/$defs/varRef" },
+        { "anyOf": [{ "$ref": "#/$defs/varRef" }, { "$ref": "#/$defs/stringLiteral" }] }
+      ],
+      "minItems": 3,
+      "maxItems": 3,
+      "items": false
+    },
+    "numberLiteral": {
+      "title": "Number literal",
+      "description": "A number operand.",
+      "type": "object",
+      "required": ["value"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "title": "Value", "type": "number" }
+      }
+    },
+    "stringLiteral": {
+      "title": "String literal",
+      "description": "A string operand.",
+      "type": "object",
+      "required": ["value"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "title": "Value", "type": "string" }
+      }
+    },
+    "quantifiedAssignmentOperator": {
+      "title": "Assignment operator",
+      "anyOf": [
+        {
+          "const": "assign",
+          "description": "Holds if the quantified variable's binding equals the variable's current value."
+        }
+      ]
+    },
+    "quantifiedAssignmentRule": {
+      "title": "Assignment",
+      "description": "`[assign, variable, quantified variable]`.",
+      "type": "array",
+      "prefixItems": [
+        { "$ref": "#/$defs/quantifiedAssignmentOperator" },
+        { "$ref": "#/$defs/varRef" },
+        { "$ref": "#/$defs/quantifiedVariable" }
+      ],
+      "minItems": 3,
+      "maxItems": 3,
+      "items": false
+    },
+    "quantifiedVariable": {
+      "title": "Quantified variable",
+      "description": "A name bound by `forall` or `exists`.",
+      "type": "object",
+      "required": ["qvar"],
+      "additionalProperties": false,
+      "properties": {
+        "qvar": { "title": "Name", "$ref": "#/$defs/identifier" }
+      }
     },
     "quantifierOperator": {
       "title": "Quantifier",
-      "description": "Binds one or more names to values drawn from the trace and holds when the quantified rule holds for the right share of them. The names are local to the quantifier: they are bound here and nowhere else, and they resolve to no variable, rule or property.",
       "anyOf": [
         {
           "const": "forall",
-          "description": "Holds when the quantified rule holds for every binding of the quantified names."
+          "description": "Holds if the rule holds for every binding."
         },
         {
           "const": "exists",
-          "description": "Holds when the quantified rule holds for at least one binding of the quantified names."
+          "description": "Holds if the rule holds for some binding."
         }
       ]
     },
     "binding": {
-      "title": "Quantifier binding",
-      "description": "The names a quantifier binds. Required and non-empty: a quantifier that binds nothing quantifies over nothing.",
+      "title": "Binding",
+      "description": "Names bound by a quantifier.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["vars"],
+      "required": ["qvars"],
       "properties": {
-        "vars": {
+        "qvars": {
+          "title": "Quantified variables",
+          "description": "One or more names, each listed once.",
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
@@ -349,268 +584,173 @@
         }
       }
     },
-    "pastRule": {
-      "title": "Past-time rule",
-      "description": "A rule whose temporal operators all look backward.",
-      "anyOf": [
-        { "$ref": "#/$defs/atomRule" },
-        { "$ref": "#/$defs/pastNotRule" },
-        { "$ref": "#/$defs/pastQuantifiedRule" },
-        { "$ref": "#/$defs/pastMultiaryRule" },
-        { "$ref": "#/$defs/pastStepRule" },
-        { "$ref": "#/$defs/pastUnaryTemporalRule" },
-        { "$ref": "#/$defs/pastBinaryTemporalRule" }
-      ]
-    },
-    "pastStepOperator": {
-      "title": "Past-time step operator",
-      "const": "prev",
-      "description": "The operand's value at the previous step. Has no infix spelling, so a property using it writes that rule in prefix form."
-    },
-    "pastUnaryTemporalOperator": {
-      "title": "Past-time unary temporal operator",
+    "unaryTemporalOperator": {
+      "title": "Unary temporal operator",
       "anyOf": [
         {
           "const": "once",
-          "description": "The operand held at some point in the past. Takes an optional metric bound narrowing how far back to look."
+          "description": "Holds if the operand held at some past point."
         },
         {
           "const": "historically",
-          "description": "The operand held at every point in the past. Takes an optional metric bound narrowing how far back to look."
-        }
-      ]
-    },
-    "pastBinaryTemporalOperator": {
-      "title": "Past-time binary temporal operator",
-      "const": "since",
-      "description": "The second operand held at some point in the past and the first has held at every point after it. Takes an optional metric bound on when the second operand held."
-    },
-    "pastQuantifiedRule": {
-      "title": "Quantified rule (past-time)",
-      "type": "array",
-      "items": [
-        { "$ref": "#/$defs/quantifierOperator" },
-        { "$ref": "#/$defs/pastRule" },
-        { "$ref": "#/$defs/binding" }
-      ],
-      "minItems": 3,
-      "maxItems": 3,
-      "additionalItems": false
-    },
-    "pastNotRule": {
-      "title": "Negation (past-time)",
-      "type": "array",
-      "items": [
-        { "$ref": "#/$defs/notOperator" },
-        { "$ref": "#/$defs/pastRule" }
-      ],
-      "minItems": 2,
-      "maxItems": 2,
-      "additionalItems": false
-    },
-    "pastStepRule": {
-      "title": "Step rule (past-time)",
-      "type": "array",
-      "items": [
-        { "$ref": "#/$defs/pastStepOperator" },
-        { "$ref": "#/$defs/pastRule" }
-      ],
-      "minItems": 2,
-      "maxItems": 2,
-      "additionalItems": false
-    },
-    "pastMultiaryRule": {
-      "title": "N-ary rule (past-time)",
-      "type": "array",
-      "items": [
-        { "$ref": "#/$defs/multiaryOperator" },
-        { "$ref": "#/$defs/pastRule" },
-        { "$ref": "#/$defs/pastRule" }
-      ],
-      "minItems": 3,
-      "additionalItems": { "$ref": "#/$defs/pastRule" }
-    },
-    "pastUnaryTemporalRule": {
-      "title": "Unary temporal rule (past-time)",
-      "type": "array",
-      "items": [
-        { "$ref": "#/$defs/pastUnaryTemporalOperator" },
-        { "$ref": "#/$defs/pastRule" }
-      ],
-      "minItems": 2,
-      "maxItems": 3,
-      "additionalItems": { "$ref": "#/$defs/bound" }
-    },
-    "pastBinaryTemporalRule": {
-      "title": "Binary temporal rule (past-time)",
-      "type": "array",
-      "items": [
-        { "$ref": "#/$defs/pastBinaryTemporalOperator" },
-        { "$ref": "#/$defs/pastRule" },
-        { "$ref": "#/$defs/pastRule" }
-      ],
-      "minItems": 3,
-      "maxItems": 4,
-      "additionalItems": { "$ref": "#/$defs/bound" }
-    },
-    "futureRule": {
-      "title": "Future-time rule",
-      "description": "A rule whose temporal operators all look forward.",
-      "anyOf": [
-        { "$ref": "#/$defs/atomRule" },
-        { "$ref": "#/$defs/futureNotRule" },
-        { "$ref": "#/$defs/futureQuantifiedRule" },
-        { "$ref": "#/$defs/futureMultiaryRule" },
-        { "$ref": "#/$defs/futureStepRule" },
-        { "$ref": "#/$defs/futureUnaryTemporalRule" },
-        { "$ref": "#/$defs/futureBinaryTemporalRule" }
-      ]
-    },
-    "futureStepOperator": {
-      "title": "Future-time step operator",
-      "const": "next",
-      "description": "The operand's value at the next step."
-    },
-    "futureUnaryTemporalOperator": {
-      "title": "Future-time unary temporal operator",
-      "anyOf": [
+          "description": "Holds if the operand held at every past point."
+        },
         {
           "const": "eventually",
-          "description": "The operand holds at some point in the future. Takes an optional metric bound narrowing how far ahead to look."
+          "description": "Holds if the operand holds at some future point."
         },
         {
           "const": "always",
-          "description": "The operand holds at every point in the future. Takes an optional metric bound narrowing how far ahead to look."
+          "description": "Holds if the operand holds at every future point."
         }
       ]
     },
-    "futureBinaryTemporalOperator": {
-      "title": "Future-time binary temporal operator",
-      "const": "until",
-      "description": "The second operand holds at some point in the future and the first holds at every point before it. Takes an optional metric bound on when the second operand holds."
+    "binaryTemporalOperator": {
+      "title": "Binary temporal operator",
+      "anyOf": [
+        {
+          "const": "since",
+          "description": "Holds if the second operand held at some past point and the first has held since."
+        },
+        {
+          "const": "until",
+          "description": "Holds if the second operand holds at some future point and the first holds until then."
+        }
+      ]
     },
-    "futureQuantifiedRule": {
-      "title": "Quantified rule (future-time)",
+    "quantifiedRule": {
+      "title": "Quantified rule",
+      "description": "`[quantifier, rule, binding]`.",
       "type": "array",
-      "items": [
+      "prefixItems": [
         { "$ref": "#/$defs/quantifierOperator" },
-        { "$ref": "#/$defs/futureRule" },
+        { "$ref": "#/$defs/prefixRule" },
         { "$ref": "#/$defs/binding" }
       ],
       "minItems": 3,
       "maxItems": 3,
-      "additionalItems": false
+      "items": false
     },
-    "futureNotRule": {
-      "title": "Negation (future-time)",
+    "unaryRule": {
+      "title": "Unary rule",
+      "description": "`[operator, rule]`.",
       "type": "array",
-      "items": [
-        { "$ref": "#/$defs/notOperator" },
-        { "$ref": "#/$defs/futureRule" }
-      ],
+      "prefixItems": [{ "$ref": "#/$defs/unaryOperator" }, { "$ref": "#/$defs/prefixRule" }],
       "minItems": 2,
       "maxItems": 2,
-      "additionalItems": false
+      "items": false
     },
-    "futureStepRule": {
-      "title": "Step rule (future-time)",
+    "stepTemporalRule": {
+      "title": "Step temporal rule",
+      "description": "`[operator, rule]`.",
       "type": "array",
-      "items": [
-        { "$ref": "#/$defs/futureStepOperator" },
-        { "$ref": "#/$defs/futureRule" }
-      ],
+      "prefixItems": [{ "$ref": "#/$defs/stepTemporalOperator" }, { "$ref": "#/$defs/prefixRule" }],
       "minItems": 2,
       "maxItems": 2,
-      "additionalItems": false
+      "items": false
     },
-    "futureMultiaryRule": {
-      "title": "N-ary rule (future-time)",
+    "multiaryRule": {
+      "title": "N-ary rule",
+      "description": "`[operator, rule, rule, ...]`.",
       "type": "array",
-      "items": [
+      "prefixItems": [
         { "$ref": "#/$defs/multiaryOperator" },
-        { "$ref": "#/$defs/futureRule" },
-        { "$ref": "#/$defs/futureRule" }
+        { "$ref": "#/$defs/prefixRule" },
+        { "$ref": "#/$defs/prefixRule" }
       ],
       "minItems": 3,
-      "additionalItems": { "$ref": "#/$defs/futureRule" }
+      "items": { "$ref": "#/$defs/prefixRule" }
     },
-    "futureUnaryTemporalRule": {
-      "title": "Unary temporal rule (future-time)",
+    "unaryTemporalRule": {
+      "title": "Unary temporal rule",
+      "description": "`[operator, rule]`, optionally followed by a metric bound.",
       "type": "array",
-      "items": [
-        { "$ref": "#/$defs/futureUnaryTemporalOperator" },
-        { "$ref": "#/$defs/futureRule" }
-      ],
+      "prefixItems": [{ "$ref": "#/$defs/unaryTemporalOperator" }, { "$ref": "#/$defs/prefixRule" }],
       "minItems": 2,
       "maxItems": 3,
-      "additionalItems": { "$ref": "#/$defs/bound" }
+      "items": { "$ref": "#/$defs/timeBound" }
     },
-    "futureBinaryTemporalRule": {
-      "title": "Binary temporal rule (future-time)",
+    "binaryTemporalRule": {
+      "title": "Binary temporal rule",
+      "description": "`[operator, rule, rule]`, optionally followed by a metric bound on the second operand.",
       "type": "array",
-      "items": [
-        { "$ref": "#/$defs/futureBinaryTemporalOperator" },
-        { "$ref": "#/$defs/futureRule" },
-        { "$ref": "#/$defs/futureRule" }
+      "prefixItems": [
+        { "$ref": "#/$defs/binaryTemporalOperator" },
+        { "$ref": "#/$defs/prefixRule" },
+        { "$ref": "#/$defs/prefixRule" }
       ],
       "minItems": 3,
       "maxItems": 4,
-      "additionalItems": { "$ref": "#/$defs/bound" }
+      "items": { "$ref": "#/$defs/timeBound" }
+    },
+    "propertyTable": {
+      "title": "Property table",
+      "description": "Properties by name.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/identifier" },
+      "additionalProperties": { "$ref": "#/$defs/property" }
     },
     "ruleTable": {
       "title": "Rule table",
+      "description": "Rules by name.",
       "type": "object",
       "propertyNames": { "$ref": "#/$defs/identifier" },
       "additionalProperties": { "$ref": "#/$defs/rule" }
     },
     "property": {
       "title": "Property",
+      "description": "A requirement: whenever `given` holds, `check` holds.",
       "type": "object",
-      "required": ["name", "check"],
+      "required": ["check"],
       "additionalProperties": false,
       "properties": {
-        "name": {
-          "$ref": "#/$defs/identifier"
-        },
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "criticality": {
-          "title": "Criticality",
-          "description": "How much a violation of this property matters. It classifies the verdict for whoever reads it and does not change how the property is evaluated.",
-          "anyOf": [
-            {
-              "const": "info",
-              "description": "Informational; a violation is worth recording and nothing more."
-            },
-            {
-              "const": "warning",
-              "description": "A violation is a concern but not a failure."
-            },
-            {
-              "const": "error",
-              "description": "A violation is a failure."
-            },
-            {
-              "const": "critical",
-              "description": "A violation is a failure that matters most -- a safety requirement."
-            }
-          ]
-        },
-        "message": {
+        "title": {
+          "title": "Title",
+          "description": "A short name.",
           "type": "string"
         },
+        "description": {
+          "title": "Description",
+          "description": "A longer explanation.",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "description": "Text reported when the property is violated.",
+          "type": "string"
+        },
+        "time_unit": {
+          "title": "Time unit",
+          "description": "Default unit of the metric bounds in this property.",
+          "$ref": "#/$defs/timeUnit"
+        },
+        "tags": {
+          "title": "Tags",
+          "description": "Labels for selecting and grouping properties.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^\\S+(?![\\s\\S])" }
+        },
         "given": {
+          "title": "Given",
+          "description": "Condition under which `check` is required.",
           "$ref": "#/$defs/rule"
         },
         "check": {
+          "title": "Check",
+          "description": "The requirement.",
           "$ref": "#/$defs/rule"
         },
-        "impose": {
-          "description": "RESERVED",
-          "$ref": "#/$defs/rule"
-        },
-        "rules": {
+        "where": {
+          "title": "Local rules",
+          "description": "Rules visible only to this property.",
           "$ref": "#/$defs/ruleTable"
+        },
+        "extras": {
+          "title": "Extras",
+          "description": "Free-form data about the property. The format does not interpret it.",
+          "type": "object",
+          "additionalProperties": true
         }
       }
     }

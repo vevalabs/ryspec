@@ -1,0 +1,16 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ('version' was unexpected)
+
+# `[meta]` carries two keys and no others. A third would be a key the format
+# does not name and nothing reads, and there is no nesting under `[meta]` for
+# it to be read as instead -- so it is rejected here rather than accepted and
+# ignored. `version` in particular is the document's own key and belongs at
+# the root.
+version = "0"
+
+[meta]
+title = "A document"
+version = "2.0"
+
+[properties.p]
+check = "q"

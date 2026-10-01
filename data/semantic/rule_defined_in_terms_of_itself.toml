@@ -1,0 +1,19 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Rule 13: 'a' is defined through 'b' and 'b' through 'a'. Nothing in the pair
+# ever reaches a value, and the schema sees two well-formed rules.
+
+[[monitors]]
+inputs = ["p"]
+outputs = ["loops"]
+
+[variables]
+p = { type = "bool" }
+
+[rules]
+a = ["and", "b", "p"]
+b = ["or", "a", "p"]
+
+[properties.loops]
+check = "a"

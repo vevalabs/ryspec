@@ -1,0 +1,20 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# A variable that names no `type` is a bool, whichever list a monitor names it
+# in: `door_closed` is an input read as a truth value, and `armed` a parameter
+# taking a boolean `initial_value`. A number
+# says `type = "number"`, as `speed` does, and only then may it carry `min`
+# and `max`.
+[[monitors]]
+inputs = ["speed", "door_closed"]
+parameters = ["armed"]
+outputs = ["guarded"]
+
+[variables]
+speed = { type = "number", min = 0, max = 300 }
+door_closed = { description = "the door sensor" }
+armed = { initial_value = true, description = "the guard is enabled" }
+
+[properties.guarded]
+check = ["implies", ["and", "armed", "door_closed"], ["lt", "speed", { value = 120 }]]

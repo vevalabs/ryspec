@@ -1,0 +1,13 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+
+# A comparison is an atom, so it stands in braces whole, as `{speed > 30}`.
+# Its operands braced one by one and compared outside the braces are not a
+# comparison.
+version = "0"
+
+[variables]
+speed = { type = "number" }
+
+[properties.p_holds]
+check = "(once {speed} > 30)"

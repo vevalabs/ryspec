@@ -3,8 +3,7 @@
 
 # The bound is the last item, after both operands. Placed third it sits where
 # the operand that ends the stretch belongs.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p_holds"
+[properties.p_holds]
 check = ["until", "p", { max = 3 }, "q"]

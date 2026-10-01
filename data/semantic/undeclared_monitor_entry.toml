@@ -1,0 +1,15 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Rule 3: an inputs or parameters entry with no variables declaration.
+# outputs names a rule or a property instead -- see unresolved_output.toml.
+
+[[monitors]]
+inputs = ["x", "y"]
+outputs = ["p"]
+
+[variables]
+x = {}
+
+[properties.p]
+check = ["gt", "x", { value = 0 }]

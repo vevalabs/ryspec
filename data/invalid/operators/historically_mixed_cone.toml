@@ -1,10 +1,9 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['historically', ['until', 'p', 'q']] is not valid
+#:expect-semantic-error 'historically' looks to the past
 
 # `historically` looks backward, so its operand is a past-time rule. `until`
 # looks forward.
-version = 0
+version = "0"
 
-[[properties]]
-name = "p_holds"
+[properties.p_holds]
 check = ["historically", ["until", "p", "q"]]

@@ -1,0 +1,13 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-grammar-error
+
+# An assignment is written with `:=` and a comparison with `==`. A lone `=` is
+# neither, so `{s = sensor_id}` is refused rather than guessed at -- which is
+# what keeps a comparison with one `=` dropped from reading as an assignment.
+version = "0"
+
+[variables]
+sensor_id = { type = "number" }
+
+[properties.p1]
+check = "(forall[s] {s = sensor_id})"

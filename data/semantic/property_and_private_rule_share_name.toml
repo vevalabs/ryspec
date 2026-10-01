@@ -1,0 +1,22 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Rule 11, property and rule: a property name is visible across the whole
+# file, so a private rule of that name collides with it even though the two
+# sit in different properties.
+
+[[monitors]]
+inputs = ["p"]
+outputs = ["other"]
+
+[variables]
+p = { type = "bool" }
+
+[properties.guard]
+check = "p"
+
+[properties.other]
+check = "guard"
+
+[properties.other.where]
+guard = ["once", "p"]

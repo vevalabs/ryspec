@@ -1,0 +1,19 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error Additional properties are not allowed ('title' was unexpected)
+
+# A namespace holds logic and nothing else, so it carries no metadata keys.
+# `title` under a namespace table is not a reserved key -- any key that is not
+# `rules`, `properties` or a reserved name is read as a nested namespace --
+# and `a` holds logic, so it holds no nested namespace and the stray key is
+# refused as the stray key it is. `[meta]`, at the document root, is the one
+# place a document says this about itself instead.
+version = "0"
+
+[a]
+title = "A namespace"
+
+[a.rules]
+r = "x"
+
+[a.properties.p]
+check = "r"

@@ -1,0 +1,16 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['and', 'armed', '({p} or {q})'] is not valid
+
+# A rule is written in one spelling: prefix form, or expression form. An
+# operand of a prefix rule is a prefix rule in turn, so an expression string
+# is not one -- a rule in expression form is reached from a prefix one by
+# name, not by being nested inside it.
+version = "0"
+
+[variables]
+armed = { type = "bool" }
+p = { type = "bool" }
+q = { type = "bool" }
+
+[properties.mixed]
+check = ["and", "armed", "({p} or {q})"]
