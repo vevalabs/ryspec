@@ -5,11 +5,11 @@
 # unit says nothing about how far apart two samples are.
 version = "0"
 
-[[monitors]]
+[monitors.default]
 inputs = ["p"]
 outputs = ["p_seen"]
 
-[monitors.runtime]
+[monitors.default.runtime]
 base_period = 10
 
 [properties.p_seen]

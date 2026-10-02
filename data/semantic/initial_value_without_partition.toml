@@ -3,7 +3,7 @@ version = "0"
 
 # Rule 5: an initial_value on a name in no monitor's lists.
 
-[[monitors]]
+[monitors.default]
 inputs = ["speed"]
 outputs = ["p"]
 parameters = []

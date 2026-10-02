@@ -4,7 +4,7 @@ version = "0"
 # Every future-time operator: next, eventually, always and until. A document
 # may hold past-time and future-time properties side by side; what may not be
 # mixed is the two cones inside one rule.
-[[monitors]]
+[monitors.default]
 inputs = ["request", "grant", "shutdown"]
 outputs = ["grant_follows_request", "no_grant_before_shutdown", "quiet_after_shutdown"]
 

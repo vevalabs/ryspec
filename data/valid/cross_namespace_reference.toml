@@ -5,7 +5,7 @@ version = "0"
 # <namespace>.<name>, in prefix form as anywhere else. `plant.cell` builds on
 # `plant.shared.arm_idle` and on the verdict of `plant.shared.door_closed`
 # without either being declared twice.
-[[monitors]]
+[monitors.default]
 inputs = ["door_open", "arm_moving"]
 outputs = ["plant.cell.safe_to_enter"]
 

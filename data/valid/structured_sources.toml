@@ -6,7 +6,7 @@ version = "0"
 # once, on the variable a path reaches into, so the frame is decoded once.
 # A one-segment source -- `speed_alias` -- reads the whole of another variable
 # and claims no slot of its own.
-[[monitors]]
+[monitors.default]
 inputs = ["telemetry", "camera_frame"]
 outputs = ["speed_plausible"]
 

@@ -1,0 +1,14 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error is not of type 'object'
+
+# `monitors` is a table keyed by name, so nothing outside the document is left
+# without a way to name one interface. `[[monitors]]`, the anonymous array the
+# format used to take, is now a type error rather than a quietly accepted one.
+version = "0"
+
+[[monitors]]
+inputs = ["p"]
+outputs = ["q"]
+
+[properties.q]
+check = "p"

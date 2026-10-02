@@ -7,7 +7,7 @@
 # no way to tell which `check = "guard"` reads.
 version = "0"
 
-[[monitors]]
+[monitors.default]
 inputs = ["p", "guard"]
 outputs = ["guard_holds"]
 

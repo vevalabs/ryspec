@@ -6,7 +6,7 @@ version = "0"
 # either -- a monitor names properties and variables, and a rule is the
 # document's own working.
 
-[[monitors]]
+[monitors.default]
 inputs = ["x"]
 outputs = ["result"]
 

@@ -4,7 +4,7 @@ version = "0"
 # Text compared with text. An immediate operand is written `{ value = ... }`,
 # so an unmarked operand is always a variable: `label` against `expected_label` below
 # compares two variables, and never a variable with the literal text.
-[[monitors]]
+[monitors.default]
 inputs = ["label", "expected_label"]
 outputs = ["labelled"]
 

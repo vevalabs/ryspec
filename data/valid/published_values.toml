@@ -11,7 +11,7 @@ version = "0"
 # The rules are the other half of the point: `guard` at namespace level and
 # `rhs` private to the property are what `guard_holds` is built out of, and
 # neither is nameable in outputs.
-[[monitors]]
+[monitors.default]
 inputs = ["frame", "r"]
 outputs = ["guard_holds", "speed"]
 

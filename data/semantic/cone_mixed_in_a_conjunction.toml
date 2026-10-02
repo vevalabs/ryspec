@@ -4,7 +4,7 @@ version = "0"
 # Rule 12, boolean form: 'and' carries no direction of its own, so it takes
 # the cone of its operands -- and here they disagree.
 
-[[monitors]]
+[monitors.default]
 inputs = ["p"]
 outputs = ["mixed"]
 

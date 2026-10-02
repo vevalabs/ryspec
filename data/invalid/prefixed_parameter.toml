@@ -5,7 +5,7 @@
 # is part of no name, so `limit` names nothing.
 version = "0"
 
-[[monitors]]
+[monitors.default]
 inputs = ["speed"]
 outputs = ["p"]
 parameters = ["@limit"]

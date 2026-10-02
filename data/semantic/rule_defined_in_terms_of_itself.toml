@@ -4,7 +4,7 @@ version = "0"
 # Rule 13: 'a' is defined through 'b' and 'b' through 'a'. Nothing in the pair
 # ever reaches a value, and the schema sees two well-formed rules.
 
-[[monitors]]
+[monitors.default]
 inputs = ["p"]
 outputs = ["loops"]
 

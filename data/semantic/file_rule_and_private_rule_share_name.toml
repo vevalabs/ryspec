@@ -6,7 +6,7 @@ version = "0"
 # 'helper' beside a file-level one leaves the name ambiguous inside the
 # property that declares it.
 
-[[monitors]]
+[monitors.default]
 inputs = ["p"]
 outputs = ["helper_holds"]
 

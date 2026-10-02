@@ -1,0 +1,14 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['p'] is not of type 'object'
+
+# `monitors` is a table keyed by name, so a monitor's keys sit one level down,
+# under `[monitors.<name>]`. Written straight into `[monitors]`, `inputs` is
+# read as a monitor named `inputs`, and a list is no monitor.
+version = "0"
+
+[monitors]
+inputs = ["p"]
+outputs = ["q"]
+
+[properties.q]
+check = "p"

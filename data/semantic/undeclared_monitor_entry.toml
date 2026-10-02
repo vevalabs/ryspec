@@ -4,7 +4,7 @@ version = "0"
 # Rule 3: an inputs or parameters entry with no variables declaration.
 # outputs names a rule or a property instead -- see unresolved_output.toml.
 
-[[monitors]]
+[monitors.default]
 inputs = ["x", "y"]
 outputs = ["p"]
 

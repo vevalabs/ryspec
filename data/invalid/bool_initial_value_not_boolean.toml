@@ -5,7 +5,7 @@
 # bool, so its starting value is `true` or `false`, not 1.
 version = "0"
 
-[[monitors]]
+[monitors.default]
 inputs = ["pressure"]
 outputs = ["p"]
 parameters = ["fail_open"]

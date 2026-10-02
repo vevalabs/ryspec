@@ -10,7 +10,7 @@ version = "0"
 # metric bound is written [min:max] after the operator. The two are the same
 # rule written two ways, so every prefix rule here has an expression twin.
 
-[[monitors]]
+[monitors.default]
 inputs = ["p", "q", "speed"]
 outputs = ["always_prefix", "always_expression"]
 parameters = ["window"]

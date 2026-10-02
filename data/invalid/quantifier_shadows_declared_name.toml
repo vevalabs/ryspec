@@ -4,7 +4,7 @@ version = "0"
 
 # A quantifier variable is local and declared nowhere, so it may not take a
 # name the file already uses for a variable, a rule or a property.
-[[monitors]]
+[monitors.default]
 inputs = ["sensor_id", "reading"]
 outputs = ["p1"]
 

@@ -1,7 +1,7 @@
 #:schema ../../schemas/v0/ryspec.schema.json
 version = "0"
 
-# Neither [[monitors]] nor [variables] is written, so a loader deduces the
+# Neither [monitors] nor [variables] is written, so a loader deduces the
 # value space from the rules alone: `p` and `q` are names nothing else
 # declares, so they can only be inputs. A file owes neither table.
 [properties.never_both]

@@ -13,12 +13,12 @@ version = "0"
 # a bound without one is `[min:max]` as before. Position alone says which field
 # a name fills, so `[:s]` bounds by a parameter named `s` and `[::s]` is a unit
 # with no end to count.
-[[monitors]]
+[monitors.default]
 inputs = ["trigger", "ack"]
 outputs = ["ack_in_window", "ack_in_seconds"]
 parameters = ["deadline"]
 
-[monitors.runtime]
+[monitors.default.runtime]
 buffer_size = 1024
 time_unit = "ms"
 # One sample every 10 ms.

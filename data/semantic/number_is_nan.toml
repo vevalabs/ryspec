@@ -9,7 +9,7 @@ version = "0"
 p = { type = "bool" }
 threshold = { type = "number", initial_value = nan }
 
-[[monitors]]
+[monitors.default]
 inputs = ["p"]
 parameters = ["threshold"]
 outputs = ["p_seen"]

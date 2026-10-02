@@ -1,20 +1,20 @@
 #:schema ../../schemas/v0/ryspec.schema.json
 version = "0"
 
-# Every key of a monitor but `outputs` is optional. This file's first monitor
+# Every key of a monitor but `outputs` is optional. `deduced`
 # writes `outputs` alone: it says which verdict it publishes and leaves the
 # input partition to be deduced, `q` and `r` falling out of first use in the
 # order a loader meets them.
-[[monitors]]
+[monitors.deduced]
 outputs = ["q_then_r"]
 
-# The second adds an order for the inputs and a runtime setting, and still
+# `ordered` adds an order for the inputs and a runtime setting, and still
 # names what it publishes: no monitor publishes a default set.
-[[monitors]]
+[monitors.ordered]
 inputs = ["r", "q"]
 outputs = ["q_then_r"]
 
-[monitors.runtime]
+[monitors.ordered.runtime]
 buffer_size = 512
 
 [properties.q_then_r]

@@ -4,7 +4,7 @@ version = "0"
 # Every past-time operator the format has: prev, once, historically and since,
 # each with and without a metric bound. A rule mixing these with the future
 # operators would be rejected -- see ../invalid/mixed_time_cones.toml.
-[[monitors]]
+[monitors.default]
 inputs = ["armed", "fault", "reset"]
 outputs = ["no_fault_since_reset", "armed_recently"]
 

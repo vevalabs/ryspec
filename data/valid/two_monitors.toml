@@ -1,25 +1,25 @@
 #:schema ../../schemas/v0/ryspec.schema.json
 version = "0"
 
-# `monitors` is an array of tables, so one document may offer several
-# interfaces over one value space. Both entries below read the same trace and
-# publish the same verdicts; they differ in what they take and what they hand
-# back -- a full build, and a cut-down one for a target with no room for the
-# second property. The value space is written once, which is the point: two
+# `monitors` is a table keyed by name, so one document may offer several
+# interfaces over one value space, and each can be asked for by its name. Both
+# monitors below read the same trace and publish the same verdicts; they differ
+# in what they take and what they hand back -- `full`, and `compact`, cut down
+# for a target with no room for the second property. The value space is written once, which is the point: two
 # documents would have two value spaces to keep in step.
-[[monitors]]
+[monitors.full]
 inputs = ["door_open", "arm_moving", "estop"]
 outputs = ["door_interlock", "estop_latches"]
 
-[monitors.runtime]
+[monitors.full.runtime]
 allocation_size = 65536
 buffer_size = 4096
 
-[[monitors]]
+[monitors.compact]
 inputs = ["door_open", "arm_moving"]
 outputs = ["door_interlock"]
 
-[monitors.runtime]
+[monitors.compact.runtime]
 buffer_size = 256
 
 [variables]

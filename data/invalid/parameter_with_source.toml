@@ -6,7 +6,7 @@
 # schema cannot see which list `threshold` is in -- the loader can.
 version = "0"
 
-[[monitors]]
+[monitors.default]
 inputs = ["speed"]
 outputs = ["p"]
 parameters = ["threshold"]

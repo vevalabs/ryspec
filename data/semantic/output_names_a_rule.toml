@@ -6,7 +6,7 @@ version = "0"
 # something the interface offers, and publishing what it computes means giving
 # it a property of its own.
 
-[[monitors]]
+[monitors.default]
 inputs = ["x"]
 outputs = ["guard"]
 

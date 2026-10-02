@@ -1,0 +1,14 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error Additional properties are not allowed ('monitors' was unexpected)
+
+# Monitors are independent of namespaces: like `[variables]`, `[monitors]`
+# sits at the root alone, and a namespace holds no monitor of its own. A
+# monitor over a namespace's properties names them by their paths instead.
+version = "0"
+
+[namespace.plant.properties.q]
+check = "p"
+
+[namespace.plant.monitors.default]
+inputs = ["p"]
+outputs = ["plant.q"]

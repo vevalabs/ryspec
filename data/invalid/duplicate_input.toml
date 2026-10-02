@@ -5,7 +5,7 @@
 # once. Listing `speed` twice would claim two input slots for one variable.
 version = "0"
 
-[[monitors]]
+[monitors.default]
 inputs = ["speed", "speed"]
 outputs = ["p"]
 

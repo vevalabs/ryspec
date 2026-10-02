@@ -5,7 +5,7 @@ version = "0"
 # namespace, and a rule written differently so that the two files share the
 # names without sharing the rules behind them. The two columns they read
 # share a name too, each file declaring them in its own `[variables]`.
-[[monitors]]
+[monitors.default]
 inputs = ["door_open", "arm_moving"]
 outputs = ["com.example.plant.south.door_interlock"]
 

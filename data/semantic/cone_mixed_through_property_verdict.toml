@@ -5,7 +5,7 @@ version = "0"
 # which is what its 'check' computes -- so the verdict carries that rule's
 # cone into wherever the property is named.
 
-[[monitors]]
+[monitors.default]
 inputs = ["p"]
 outputs = ["backward", "mixed"]
 

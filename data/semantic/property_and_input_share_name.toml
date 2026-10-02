@@ -6,7 +6,7 @@ version = "0"
 # sanctions that: a verdict is published by naming its property in outputs and
 # needs no variable beside it, which is what 'guard_seen' shows.
 
-[[monitors]]
+[monitors.default]
 inputs = ["p", "guard"]
 outputs = ["guard_seen"]
 

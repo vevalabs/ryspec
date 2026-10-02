@@ -8,7 +8,7 @@
 # ../valid/structured_sources.toml.
 version = "0"
 
-[[monitors]]
+[monitors.default]
 inputs = ["frame"]
 outputs = ["p"]
 

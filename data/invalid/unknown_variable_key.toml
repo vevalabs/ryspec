@@ -2,11 +2,11 @@
 #:expect-schema-error ('causality' was unexpected)
 
 # A `variables` entry says nothing about which partition a name is in -- that
-# is decided solely by the [[monitors]] lists, so there is no key restating it
+# is decided solely by the monitors' lists, so there is no key restating it
 # and the two can never disagree. FMI's `causality` has no counterpart here.
 version = "0"
 
-[[monitors]]
+[monitors.default]
 inputs = ["speed"]
 outputs = ["p"]
 

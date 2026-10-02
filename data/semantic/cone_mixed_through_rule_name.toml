@@ -5,7 +5,7 @@ version = "0"
 # past-time rule. Written out in full the schema would reject it; behind a
 # name the cone is only visible once the name is resolved.
 
-[[monitors]]
+[monitors.default]
 inputs = ["p"]
 outputs = ["mixed"]
 

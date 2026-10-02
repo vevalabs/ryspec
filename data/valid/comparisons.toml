@@ -6,7 +6,7 @@ version = "0"
 # variable named bare -- a parameter, or an input such as
 # `requested_gear` below. Expression form spells the same six </<=/>/>=/==/!=
 # -- see ../valid/quantifiers.toml, where a quantified rule uses them.
-[[monitors]]
+[monitors.default]
 inputs = ["speed", "gear", "requested_gear", "temperature"]
 outputs = ["speed_in_band", "gear_sane", "top_gear_needs_speed", "gear_as_requested"]
 parameters = ["speed_min", "speed_max"]

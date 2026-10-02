@@ -9,7 +9,7 @@ version = "0"
 # ../../malformed/prev_has_no_infix_spelling.toml. Its twin `next` is the
 # exception -- that one does have an infix spelling.
 
-[[monitors]]
+[monitors.default]
 inputs = ["p", "q", "speed"]
 outputs = ["prev_prefix"]
 

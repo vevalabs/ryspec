@@ -8,7 +8,7 @@
 # wanted, and `1speed` is not an identifier under any spelling.
 version = "0"
 
-[[monitors]]
+[monitors.default]
 inputs = ["vehicle.1speed"]
 outputs = ["p"]
 

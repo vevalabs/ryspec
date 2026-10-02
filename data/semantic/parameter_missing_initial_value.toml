@@ -3,7 +3,7 @@ version = "0"
 
 # Rule 6: a listed parameter whose declaration carries no initial_value.
 
-[[monitors]]
+[monitors.default]
 inputs = ["x"]
 outputs = ["p"]
 parameters = ["threshold"]

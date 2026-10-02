@@ -4,11 +4,11 @@
 # A base period is the length of one step, and a step takes some time.
 version = "0"
 
-[[monitors]]
+[monitors.default]
 inputs = ["p"]
 outputs = ["p_seen"]
 
-[monitors.runtime]
+[monitors.default.runtime]
 time_unit = "ms"
 base_period = 0
 

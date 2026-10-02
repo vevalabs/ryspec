@@ -8,7 +8,7 @@ version = "0"
 # a comparison such as `{speed < 120}`. A bare name where a rule is expected --
 # `given = "guard"` -- is a reference and takes no braces; a bound is not an
 # atom, so a parameter in one takes no braces either, as `[:window]`.
-[[monitors]]
+[monitors.default]
 inputs = ["armed", "fault", "reset", "ack"]
 outputs = ["guarded_ack"]
 parameters = ["min_delay", "max_delay"]

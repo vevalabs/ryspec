@@ -7,7 +7,7 @@ version = "0"
 # would have said `a.b.guard_holds`. The rules -- `guard` at namespace level
 # and `rhs` private to the property -- are named from neither, a monitor
 # naming no rule wherever it sits.
-[[monitors]]
+[monitors.default]
 inputs = ["q", "r"]
 outputs = ["guard_holds"]
 

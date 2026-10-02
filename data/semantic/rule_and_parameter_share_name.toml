@@ -4,7 +4,7 @@ version = "0"
 # Rule 11, rule and parameter: a parameter is a source of value like an input
 # is -- its initial_value is the value -- so a rule may not take its name.
 
-[[monitors]]
+[monitors.default]
 inputs = ["p"]
 outputs = ["limit_holds"]
 parameters = ["limit"]

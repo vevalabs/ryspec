@@ -6,7 +6,7 @@ version = "0"
 # dotted path the schema accepts and nothing in the document answers to -- the
 # property is 'p', and 'rhs' is a segment past it.
 
-[[monitors]]
+[monitors.default]
 inputs = ["x"]
 outputs = ["p.rhs"]
 

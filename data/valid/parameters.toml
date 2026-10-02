@@ -7,12 +7,12 @@ version = "0"
 # that exposes it. `fail_open` shows the boolean case, which takes no bounds.
 # The 0 inside `pressure_bounded` is an anonymous parameter: the loader gives
 # it a slot exactly as if it had been declared.
-[[monitors]]
+[monitors.default]
 inputs = ["pressure", "valve_open"]
 outputs = ["pressure_bounded"]
 parameters = ["pressure_max", "fail_open"]
 
-[monitors.runtime]
+[monitors.default.runtime]
 allocation_size = 32768
 buffer_size = 2048
 

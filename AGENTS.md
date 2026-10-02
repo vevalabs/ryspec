@@ -54,6 +54,7 @@ Namespaces provide a packaging mechanism for properties.
 - A monitor describes a runtime interface rather than a logical package.
 - Its inputs, outputs, parameters, and runtime configuration remain separate from the organization of properties.
 - A document can consequently define multiple monitor interfaces over the same collection of properties.
+- `monitors` is a table keyed by name, `[monitors.<name>]`, and like `[variables]` it sits at the root alone: no namespace holds a monitor.
 
 ## Temporal Bounds
 

@@ -13,7 +13,7 @@ version = "0"
 # The value space does not divide that way. `[variables]` is the document's,
 # reached from the root and from `south` alike, so `arm_moving` below is one
 # column read by two namespaces and is declared once.
-[[monitors]]
+[monitors.default]
 inputs = ["arm_moving", "door_open"]
 outputs = ["arm_safe", "south.door_interlock"]
 

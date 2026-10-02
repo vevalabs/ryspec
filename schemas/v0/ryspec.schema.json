@@ -40,9 +40,10 @@
     },
     "monitors": {
       "title": "Monitors",
-      "description": "Runtime interfaces over the document's properties.",
-      "type": "array",
-      "items": { "$ref": "#/definitions/monitor" }
+      "description": "Runtime interfaces over the document's properties, keyed by name. Monitors sit at the root alone: no namespace holds one.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/definitions/identifier" },
+      "additionalProperties": { "$ref": "#/definitions/monitor" }
     },
     "rules": {
       "title": "Rules",

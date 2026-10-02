@@ -1,18 +1,18 @@
 #:schema ../schemas/v0/ryspec.schema.json
 version = "0"
 
-# A `[[monitors]]` entry fixes the order of each partition; `[variables]`
+# A monitor, `[monitors.default]`, fixes the order of each partition; `[variables]`
 # describes each name -- its type and (for a parameter) starting value.
 # The value space is the document's one table, so `inputs` and `parameters`
 # name a variable bare, while `outputs` names a property where it lives --
 # `velocity` would be nameable there too, carrying a `source` and so
 # computed rather than fed in. A rule reads every variable by its bare name. A rule is nameable in none of the three.
-[[monitors]]
+[monitors.default]
 inputs = ["speed", "brake"]
 outputs = ["speed_within_limit"]
 parameters = ["speed_max"]
 
-[monitors.runtime]
+[monitors.default.runtime]
 allocation_size = 65536
 buffer_size = 4096
 

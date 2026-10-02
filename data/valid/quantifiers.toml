@@ -6,7 +6,7 @@ version = "0"
 # them over the values the trace has carried so far. A quantifier carries no
 # time direction of its own, so it stands in either cone: under a past operator
 # in `each_fault_was_seen`, and over a future one in the last property here.
-[[monitors]]
+[monitors.default]
 inputs = ["sensor_id", "reading", "fault"]
 # The quantified rules below are named from no list: a monitor names
 # properties and variables, so what the interface carries is the verdicts of

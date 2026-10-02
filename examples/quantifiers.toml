@@ -5,7 +5,7 @@ version = "0"
 # binds names local to itself -- declared in no table, taking no slot -- and
 # ranges them over the active domain: the values that position has carried in
 # the trace so far.
-[[monitors]]
+[monitors.default]
 inputs = ["sensor_id", "reading"]
 # `every_sensor_in_band` is a rule, so it is not named here. `band_holds` is
 # the property that reads it, and its verdict is what the monitor publishes.

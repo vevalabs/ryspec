@@ -12,7 +12,7 @@ version = "0"
 # space: `[variables]` is the document's one table, and a rule in any namespace
 # names a variable bare, by the name it is declared under. Each file also stands alone, which is what the rest of
 # `data/valid` asks of it.
-[[monitors]]
+[monitors.default]
 inputs = ["door_open", "arm_moving"]
 outputs = ["com.example.plant.north.door_interlock"]
 

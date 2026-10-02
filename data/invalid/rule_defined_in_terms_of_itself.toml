@@ -5,7 +5,7 @@
 # value. Both rules are well-formed on their own, which is all the schema sees.
 version = "0"
 
-[[monitors]]
+[monitors.default]
 inputs = ["p"]
 outputs = ["loops"]
 

@@ -6,7 +6,7 @@
 # order" would let two loaders read one document as two interfaces.
 version = "0"
 
-[[monitors]]
+[monitors.default]
 inputs = ["p"]
 
 [properties.p_seen]

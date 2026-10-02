@@ -6,7 +6,7 @@
 # `looks_back` the mixing is only visible once the name is resolved.
 version = "0"
 
-[[monitors]]
+[monitors.default]
 inputs = ["p"]
 outputs = ["mixed"]
 

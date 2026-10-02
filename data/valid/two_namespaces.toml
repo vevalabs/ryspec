@@ -10,7 +10,7 @@ version = "0"
 # one table, so the four columns below are four names rather than two declared
 # twice -- these are two cells, and the north door is not the south door. Two
 # namespaces reading one column would name that column once.
-[[monitors]]
+[monitors.default]
 inputs = [
   "north_door_open",
   "north_arm_moving",

@@ -6,7 +6,7 @@ version = "0"
 # none, is in no inputs list, and no rule may take its name, so nothing feeds
 # it and nothing computes it.
 
-[[monitors]]
+[monitors.default]
 inputs = ["x"]
 outputs = ["result"]
 

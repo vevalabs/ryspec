@@ -37,7 +37,7 @@ A document is a TOML table. Its root holds these keys and no others:
 | `version` | **required.** The format version, the string `"0"` |
 | `meta` | `title` and `description` of the document, and nothing else |
 | `variables` | the value space: one declaration per variable, keyed by name |
-| `monitors` | an array of runtime interfaces over the document's properties |
+| `monitors` | the runtime interfaces over the document's properties, keyed by name |
 | `rules` | rules of the anonymous namespace, keyed by name |
 | `properties` | properties of the anonymous namespace, keyed by name |
 | `namespace` | the named namespaces |
@@ -162,8 +162,20 @@ document that itself contains a dot.
 ## Monitors
 
 A monitor is a runtime interface: what it reads, what it publishes and how it
-is configured. Monitors are independent of namespaces, and one document may
-offer several over the same properties (`data/valid/two_monitors.toml`).
+is configured. One document may offer several over the same properties
+(`data/valid/two_monitors.toml`), each a table keyed by its name:
+`[monitors.compact]` is the monitor `compact`, which a tool outside the
+document asks for by that name. The name is an identifier, and it is the
+monitor's alone: nothing in a rule or another monitor refers to a monitor, so
+monitor names share no space with variables, rules or properties.
+
+Monitors are independent of namespaces. Like `variables`, `monitors` sits at
+the root alone, and no namespace holds one
+(`data/invalid/monitor_in_namespace.toml`): a monitor over a namespace's
+properties names them by their paths. A monitor's keys sit under its name, so
+the anonymous array the format used to take, `[[monitors]]`, is a type error
+(`data/invalid/monitors_as_array.toml`), and so are keys written straight into
+`[monitors]` (`data/invalid/monitor_without_name.toml`).
 
 | key | holds |
 | --- | --- |
@@ -188,7 +200,7 @@ trace's column order lets the trace be ingested as it stands. Every key but
 - A **parameter** carries its value as `initial_value`; `min` and `max`
   optionally bound it for an embedding that exposes it.
 
-**Deduction.** A document owes neither `[[monitors]]` nor `[variables]`. A bare
+**Deduction.** A document owes neither `[monitors]` nor `[variables]`. A bare
 name in a rule that resolves to no rule, property or declared variable can only
 be an input, and becomes one, ordered by first use unless an `inputs` list says
 otherwise (`data/valid/deduction.toml`). A parameter cannot be deduced: a
@@ -558,6 +570,5 @@ These are undecided, and this text deliberately takes no side on them.
   may be a string comparison operand, compared as its raw text, is undecided.
 - **Dotted names in expressions.** A braced name is an identifier, so expression
   form cannot reach another namespace's rule. Prefix form can.
-- **Naming monitors, selecting by tag.** `monitors` is an anonymous array, so
-  nothing outside the document can name one interface. `tags` are described as
-  for selecting properties, but no monitor selects by them.
+- **Selecting by tag.** `tags` are described as for selecting properties, but
+  no monitor selects by them.

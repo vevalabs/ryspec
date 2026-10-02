@@ -6,7 +6,7 @@ version = "0"
 # and an input already carries a value -- so the rule is a second source for
 # it, and `guard` no longer says which it means.
 
-[[monitors]]
+[monitors.default]
 inputs = ["p", "guard"]
 outputs = ["guard_holds"]
 

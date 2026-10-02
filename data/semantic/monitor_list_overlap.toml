@@ -3,7 +3,7 @@ version = "0"
 
 # Rule 1: a name in two of one monitor's lists at once.
 
-[[monitors]]
+[monitors.default]
 inputs = ["speed"]
 outputs = ["p"]
 parameters = ["speed"]

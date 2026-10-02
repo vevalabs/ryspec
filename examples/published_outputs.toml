@@ -11,7 +11,7 @@ version = "0"
 # A rule is named in neither list. `once_moving` and `guard` are how
 # `guard_holds` is written, and `rhs` is private to that property; publishing
 # what one of them computes means giving it a property of its own.
-[[monitors]]
+[monitors.default]
 inputs = ["frame", "r"]
 outputs = ["guard_holds", "speed"]
 

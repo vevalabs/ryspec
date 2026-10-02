@@ -3,7 +3,7 @@ version = "0"
 
 # A `text` variable decoded as JSON lets other variables read fields out of it
 # through a dotted `source` path, without claiming an input slot of their own.
-[[monitors]]
+[monitors.default]
 inputs = ["vehicle_state"]
 outputs = ["in_gear_while_moving"]
 

@@ -6,7 +6,7 @@ version = "0"
 # taking a boolean `initial_value`. A number
 # says `type = "number"`, as `speed` does, and only then may it carry `min`
 # and `max`.
-[[monitors]]
+[monitors.default]
 inputs = ["speed", "door_closed"]
 parameters = ["armed"]
 outputs = ["guarded"]

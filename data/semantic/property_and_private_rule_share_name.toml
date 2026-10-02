@@ -5,7 +5,7 @@ version = "0"
 # file, so a private rule of that name collides with it even though the two
 # sit in different properties.
 
-[[monitors]]
+[monitors.default]
 inputs = ["p"]
 outputs = ["other"]
 
