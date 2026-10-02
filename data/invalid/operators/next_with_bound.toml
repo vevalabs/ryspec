@@ -1,5 +1,5 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['next', 'p', {'max': 3}] is not valid
+#:expect-schema-error ['next', 'p', {'max': 3}] is too long
 
 # `next` is a single step rather than a window, so it takes no metric bound.
 # Reaching three steps ahead is three nested `next` rules, or a bounded

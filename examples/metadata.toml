@@ -1,14 +1,14 @@
 #:schema ../schemas/v0/ryspec.schema.json
 version = "0"
 
-# A document records facts about itself in `[meta]`. A namespace holds logic
-# and nothing else, so `[meta]` is the only place any of this is said, no
+# A document records facts about itself in `[meta]`. A namespace holds rules,
+# properties and namespaces and nothing else, so `[meta]` is the only place any of this is said, no
 # matter how many namespaces the document declares.
 [meta]
 title = "Vehicle reference specification"
 description = "Every check the reference vehicle model ships with."
 
-[com.example.ryspec.vehicle_braking.properties.brakes_after_warning]
+[namespace.braking.properties.brakes_after_warning]
 title = "Brakes engage after a warning"
 tags = ["safety", "braking"]
 message = "brake was not engaged within 10 steps of a warning"

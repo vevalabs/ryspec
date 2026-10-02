@@ -1,12 +1,12 @@
 #:schema ../../schemas/v0/ryspec.schema.json
 version = "0"
 
-# [<ns>.properties.<name>.where] is a visibility boundary, not a convenience:
-# each property below declares its own `rhs` without the two colliding. The
-# boundary is the document's alone -- neither `rhs` is nameable in outputs,
-# and neither would be after a move up to [<ns>.rules], a monitor naming
-# properties and variables and no rule. What the interface carries is the two
-# verdicts.
+# [namespace.<ns>.properties.<name>.where] is a visibility boundary, not a
+# convenience: each property below declares its own `rhs` without the two
+# colliding. The boundary is the document's alone -- neither `rhs` is nameable
+# in outputs, and neither would be after a move up to [namespace.<ns>.rules], a
+# monitor naming properties and variables and no rule. What the interface
+# carries is the two verdicts.
 [[monitors]]
 inputs = ["p", "q", "r"]
 outputs = ["left_holds", "right_holds"]

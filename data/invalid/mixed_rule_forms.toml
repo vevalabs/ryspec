@@ -1,5 +1,5 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['and', 'armed', '({p} or {q})'] is not valid
+#:expect-schema-error '({p} or {q})' does not match
 
 # A rule is written in one spelling: prefix form, or expression form. An
 # operand of a prefix rule is a prefix rule in turn, so an expression string

@@ -1,5 +1,5 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['always'] is not valid
+#:expect-schema-error ['always'] is too short
 
 # `always` takes the operand that has to hold at every point ahead.
 version = "0"

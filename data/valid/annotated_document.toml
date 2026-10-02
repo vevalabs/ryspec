@@ -3,31 +3,31 @@ version = "0"
 
 # Everything a document may say about itself, at both levels it says it.
 # `[meta]` is the file's own: two keys -- title and description --
-# describing the whole rather than any part of it. A
-# namespace holds logic and nothing else, so it says nothing about itself;
-# each property carries its own title, description, tags and
+# describing the whole rather than any part of it. A namespace holds rules,
+# properties and namespaces and nothing else, so it says nothing about
+# itself; each property carries its own title, description, tags and
 # operator-facing message instead. Tags cut across namespaces, so two
 # properties may share one wherever they sit.
 [meta]
 title = "Reference plant specification"
 description = "Every check the reference plant cell ships with."
 
-[com.example.plant.safety.properties.door_interlock]
+[namespace.com.example.plant.safety.properties.door_interlock]
 title = "Door interlock holds"
 description = "The cell door may not be open while the arm is moving."
 tags = ["safety", "iso-10218"]
 message = "cell door opened while the arm was moving"
 check = ["not", ["and", "door_open", "arm_moving"]]
 
-[com.example.plant.safety.properties.estop_latches]
+[namespace.com.example.plant.safety.properties.estop_latches]
 title = "Emergency stop latches"
 tags = ["safety"]
 message = "the emergency stop did not latch"
 check = ["historically", ["implies", "estop_pressed", "estop_latched"]]
 
-[com.example.plant.safety.properties.coolant_warning]
+[namespace.com.example.plant.safety.properties.coolant_warning]
 message = "coolant ran low at some point in the last 100 steps"
 check = ["not", ["once", "coolant_low", { max = 100 }]]
 
-[com.example.plant.safety.properties.cycle_counted]
+[namespace.com.example.plant.safety.properties.cycle_counted]
 check = ["once", "cycle_complete"]

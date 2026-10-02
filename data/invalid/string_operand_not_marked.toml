@@ -1,5 +1,5 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['eq', 'label', 'sensor 7'] is not valid
+#:expect-schema-error 'sensor 7' does not match
 
 # An unmarked operand is a variable reference, and `sensor 7` is not one. The text it means is
 # written `{ value = "sensor 7" }`.

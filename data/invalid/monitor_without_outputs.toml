@@ -1,0 +1,13 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'outputs' is a required property
+
+# A monitor names what it publishes. There is no default set to fall back on:
+# TOML does not order a table's keys, so "every property, in declaration
+# order" would let two loaders read one document as two interfaces.
+version = "0"
+
+[[monitors]]
+inputs = ["p"]
+
+[properties.p_seen]
+check = ["once", "p"]

@@ -1,5 +1,5 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['eventually'] is not valid
+#:expect-schema-error ['eventually'] is too short
 
 # `eventually` takes the operand that has to hold at some point ahead.
 version = "0"

@@ -1,5 +1,5 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['until', 'p', {'max': 3}, 'q'] is not valid
+#:expect-schema-error {'max': 3} is not of type 'string', 'array'
 
 # The bound is the last item, after both operands. Placed third it sits where
 # the operand that ends the stretch belongs.

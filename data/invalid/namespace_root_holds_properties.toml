@@ -1,0 +1,10 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error False schema does not allow
+
+# `[namespace]` holds named namespaces and is not one itself. A property
+# written straight under it would belong to a namespace with an empty path,
+# which is the anonymous namespace by another header: that one is `[properties]`.
+version = "0"
+
+[namespace.properties.p]
+check = "x"

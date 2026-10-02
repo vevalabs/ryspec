@@ -2,8 +2,9 @@
 version = "0"
 
 # Prefix form represents a rule as an operator followed by its operands, with
-# no infix syntax or precedence rules. `[<ns>.properties.<name>.where]` holds
-# subformulas private to this property.
+# no infix syntax or precedence rules.
+# `[namespace.<ns>.properties.<name>.where]` holds subformulas private to this
+# property.
 [properties.p1]
 given = "cond1"
 check = ["since", "not_p", "q"]

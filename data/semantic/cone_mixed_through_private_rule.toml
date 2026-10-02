@@ -2,7 +2,7 @@
 version = "0"
 
 # Rule 12, private form: a name inside a property reaches that property's own
-# rule table first, so the cone is resolved there before [<ns>.rules].
+# rule table first, so the cone is resolved there before [namespace.<ns>.rules].
 
 [[monitors]]
 inputs = ["p"]

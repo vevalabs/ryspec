@@ -1,0 +1,11 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error False schema does not allow
+
+# A namespace's free-form data sits in its own `extras`, and the document's in
+# `[extras]` at the root. `[namespace]` is no namespace, so it has none: the
+# table below is neither, and not a namespace named `extras` either, that name
+# being taken in every namespace.
+version = "0"
+
+[namespace.extras]
+owner = "braking team"

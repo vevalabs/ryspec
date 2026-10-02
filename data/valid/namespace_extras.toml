@@ -1,0 +1,15 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# A leaf namespace may carry `extras` beside its `rules` and `properties`:
+# free-form data about the namespace, which the format does not read. `plant`
+# holds only nested namespaces, and so no `extras` of its own.
+[variables]
+door_open = { type = "bool" }
+
+[namespace.plant.cell.extras]
+owner = "cell safety"
+reviewed_on = 2026-09-01
+
+[namespace.plant.cell.properties.door_shut]
+check = ["historically", ["not", "door_open"]]

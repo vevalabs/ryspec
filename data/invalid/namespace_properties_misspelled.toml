@@ -1,0 +1,10 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'x' is not of type 'object'
+
+# `propertes` is not `properties`, so it is read as a nested namespace, and
+# `p` under it as a namespace too. A namespace holds only tables, so the
+# string `check` gives the misspelling away.
+version = "0"
+
+[namespace.a.propertes.p]
+check = "x"

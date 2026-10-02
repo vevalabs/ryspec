@@ -1,5 +1,5 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['once', 'p', {'time_unit': 's'}] is not valid
+#:expect-schema-error {'time_unit': 's'} is not valid
 
 # A unit says what a bound's ends count. A bound giving a unit and no end
 # counts nothing.

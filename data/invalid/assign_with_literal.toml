@@ -1,5 +1,5 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['forall', ['assign', 'sensor_id', {'value': 3}]
+#:expect-schema-error 'qvar' is a required property
 
 # `assign` gives a quantified variable the value of a name. A literal is not
 # a quantified variable, and comparing with one is what `eq` is for.

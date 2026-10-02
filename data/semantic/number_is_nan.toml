@@ -1,0 +1,18 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Rule 23: TOML has `nan`, and no number in the format is one. A JSON Schema
+# cannot refuse it: JSON has no `nan` to compare against, and every bound a
+# schema sets is a comparison `nan` passes.
+
+[variables]
+p = { type = "bool" }
+threshold = { type = "number", initial_value = nan }
+
+[[monitors]]
+inputs = ["p"]
+parameters = ["threshold"]
+outputs = ["p_seen"]
+
+[properties.p_seen]
+check = ["once", "p", { max = "threshold" }]

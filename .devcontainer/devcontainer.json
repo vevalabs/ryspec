@@ -1,6 +1,19 @@
 {
   "name": "ryspec",
-  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "target": "base-devel"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "username": "vscode",
+      "installZsh": false,
+      "installOhMyZsh": false,
+      "configureZshAsDefaultShell": false
+    }
+  },
+  "remoteUser": "vscode",
+  "postCreateCommand": "python3.12 -m pip install --user -e .",
   "customizations": {
     "vscode": {
       "extensions": [

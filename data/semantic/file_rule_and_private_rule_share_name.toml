@@ -1,10 +1,10 @@
 #:schema ../../schemas/v0/ryspec.schema.json
 version = "0"
 
-# Rule 11, two rules: [<ns>.properties.<name>.where] is a boundary between
-# properties, not a shadow over [<ns>.rules]. A private 'helper' beside a
-# file-level one leaves the name ambiguous inside the property that declares
-# it.
+# Rule 11, two rules: [namespace.<ns>.properties.<name>.where] is a boundary
+# between properties, not a shadow over [namespace.<ns>.rules]. A private
+# 'helper' beside a file-level one leaves the name ambiguous inside the
+# property that declares it.
 
 [[monitors]]
 inputs = ["p"]

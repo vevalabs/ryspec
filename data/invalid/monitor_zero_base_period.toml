@@ -6,6 +6,7 @@ version = "0"
 
 [[monitors]]
 inputs = ["p"]
+outputs = ["p_seen"]
 
 [monitors.runtime]
 time_unit = "ms"

@@ -1,5 +1,5 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['since', 'p', 'q', {'max': 'limits.max'}] is not valid
+#:expect-schema-error 'limits.max' is not valid
 
 # A bound's end is a number or a parameter, named bare. A dotted path names a
 # rule or a property in a namespace, and neither sizes a bound.

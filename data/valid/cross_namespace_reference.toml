@@ -13,12 +13,12 @@ outputs = ["plant.cell.safe_to_enter"]
 door_open = { type = "bool" }
 arm_moving = { type = "bool" }
 
-[plant.shared.rules]
+[namespace.plant.shared.rules]
 arm_idle = ["not", "arm_moving"]
 
-[plant.shared.properties.door_closed]
+[namespace.plant.shared.properties.door_closed]
 check = ["not", "door_open"]
 
-[plant.cell.properties.safe_to_enter]
+[namespace.plant.cell.properties.safe_to_enter]
 given = "plant.shared.door_closed"
 check = ["historically", "plant.shared.arm_idle", { max = 5 }]

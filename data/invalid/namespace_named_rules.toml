@@ -1,0 +1,10 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error is not of type 'string', 'array'
+
+# `rules` and `properties` are the two names no namespace may take. Below,
+# `rules` is meant as the nested namespace `a.rules`, but `rules` under a
+# namespace is that namespace's rule table, and `b` is not a rule.
+version = "0"
+
+[namespace.a.rules.b.properties.p]
+check = "x"

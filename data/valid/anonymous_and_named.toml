@@ -6,11 +6,9 @@ version = "0"
 # rather than one, and a [monitors] list tells them apart by the prefix the
 # root does not carry.
 #
-# This is the shape only the root may take. A named namespace holding logic
-# holds no nested namespace, so what the root does here -- `[rules]` and
-# `[properties]` beside the namespace `south` -- is the exemption the root
-# carries for being the anonymous namespace and the parent of the named ones
-# at once.
+# The root is the one namespace that may nest others: it holds the rule
+# `interlock`, the property `arm_safe` and the nested namespace `south` side by
+# side, which no named namespace may.
 #
 # The value space does not divide that way. `[variables]` is the document's,
 # reached from the root and from `south` alike, so `arm_moving` below is one
@@ -29,8 +27,8 @@ interlock = ["not", "arm_moving"]
 [properties.arm_safe]
 check = ["historically", "interlock"]
 
-[south.rules]
+[namespace.south.rules]
 interlock = ["not", ["and", "door_open", "arm_moving"]]
 
-[south.properties.door_interlock]
+[namespace.south.properties.door_interlock]
 check = ["historically", "interlock"]

@@ -1,5 +1,5 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['forall', ['assign', 'sensor_id', {'qvar': 's', 'over': 'sensor_id'}]
+#:expect-schema-error ('over' was unexpected)
 
 # The marker table is closed, and `qvar` is its only key.
 version = "0"

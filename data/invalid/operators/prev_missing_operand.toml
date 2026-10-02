@@ -1,5 +1,5 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['prev'] is not valid
+#:expect-schema-error ['prev'] is too short
 
 # `prev` takes the operand whose previous value it reads.
 version = "0"

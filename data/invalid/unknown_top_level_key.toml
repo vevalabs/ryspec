@@ -1,11 +1,10 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error is not of type 'object'
+#:expect-schema-error ('montiors' was unexpected)
 
-# The document root is open, because every key it does not name is a
-# namespace. What catches a misspelled or retired table name is the shape of
-# what it holds: `montiors` is read as a namespace, and a namespace's keys are
-# its `rules` and its `properties`, or else nested namespaces -- never the
-# arrays a monitor's lists are made of.
+# The document root is closed: `version`, `meta`, `variables`, `monitors`,
+# `properties` and `extras`, and nothing else. Namespaces live under
+# `properties`, so a misspelled or retired root key is refused as the stray
+# key it is.
 version = "0"
 
 [montiors]

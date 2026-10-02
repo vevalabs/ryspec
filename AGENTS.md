@@ -5,7 +5,7 @@
 ## Layout
 
 The repository is the format: its JSON Schema, the language definition, and the
-corpus that holds the schema to it. There is no implementation in it.
+corpus that holds the schema to it, plus a C library skeleton that reads documents.
 
 | path | holds |
 | --- | --- |
@@ -14,6 +14,8 @@ corpus that holds the schema to it. There is no implementation in it.
 | `data/`, `examples/` | the document corpus and the documented examples |
 | `data/README.md` | what each corpus directory means, and what a file's `#:expect-*-error` header still asserts |
 | `data/semantic/` | one schema-valid fixture per rule in `SPEC.md`'s "What the schema cannot check" |
+| `CMakeLists.txt`, `include/`, `src/`, `tests/` | `libryspec`, a static C library built on tomlc17 (fetched by CMake) |
+| `python/` | the `ryspec` Python package, whose `ryspec validate` checks documents against the schema, and `ryspec lint` against the rules the schema cannot check, through `libryspec` (`python/ext/`, built by CMake from the root `pyproject.toml`) |
 
 ## Rules
 
@@ -40,6 +42,8 @@ Properties define externally meaningful requirements or assertions.
 Namespaces provide a packaging mechanism for properties.
 
 - A namespace groups related rules and properties without changing their semantics.
+- `[rules]` and `[properties]` at the root are the anonymous namespace. A named namespace is a path under `[namespace]`, and it holds its own `rules` and `properties`: `[namespace.a.b.properties.p]` is the property `p` of the namespace `a.b`, referenced as `a.b.p`.
+- A named namespace is either a leaf, holding `rules`, `properties` and `extras`, or intermediate, holding nested namespaces alone. No namespace is named `rules`, `properties` or `extras`.
 - Namespaces are organizational units rather than runtime scopes.
 - Properties can therefore be referenced independently of how they are packaged.
 - The namespace hierarchy provides a natural mechanism for organizing larger specifications and avoiding name collisions.

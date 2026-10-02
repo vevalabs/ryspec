@@ -13,9 +13,9 @@ outputs = ["com.example.plant.south.door_interlock"]
 door_open = { type = "bool", description = "the cell door is open" }
 arm_moving = { type = "bool", description = "the arm is under power" }
 
-[com.example.plant.south.rules]
+[namespace.com.example.plant.south.rules]
 interlock = ["or", ["not", "door_open"], ["not", "arm_moving"]]
 
-[com.example.plant.south.properties.door_interlock]
+[namespace.com.example.plant.south.properties.door_interlock]
 message = "cell door opened while the arm was moving"
 check = ["historically", "interlock"]

@@ -1,0 +1,33 @@
+[build-system]
+requires = ["scikit-build-core>=0.10"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "ryspec"
+version = "0.0.0"
+description = "Validate ryspec documents against the ryspec JSON Schema"
+readme = "README.md"
+license = "MPL-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = [
+    "jsonschema>=4.18",
+    "tomli>=2.4",
+]
+
+[project.urls]
+Homepage = "https://github.com/vevalabs/ryspec"
+
+[project.scripts]
+ryspec = "ryspec.cli:main"
+
+# CMakeLists.txt builds the ryspec._core extension from libryspec, and
+# installs it and the schema of schemas/v0/, the single copy the corpus and
+# the C library also read, into the package under python/.
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+cmake.version = ">=3.25"
+cmake.define.BUILD_TESTING = "OFF"
+install.components = ["python"]
+wheel.packages = ["python/src/ryspec"]
+sdist.exclude = [".devcontainer", "data", "examples"]

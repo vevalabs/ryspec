@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'check' is a required property
+
+# A property holds `check`. A table under `properties` is always a property,
+# so one that forgot its `check` is refused as the property it is.
+version = "0"
+
+[properties.p]
+given = "door_open"

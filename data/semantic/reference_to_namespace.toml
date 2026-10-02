@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Rule 22: `south` is a namespace, and a name resolves to a variable, a rule
+# or a property, never to a namespace. It is not a deduced input either:
+# something declares it.
+
+[namespace.south.properties.door_interlock]
+check = "door_closed"
+
+[properties.p]
+check = ["historically", "south"]

@@ -1,5 +1,5 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['forall', ['and', ['assign', 'sensor_id', {'qvar': 's'}], {'qvar': 's'}]
+#:expect-schema-error {'qvar': 's'} is not of type 'string', 'array'
 version = "0"
 
 # A quantifier variable holds a value drawn from the trace, not a truth value,

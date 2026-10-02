@@ -1,5 +1,5 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['until', 'p'] is not valid
+#:expect-schema-error ['until', 'p'] is too short
 
 # `until` is binary: the condition that holds throughout, and the one that
 # ends the stretch.

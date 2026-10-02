@@ -1,5 +1,5 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['once'] is not valid
+#:expect-schema-error ['once'] is too short
 
 # `once` takes an operand. Alone it says there is something that held in the
 # past without saying what.

@@ -22,8 +22,8 @@ guard = ["and", ["and", "r", ["not", "q"]], "once_q"]
 [properties.guard_holds]
 check = ["and", "guard", "rhs"]
 
-# Private to the property above, exactly as `[<ns>.properties.<name>.where]`
-# is under a named namespace. The anonymity is the namespace's; the boundary
-# stays.
+# Private to the property above, exactly as
+# `[namespace.<ns>.properties.<name>.where]` is under a named namespace. The
+# anonymity is the namespace's; the boundary stays.
 [properties.guard_holds.where]
 rhs = ["or", "q", "r"]

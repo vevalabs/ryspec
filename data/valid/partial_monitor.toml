@@ -1,18 +1,18 @@
 #:schema ../../schemas/v0/ryspec.schema.json
 version = "0"
 
-# Every key of a monitor is optional, including the partition lists. This file
+# Every key of a monitor but `outputs` is optional. This file's first monitor
 # writes `outputs` alone: it says which verdict it publishes and leaves the
 # input partition to be deduced, `q` and `r` falling out of first use in the
 # order a loader meets them.
 [[monitors]]
 outputs = ["q_then_r"]
 
-# The second entry says the other half -- an order for the inputs, and nothing
-# about what it publishes, so the default set applies: every property in
-# declaration order.
+# The second adds an order for the inputs and a runtime setting, and still
+# names what it publishes: no monitor publishes a default set.
 [[monitors]]
 inputs = ["r", "q"]
+outputs = ["q_then_r"]
 
 [monitors.runtime]
 buffer_size = 512

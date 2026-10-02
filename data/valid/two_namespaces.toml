@@ -25,14 +25,14 @@ north_arm_moving = { type = "bool", description = "the north arm is under power"
 south_door_open = { type = "bool", description = "the south cell door is open" }
 south_arm_moving = { type = "bool", description = "the south arm is under power" }
 
-[north.rules]
+[namespace.north.rules]
 interlock = ["not", ["and", "north_door_open", "north_arm_moving"]]
 
-[north.properties.door_interlock]
+[namespace.north.properties.door_interlock]
 check = ["historically", "interlock"]
 
-[south.rules]
+[namespace.south.rules]
 interlock = ["or", ["not", "south_door_open"], ["not", "south_arm_moving"]]
 
-[south.properties.door_interlock]
+[namespace.south.properties.door_interlock]
 check = ["historically", "interlock"]

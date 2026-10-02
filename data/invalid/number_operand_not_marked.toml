@@ -1,5 +1,5 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['lt', 'reading', 120] is not valid
+#:expect-schema-error 120 is not of type 'object'
 
 # An immediate operand is written `{ value = ... }`, so that an unmarked operand
 # is always a variable reference. A bare number is neither.

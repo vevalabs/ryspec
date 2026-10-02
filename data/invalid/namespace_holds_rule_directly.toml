@@ -1,0 +1,10 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'x' is not of type 'object'
+
+# A namespace holds its rules in `rules` and its properties in `properties`,
+# and every other key is a nested namespace. `r` below is neither, and a rule
+# written straight into the namespace table is refused rather than read as one.
+version = "0"
+
+[namespace.a]
+r = "x"

@@ -2,8 +2,8 @@
 version = "0"
 
 # The smallest document the format admits: a version and one property. There is
-# no [[monitors]] and no [variables], so `heartbeat` can only be an input, and
-# the verdict of `stays_alive` is published because the default output set is
-# every property in declaration order.
+# no [[monitors]] and no [variables], so `heartbeat` can only be an input. With
+# no monitor the document offers no interface: `stays_alive` is defined, and
+# publishing its verdict is for a monitor to add.
 [properties.stays_alive]
 check = "heartbeat"

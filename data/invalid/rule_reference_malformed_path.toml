@@ -1,11 +1,11 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['not', 'plant..arm_idle'] is not valid
+#:expect-schema-error 'plant..arm_idle' does not match
 
 # A rule reference is a dotted path of identifiers. An empty segment names no
 # namespace, so `plant..arm_idle` is refused rather than read as `plant.arm_idle`.
 version = "0"
 
-[plant.rules]
+[namespace.plant.rules]
 arm_idle = "arm_moving"
 
 [properties.p]

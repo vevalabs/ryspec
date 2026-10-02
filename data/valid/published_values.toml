@@ -1,8 +1,7 @@
 #:schema ../../schemas/v0/ryspec.schema.json
 version = "0"
 
-# outputs REPLACES the default published set, which is every property in
-# declaration order. Both ways to name a published value appear here: a
+# A monitor publishes what its outputs name, and nothing else. Both ways to name a published value appear here: a
 # property whose verdict is published, and a declared variable the document
 # computes -- `speed`, decoded out of the frame rather than fed in. The names
 # property keys bare because this file declares no namespace; under `a.b` it
@@ -27,7 +26,7 @@ r_and_not_moving = ["and", "r", ["not", "moving"]]
 guard = ["and", "r_and_not_moving", ["once", "moving"]]
 
 # `never_published` has no place in outputs, so its verdict is computed and
-# kept. Replacing the default set is how a file says which verdicts matter.
+# kept. Naming outputs is how a file says which verdicts matter.
 [properties.guard_holds]
 check = ["and", "guard", "rhs"]
 

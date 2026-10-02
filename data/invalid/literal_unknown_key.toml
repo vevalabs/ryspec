@@ -1,5 +1,5 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['eq', 'label', {'value': 'a', 'time_unit': 'ms'}] is not valid
+#:expect-schema-error ('time_unit' was unexpected)
 
 # A literal table is closed, and `value` is its only key.
 version = "0"

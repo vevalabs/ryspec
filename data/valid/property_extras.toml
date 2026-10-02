@@ -15,6 +15,6 @@ last_violated = 2026-09-25T10:30:00Z
 retries = 3
 lanes = ["nightly", { lane = "fast" }]
 
-[a.properties.p]
+[namespace.a.properties.p]
 check = "q"
 extras = { owner = "team-a" }

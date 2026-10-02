@@ -1,16 +1,15 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://raw.githubusercontent.com/vevalabs/ryspec/main/schemas/v0/ryspec.schema.json",
   "title": "ryspec document",
   "description": "A ryspec specification document.",
   "type": "object",
   "required": ["version"],
-  "propertyNames": { "$ref": "#/$defs/identifier" },
-  "additionalProperties": { "$ref": "#/$defs/namespaceTable" },
+  "additionalProperties": false,
   "properties": {
     "version": {
       "title": "Format version",
-      "description": "The ryspec format version the document targets.",
+      "description": "The ryspec format version.",
       "type": "string",
       "const": "0"
     },
@@ -36,24 +35,32 @@
       "title": "Variables",
       "description": "Declarations of the values monitors read, publish or are configured with.",
       "type": "object",
-      "propertyNames": { "$ref": "#/$defs/identifier" },
-      "additionalProperties": { "$ref": "#/$defs/variable" }
+      "propertyNames": { "$ref": "#/definitions/identifier" },
+      "additionalProperties": { "$ref": "#/definitions/variable" }
     },
     "monitors": {
       "title": "Monitors",
       "description": "Runtime interfaces over the document's properties.",
       "type": "array",
-      "items": { "$ref": "#/$defs/monitor" }
+      "items": { "$ref": "#/definitions/monitor" }
     },
     "rules": {
       "title": "Rules",
-      "description": "Named rules of the anonymous namespace.",
-      "$ref": "#/$defs/ruleTable"
+      "description": "Rules of the anonymous namespace, keyed by name.",
+      "$ref": "#/definitions/ruleTable"
     },
     "properties": {
       "title": "Properties",
-      "description": "Properties of the anonymous namespace.",
-      "$ref": "#/$defs/propertyTable"
+      "description": "Properties of the anonymous namespace, keyed by name.",
+      "$ref": "#/definitions/propertyTable"
+    },
+    "namespace": {
+      "title": "Namespaces",
+      "description": "Named namespaces, nested by path. This table is no namespace itself, so it holds no `rules`, `properties` or `extras`: the anonymous namespace's sit at the root.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/definitions/identifier" },
+      "properties": { "rules": false, "properties": false, "extras": false },
+      "additionalProperties": { "$ref": "#/definitions/namespace" }
     },
     "extras": {
       "title": "Extras",
@@ -62,11 +69,12 @@
       "additionalProperties": true
     }
   },
-  "$defs": {
+  "definitions": {
     "monitor": {
       "title": "Monitor",
       "description": "A runtime interface: the variables it reads and publishes, and its runtime settings.",
       "type": "object",
+      "required": ["outputs"],
       "additionalProperties": false,
       "properties": {
         "runtime": {
@@ -74,6 +82,7 @@
           "description": "Settings of the monitor runtime.",
           "type": "object",
           "additionalProperties": false,
+          "dependencies": { "base_period": ["time_unit"] },
           "properties": {
             "allocation_size": {
               "title": "Allocation size",
@@ -89,14 +98,14 @@
             },
             "base_period": {
               "title": "Base period",
-              "description": "Time between two consecutive samples, in the monitor's `time_unit`.",
+              "description": "Time between two consecutive samples, in the monitor's `time_unit`, which a base period therefore requires.",
               "type": "number",
               "exclusiveMinimum": 0
             },
             "time_unit": {
               "title": "Time unit",
               "description": "Unit of the monitor's timestamps, and the default unit of metric bounds.",
-              "$ref": "#/$defs/timeUnit"
+              "$ref": "#/definitions/timeUnit"
             }
           }
         },
@@ -105,52 +114,56 @@
           "description": "Variables the monitor reads.",
           "type": "array",
           "uniqueItems": true,
-          "items": { "$ref": "#/$defs/identifier" }
+          "items": { "$ref": "#/definitions/identifier" }
         },
         "outputs": {
           "title": "Outputs",
-          "description": "Values the monitor publishes: property verdicts and variables.",
+          "description": "Values the monitor publishes, in order: property verdicts and computed variables.",
           "type": "array",
+          "minItems": 1,
           "uniqueItems": true,
-          "items": { "$ref": "#/$defs/ruleRef" }
+          "items": { "$ref": "#/definitions/dottedPath" }
         },
         "parameters": {
           "title": "Parameters",
           "description": "Variables fixed before the run.",
           "type": "array",
           "uniqueItems": true,
-          "items": { "$ref": "#/$defs/identifier" }
+          "items": { "$ref": "#/definitions/identifier" }
         }
       }
     },
-    "namespaceTable": {
+    "namespace": {
       "title": "Namespace",
-      "description": "A named group of rules and properties, or of nested namespaces.",
+      "description": "A leaf, holding rules, properties and extras, or an intermediate namespace, holding nested namespaces alone. No namespace is both.",
       "type": "object",
-      "propertyNames": { "$ref": "#/$defs/identifier" },
+      "propertyNames": { "$ref": "#/definitions/identifier" },
       "properties": {
-        "variables": { "description": "Not allowed in a namespace.", "not": {} },
-        "meta": { "description": "Not allowed in a namespace.", "not": {} },
-        "version": { "description": "Not allowed in a namespace.", "not": {} },
-        "monitors": { "description": "Not allowed in a namespace.", "not": {} },
-        "extras": { "description": "Not allowed in a namespace.", "not": {} },
         "rules": {
           "title": "Rules",
-          "description": "Named rules of the namespace.",
-          "$ref": "#/$defs/ruleTable"
+          "description": "Rules of the namespace, keyed by name.",
+          "$ref": "#/definitions/ruleTable"
         },
         "properties": {
           "title": "Properties",
-          "description": "Properties of the namespace.",
-          "$ref": "#/$defs/propertyTable"
+          "description": "Properties of the namespace, keyed by name.",
+          "$ref": "#/definitions/propertyTable"
+        },
+        "extras": {
+          "title": "Extras",
+          "description": "Free-form data about the namespace. The format does not interpret it.",
+          "type": "object",
+          "additionalProperties": true
         }
       },
-      "additionalProperties": { "$ref": "#/$defs/namespaceTable" },
-      "if": { "anyOf": [{ "required": ["rules"] }, { "required": ["properties"] }] },
+      "additionalProperties": { "$ref": "#/definitions/namespace" },
+      "if": {
+        "anyOf": [{ "required": ["rules"] }, { "required": ["properties"] }, { "required": ["extras"] }]
+      },
       "then": {
-        "title": "Namespace with logic",
-        "description": "A namespace with rules or properties has no nested namespaces. The document root is exempt.",
-        "properties": { "rules": true, "properties": true },
+        "title": "Leaf namespace",
+        "description": "A namespace with rules, properties or extras holds no nested namespace.",
+        "properties": { "rules": true, "properties": true, "extras": true },
         "additionalProperties": false
       }
     },
@@ -165,16 +178,6 @@
       "description": "Identifiers joined by dots.",
       "type": "string",
       "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*(?![\\s\\S])"
-    },
-    "varRef": {
-      "title": "Variable reference",
-      "description": "The name of a declared variable.",
-      "$ref": "#/$defs/identifier"
-    },
-    "ruleRef": {
-      "title": "Rule reference",
-      "description": "The name of a rule or property, bare or prefixed by its namespace path.",
-      "$ref": "#/$defs/dottedPath"
     },
     "variable": {
       "title": "Variable",
@@ -212,7 +215,7 @@
               }
             ]
           },
-          "then": { "$ref": "#/$defs/boolVariable" }
+          "then": { "$ref": "#/definitions/boolVariable" }
         },
         {
           "if": {
@@ -221,7 +224,7 @@
               "type": { "const": "number" }
             }
           },
-          "then": { "$ref": "#/$defs/numberVariable" }
+          "then": { "$ref": "#/definitions/numberVariable" }
         },
         {
           "if": {
@@ -230,7 +233,7 @@
               "type": { "const": "text" }
             }
           },
-          "then": { "$ref": "#/$defs/textVariable" }
+          "then": { "$ref": "#/definitions/textVariable" }
         },
         {
           "if": {
@@ -239,20 +242,20 @@
               "type": { "const": "binary" }
             }
           },
-          "then": { "$ref": "#/$defs/binaryVariable" }
+          "then": { "$ref": "#/definitions/binaryVariable" }
         }
       ]
     },
     "variableCommon": {
       "title": "Common variable keys",
-      "description": "Keys every variable may carry.",
+      "description": "Keys every variable may carry. Each variable type closes itself with `additionalProperties`, which sees only its own `properties`, so it lists these keys again.",
       "type": "object",
       "properties": {
         "type": true,
         "source": {
           "title": "Source",
           "description": "Path to the value inside a text or binary variable.",
-          "$ref": "#/$defs/dottedPath"
+          "$ref": "#/definitions/dottedPath"
         },
         "title": {
           "title": "Title",
@@ -263,27 +266,43 @@
           "title": "Description",
           "description": "A longer explanation.",
           "type": "string"
+        },
+        "extras": {
+          "title": "Extras",
+          "description": "Free-form data about the variable. The format does not interpret it.",
+          "type": "object",
+          "additionalProperties": true
         }
       }
     },
     "boolVariable": {
       "title": "Boolean variable",
       "type": "object",
-      "$ref": "#/$defs/variableCommon",
+      "allOf": [{ "$ref": "#/definitions/variableCommon" }],
       "properties": {
+        "type": true,
+        "source": true,
+        "title": true,
+        "description": true,
+        "extras": true,
         "initial_value": {
           "title": "Initial value",
           "description": "Value before the first sample.",
           "type": "boolean"
         }
       },
-      "unevaluatedProperties": false
+      "additionalProperties": false
     },
     "numberVariable": {
       "title": "Number variable",
       "type": "object",
-      "$ref": "#/$defs/variableCommon",
+      "allOf": [{ "$ref": "#/definitions/variableCommon" }],
       "properties": {
+        "type": true,
+        "source": true,
+        "title": true,
+        "description": true,
+        "extras": true,
         "initial_value": {
           "title": "Initial value",
           "description": "Value before the first sample.",
@@ -300,33 +319,43 @@
           "type": "number"
         }
       },
-      "unevaluatedProperties": false
+      "additionalProperties": false
     },
     "textVariable": {
       "title": "Text variable",
       "type": "object",
-      "$ref": "#/$defs/variableCommon",
+      "allOf": [{ "$ref": "#/definitions/variableCommon" }],
       "properties": {
+        "type": true,
+        "source": true,
+        "title": true,
+        "description": true,
+        "extras": true,
         "format": {
           "title": "Format",
           "description": "Encoding of the text.",
-          "$ref": "#/$defs/textFormat"
+          "$ref": "#/definitions/textFormat"
         }
       },
-      "unevaluatedProperties": false
+      "additionalProperties": false
     },
     "binaryVariable": {
       "title": "Binary variable",
       "type": "object",
-      "$ref": "#/$defs/variableCommon",
+      "allOf": [{ "$ref": "#/definitions/variableCommon" }],
       "properties": {
+        "type": true,
+        "source": true,
+        "title": true,
+        "description": true,
+        "extras": true,
         "format": {
           "title": "Format",
           "description": "Encoding of the data.",
-          "$ref": "#/$defs/binaryFormat"
+          "$ref": "#/definitions/binaryFormat"
         }
       },
-      "unevaluatedProperties": false
+      "additionalProperties": false
     },
     "textFormat": { "title": "Text format", "anyOf": [{ "const": "json", "description": "JSON." }] },
     "binaryFormat": {
@@ -342,7 +371,7 @@
     "timeBoundValue": {
       "title": "Bound value",
       "description": "A non-negative number or a parameter.",
-      "anyOf": [{ "type": "number", "minimum": 0 }, { "$ref": "#/$defs/varRef" }]
+      "anyOf": [{ "type": "number", "minimum": 0 }, { "$ref": "#/definitions/identifier" }]
     },
     "timeBound": {
       "title": "Metric bound",
@@ -351,15 +380,15 @@
       "additionalProperties": false,
       "minProperties": 1,
       "properties": {
-        "min": { "title": "Lower end", "$ref": "#/$defs/timeBoundValue" },
-        "max": { "title": "Upper end", "$ref": "#/$defs/timeBoundValue" },
+        "min": { "title": "Lower end", "$ref": "#/definitions/timeBoundValue" },
+        "max": { "title": "Upper end", "$ref": "#/definitions/timeBoundValue" },
         "time_unit": {
           "title": "Time unit",
           "description": "Unit of both ends. Defaults to the property's `time_unit`, then the monitor's.",
-          "$ref": "#/$defs/timeUnit"
+          "$ref": "#/definitions/timeUnit"
         }
       },
-      "dependentSchemas": {
+      "dependencies": {
         "time_unit": {
           "title": "Unit needs an end",
           "description": "A bound with `time_unit` has `min` or `max`.",
@@ -381,24 +410,77 @@
     },
     "rule": {
       "title": "Rule",
-      "description": "A rule in prefix or expression syntax.",
-      "anyOf": [{ "$ref": "#/$defs/expression" }, { "$ref": "#/$defs/prefixRule" }]
+      "description": "A rule in prefix or expression syntax. A string opening with `(` is an expression, and anything else a prefix rule.",
+      "if": { "type": "string", "pattern": "^\\(" },
+      "then": { "$ref": "#/definitions/expression" },
+      "else": { "$ref": "#/definitions/prefixRule" }
     },
     "prefixRule": {
       "title": "Prefix rule",
-      "description": "A reference, or an array: an operator followed by its operands.",
+      "description": "A reference, or an array: an operator followed by its operands. The operator alone picks the shape, so an error names the operand at fault.",
+      "type": ["string", "array"],
+      "if": { "type": "string" },
+      "then": { "$ref": "#/definitions/dottedPath" },
+      "else": {
+        "minItems": 1,
+        "items": [{ "$ref": "#/definitions/operator" }],
+        "allOf": [
+          {
+            "if": { "minItems": 1, "items": [{ "enum": ["lt", "le", "gt", "ge"] }] },
+            "then": { "$ref": "#/definitions/numberPredicateRule" }
+          },
+          {
+            "if": { "minItems": 1, "items": [{ "enum": ["contains", "startswith", "endswith"] }] },
+            "then": { "$ref": "#/definitions/stringPredicateRule" }
+          },
+          {
+            "if": { "minItems": 1, "items": [{ "$ref": "#/definitions/comparisonOperator" }] },
+            "then": { "$ref": "#/definitions/comparisonRule" }
+          },
+          {
+            "if": { "minItems": 1, "items": [{ "$ref": "#/definitions/quantifiedAssignmentOperator" }] },
+            "then": { "$ref": "#/definitions/quantifiedAssignmentRule" }
+          },
+          {
+            "if": { "minItems": 1, "items": [{ "$ref": "#/definitions/quantifierOperator" }] },
+            "then": { "$ref": "#/definitions/quantifiedRule" }
+          },
+          {
+            "if": { "minItems": 1, "items": [{ "$ref": "#/definitions/multiaryOperator" }] },
+            "then": { "$ref": "#/definitions/multiaryRule" }
+          },
+          {
+            "if": { "minItems": 1, "items": [{ "$ref": "#/definitions/unaryOperator" }] },
+            "then": { "$ref": "#/definitions/unaryRule" }
+          },
+          {
+            "if": { "minItems": 1, "items": [{ "$ref": "#/definitions/stepTemporalOperator" }] },
+            "then": { "$ref": "#/definitions/stepTemporalRule" }
+          },
+          {
+            "if": { "minItems": 1, "items": [{ "$ref": "#/definitions/unaryTemporalOperator" }] },
+            "then": { "$ref": "#/definitions/unaryTemporalRule" }
+          },
+          {
+            "if": { "minItems": 1, "items": [{ "$ref": "#/definitions/binaryTemporalOperator" }] },
+            "then": { "$ref": "#/definitions/binaryTemporalRule" }
+          }
+        ]
+      }
+    },
+    "operator": {
+      "title": "Operator",
+      "description": "The first element of a prefix rule.",
       "anyOf": [
-        { "$ref": "#/$defs/ruleRef" },
-        { "$ref": "#/$defs/varRef" },
-        { "$ref": "#/$defs/numberPredicateRule" },
-        { "$ref": "#/$defs/stringPredicateRule" },
-        { "$ref": "#/$defs/quantifiedAssignmentRule" },
-        { "$ref": "#/$defs/quantifiedRule" },
-        { "$ref": "#/$defs/multiaryRule" },
-        { "$ref": "#/$defs/unaryRule" },
-        { "$ref": "#/$defs/stepTemporalRule" },
-        { "$ref": "#/$defs/unaryTemporalRule" },
-        { "$ref": "#/$defs/binaryTemporalRule" }
+        { "$ref": "#/definitions/numberPredicateOperator" },
+        { "$ref": "#/definitions/stringPredicateOperator" },
+        { "$ref": "#/definitions/quantifiedAssignmentOperator" },
+        { "$ref": "#/definitions/quantifierOperator" },
+        { "$ref": "#/definitions/multiaryOperator" },
+        { "$ref": "#/definitions/unaryOperator" },
+        { "$ref": "#/definitions/stepTemporalOperator" },
+        { "$ref": "#/definitions/unaryTemporalOperator" },
+        { "$ref": "#/definitions/binaryTemporalOperator" }
       ]
     },
     "unaryOperator": {
@@ -461,14 +543,14 @@
       "title": "Number comparison",
       "description": "`[operator, variable, variable or number literal]`.",
       "type": "array",
-      "prefixItems": [
-        { "$ref": "#/$defs/numberPredicateOperator" },
-        { "$ref": "#/$defs/varRef" },
-        { "anyOf": [{ "$ref": "#/$defs/varRef" }, { "$ref": "#/$defs/numberLiteral" }] }
+      "items": [
+        { "$ref": "#/definitions/numberPredicateOperator" },
+        { "$ref": "#/definitions/identifier" },
+        { "if": { "type": "string" }, "then": { "$ref": "#/definitions/identifier" }, "else": { "$ref": "#/definitions/numberLiteral" } }
       ],
       "minItems": 3,
       "maxItems": 3,
-      "items": false
+      "additionalItems": false
     },
     "stringPredicateOperator": {
       "title": "String comparison operator",
@@ -493,14 +575,45 @@
       "title": "String comparison",
       "description": "`[operator, variable, variable or string literal]`.",
       "type": "array",
-      "prefixItems": [
-        { "$ref": "#/$defs/stringPredicateOperator" },
-        { "$ref": "#/$defs/varRef" },
-        { "anyOf": [{ "$ref": "#/$defs/varRef" }, { "$ref": "#/$defs/stringLiteral" }] }
+      "items": [
+        { "$ref": "#/definitions/stringPredicateOperator" },
+        { "$ref": "#/definitions/identifier" },
+        { "if": { "type": "string" }, "then": { "$ref": "#/definitions/identifier" }, "else": { "$ref": "#/definitions/stringLiteral" } }
       ],
       "minItems": 3,
       "maxItems": 3,
-      "items": false
+      "additionalItems": false
+    },
+    "comparisonOperator": {
+      "title": "Equality operator",
+      "description": "The operators both comparison families share. Which family a rule belongs to is settled by its operands' types, not its shape.",
+      "anyOf": [
+        { "const": "eq", "description": "Equal to." },
+        { "const": "ne", "description": "Not equal to." }
+      ]
+    },
+    "comparisonRule": {
+      "title": "Equality comparison",
+      "description": "`[eq or ne, variable, variable or literal]`: a number comparison or a string comparison.",
+      "type": "array",
+      "items": [
+        { "$ref": "#/definitions/comparisonOperator" },
+        { "$ref": "#/definitions/identifier" },
+        { "if": { "type": "string" }, "then": { "$ref": "#/definitions/identifier" }, "else": { "$ref": "#/definitions/literal" } }
+      ],
+      "minItems": 3,
+      "maxItems": 3,
+      "additionalItems": false
+    },
+    "literal": {
+      "title": "Literal",
+      "description": "A number or string operand.",
+      "type": "object",
+      "required": ["value"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "title": "Value", "type": ["number", "string"] }
+      }
     },
     "numberLiteral": {
       "title": "Number literal",
@@ -535,14 +648,14 @@
       "title": "Assignment",
       "description": "`[assign, variable, quantified variable]`.",
       "type": "array",
-      "prefixItems": [
-        { "$ref": "#/$defs/quantifiedAssignmentOperator" },
-        { "$ref": "#/$defs/varRef" },
-        { "$ref": "#/$defs/quantifiedVariable" }
+      "items": [
+        { "$ref": "#/definitions/quantifiedAssignmentOperator" },
+        { "$ref": "#/definitions/identifier" },
+        { "$ref": "#/definitions/quantifiedVariable" }
       ],
       "minItems": 3,
       "maxItems": 3,
-      "items": false
+      "additionalItems": false
     },
     "quantifiedVariable": {
       "title": "Quantified variable",
@@ -551,7 +664,7 @@
       "required": ["qvar"],
       "additionalProperties": false,
       "properties": {
-        "qvar": { "title": "Name", "$ref": "#/$defs/identifier" }
+        "qvar": { "title": "Name", "$ref": "#/definitions/identifier" }
       }
     },
     "quantifierOperator": {
@@ -580,7 +693,7 @@
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "$ref": "#/$defs/identifier" }
+          "items": { "$ref": "#/definitions/identifier" }
         }
       }
     },
@@ -622,80 +735,80 @@
       "title": "Quantified rule",
       "description": "`[quantifier, rule, binding]`.",
       "type": "array",
-      "prefixItems": [
-        { "$ref": "#/$defs/quantifierOperator" },
-        { "$ref": "#/$defs/prefixRule" },
-        { "$ref": "#/$defs/binding" }
+      "items": [
+        { "$ref": "#/definitions/quantifierOperator" },
+        { "$ref": "#/definitions/prefixRule" },
+        { "$ref": "#/definitions/binding" }
       ],
       "minItems": 3,
       "maxItems": 3,
-      "items": false
+      "additionalItems": false
     },
     "unaryRule": {
       "title": "Unary rule",
       "description": "`[operator, rule]`.",
       "type": "array",
-      "prefixItems": [{ "$ref": "#/$defs/unaryOperator" }, { "$ref": "#/$defs/prefixRule" }],
+      "items": [{ "$ref": "#/definitions/unaryOperator" }, { "$ref": "#/definitions/prefixRule" }],
       "minItems": 2,
       "maxItems": 2,
-      "items": false
+      "additionalItems": false
     },
     "stepTemporalRule": {
       "title": "Step temporal rule",
       "description": "`[operator, rule]`.",
       "type": "array",
-      "prefixItems": [{ "$ref": "#/$defs/stepTemporalOperator" }, { "$ref": "#/$defs/prefixRule" }],
+      "items": [{ "$ref": "#/definitions/stepTemporalOperator" }, { "$ref": "#/definitions/prefixRule" }],
       "minItems": 2,
       "maxItems": 2,
-      "items": false
+      "additionalItems": false
     },
     "multiaryRule": {
       "title": "N-ary rule",
       "description": "`[operator, rule, rule, ...]`.",
       "type": "array",
-      "prefixItems": [
-        { "$ref": "#/$defs/multiaryOperator" },
-        { "$ref": "#/$defs/prefixRule" },
-        { "$ref": "#/$defs/prefixRule" }
+      "items": [
+        { "$ref": "#/definitions/multiaryOperator" },
+        { "$ref": "#/definitions/prefixRule" },
+        { "$ref": "#/definitions/prefixRule" }
       ],
       "minItems": 3,
-      "items": { "$ref": "#/$defs/prefixRule" }
+      "additionalItems": { "$ref": "#/definitions/prefixRule" }
     },
     "unaryTemporalRule": {
       "title": "Unary temporal rule",
       "description": "`[operator, rule]`, optionally followed by a metric bound.",
       "type": "array",
-      "prefixItems": [{ "$ref": "#/$defs/unaryTemporalOperator" }, { "$ref": "#/$defs/prefixRule" }],
+      "items": [{ "$ref": "#/definitions/unaryTemporalOperator" }, { "$ref": "#/definitions/prefixRule" }],
       "minItems": 2,
       "maxItems": 3,
-      "items": { "$ref": "#/$defs/timeBound" }
+      "additionalItems": { "$ref": "#/definitions/timeBound" }
     },
     "binaryTemporalRule": {
       "title": "Binary temporal rule",
       "description": "`[operator, rule, rule]`, optionally followed by a metric bound on the second operand.",
       "type": "array",
-      "prefixItems": [
-        { "$ref": "#/$defs/binaryTemporalOperator" },
-        { "$ref": "#/$defs/prefixRule" },
-        { "$ref": "#/$defs/prefixRule" }
+      "items": [
+        { "$ref": "#/definitions/binaryTemporalOperator" },
+        { "$ref": "#/definitions/prefixRule" },
+        { "$ref": "#/definitions/prefixRule" }
       ],
       "minItems": 3,
       "maxItems": 4,
-      "items": { "$ref": "#/$defs/timeBound" }
+      "additionalItems": { "$ref": "#/definitions/timeBound" }
     },
     "propertyTable": {
       "title": "Property table",
       "description": "Properties by name.",
       "type": "object",
-      "propertyNames": { "$ref": "#/$defs/identifier" },
-      "additionalProperties": { "$ref": "#/$defs/property" }
+      "propertyNames": { "$ref": "#/definitions/identifier" },
+      "additionalProperties": { "$ref": "#/definitions/property" }
     },
     "ruleTable": {
       "title": "Rule table",
       "description": "Rules by name.",
       "type": "object",
-      "propertyNames": { "$ref": "#/$defs/identifier" },
-      "additionalProperties": { "$ref": "#/$defs/rule" }
+      "propertyNames": { "$ref": "#/definitions/identifier" },
+      "additionalProperties": { "$ref": "#/definitions/rule" }
     },
     "property": {
       "title": "Property",
@@ -722,7 +835,7 @@
         "time_unit": {
           "title": "Time unit",
           "description": "Default unit of the metric bounds in this property.",
-          "$ref": "#/$defs/timeUnit"
+          "$ref": "#/definitions/timeUnit"
         },
         "tags": {
           "title": "Tags",
@@ -734,17 +847,17 @@
         "given": {
           "title": "Given",
           "description": "Condition under which `check` is required.",
-          "$ref": "#/$defs/rule"
+          "$ref": "#/definitions/rule"
         },
         "check": {
           "title": "Check",
           "description": "The requirement.",
-          "$ref": "#/$defs/rule"
+          "$ref": "#/definitions/rule"
         },
         "where": {
           "title": "Local rules",
           "description": "Rules visible only to this property.",
-          "$ref": "#/$defs/ruleTable"
+          "$ref": "#/definitions/ruleTable"
         },
         "extras": {
           "title": "Extras",

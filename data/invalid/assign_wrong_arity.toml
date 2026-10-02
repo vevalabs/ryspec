@@ -1,5 +1,5 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['forall', ['assign', 'sensor_id', {'qvar': 's'}, {'qvar': 'r'}]
+#:expect-schema-error ['assign', 'sensor_id', {'qvar': 's'}, {'qvar': 'r'}] is too long
 
 # `assign` gives one quantified variable the value of one name. Two variables
 # is two assignments, not one assignment with a third operand.

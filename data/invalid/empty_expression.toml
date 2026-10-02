@@ -1,5 +1,5 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error '()' is not valid
+#:expect-schema-error '()' does not match
 
 # An expression is a parenthesised formula, and a pair of parentheses with
 # nothing in them is not one. It is not a name either -- the other spelling a

@@ -1,5 +1,5 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['prev', 'p', {'max': 3}] is not valid
+#:expect-schema-error ['prev', 'p', {'max': 3}] is too long
 
 # A metric bound narrows a window, and `prev` is a single step rather than a
 # window. Reaching three steps back is three nested `prev` rules, or a bounded

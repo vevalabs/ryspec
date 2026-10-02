@@ -1,5 +1,5 @@
 #:schema ../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['lt', 'reading', {'value': 'a'}] is not valid
+#:expect-schema-error 'a' is not of type 'number'
 
 # `lt` compares numbers only, so it belongs to the number predicate, and a
 # number predicate's literal is a number.

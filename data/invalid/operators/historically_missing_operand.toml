@@ -1,5 +1,5 @@
 #:schema ../../../schemas/v0/ryspec.schema.json
-#:expect-schema-error ['historically'] is not valid
+#:expect-schema-error ['historically'] is too short
 
 # `historically` takes an operand -- the thing that has held at every point.
 version = "0"

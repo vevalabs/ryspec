@@ -1,0 +1,16 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'time_unit' is a dependency of 'base_period'
+
+# A base period is measured in the monitor's `time_unit`, so a period with no
+# unit says nothing about how far apart two samples are.
+version = "0"
+
+[[monitors]]
+inputs = ["p"]
+outputs = ["p_seen"]
+
+[monitors.runtime]
+base_period = 10
+
+[properties.p_seen]
+check = ["once", "p", { max = 10 }]
