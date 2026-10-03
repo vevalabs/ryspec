@@ -1,0 +1,13 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'protobuf' is not valid
+
+# Binary data is decoded as `flatbuffers`, the one binary format the format
+# knows.
+version = "0"
+
+[variables.frame]
+type = "binary"
+format = "protobuf"
+
+[properties.p]
+check = "q"

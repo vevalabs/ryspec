@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error Additional properties are not allowed ('case' was unexpected)
+
+# A literal carries its value and nothing else.
+version = "0"
+
+[properties.p]
+check = ["contains", "label", { value = "a", case = "ignore" }]

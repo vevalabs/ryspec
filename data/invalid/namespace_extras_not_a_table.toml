@@ -1,0 +1,11 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'north' is not of type 'object'
+
+# A namespace's `extras` is free-form inside, but it is a table.
+version = "0"
+
+[namespace.plant]
+extras = "north"
+
+[namespace.plant.properties.p]
+check = "q"

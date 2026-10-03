@@ -1,0 +1,8 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['until', 'p', 'q', {'max': 3}, {'max': 5}] is too long
+
+# `until` has one bound, on its second operand.
+version = "0"
+
+[properties.p]
+check = ["until", "p", "q", { max = 3 }, { max = 5 }]

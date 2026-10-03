@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'plant.label' does not match
+
+# A string comparison reads a variable, named bare.
+version = "0"
+
+[properties.p]
+check = ["startswith", "plant.label", { value = "A" }]

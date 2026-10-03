@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'q.s' does not match
+
+# A quantified variable is a name its quantifier binds, and a binding has no
+# namespace, so it is a bare identifier.
+version = "0"
+
+[properties.p]
+check = ["forall", ["assign", "sensor_id", { qvar = "q.s" }], { qvars = ["s"] }]

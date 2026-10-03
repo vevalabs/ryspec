@@ -1,0 +1,10 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error does not match
+
+# A tag is one word, and a no-break space (U+00A0) is whitespace to the
+# schema's \S as much as a space is, though it looks like none.
+version = "0"
+
+[properties.p]
+check = "q"
+tags = ["functional\u00a0safety"]

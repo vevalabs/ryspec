@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['speed'] is not of type 'object'
+
+# `variables` is a table keyed by variable name, not a list of names.
+version = "0"
+variables = ["speed"]
+
+[properties.p]
+check = "q"

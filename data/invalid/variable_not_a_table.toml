@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error True is not of type 'object'
+
+# A variable is declared by a table, even an empty one. A bare value declares
+# nothing.
+version = "0"
+
+[variables]
+q = true
+
+[properties.p]
+check = "q"

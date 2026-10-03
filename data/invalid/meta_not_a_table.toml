@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'Cruise control' is not of type 'object'
+
+# `meta` is a table of descriptive keys, not a title on its own.
+version = "0"
+meta = "Cruise control"
+
+[properties.p]
+check = "q"

@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 0 is not of type 'object'
+
+# An equality's literal is written `{ value = ... }`. A bare number is neither
+# that nor a variable.
+version = "0"
+
+[properties.p]
+check = ["ne", "gear", 0]

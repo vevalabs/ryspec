@@ -1,0 +1,30 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# Every time unit the format knows, each in a place a unit may be written: the
+# monitor's timestamps count microseconds, `fast_response` defaults its bounds
+# to nanoseconds, and the bounds of `slow_drift` name minutes, hours and days
+# for themselves, overriding both. `ms` and `s` are in `metric_bounds.toml`.
+[monitors.default]
+inputs = ["request", "response", "drift"]
+outputs = ["fast_response", "slow_drift"]
+
+[monitors.default.runtime]
+time_unit = "us"
+base_period = 50
+
+[variables]
+request = { type = "bool" }
+response = { type = "bool" }
+drift = { type = "bool" }
+
+[properties.fast_response]
+time_unit = "ns"
+given = "request"
+check = ["eventually", "response", { max = 800 }]
+
+[properties.slow_drift]
+check = ["and",
+  ["historically", ["not", "drift"], { max = 30, time_unit = "min" }],
+  ["once", "response", { max = 12, time_unit = "h" }],
+  ["once", "request", { min = 1, max = 7, time_unit = "d" }]]

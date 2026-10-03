@@ -1,0 +1,16 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error '10ms' is not of type 'number'
+
+# A base period is a number in the runtime's `time_unit`. The unit is not
+# spelled into the period.
+version = "0"
+
+[monitors.default]
+outputs = ["p"]
+
+[monitors.default.runtime]
+time_unit = "ms"
+base_period = "10ms"
+
+[properties.p]
+check = "q"

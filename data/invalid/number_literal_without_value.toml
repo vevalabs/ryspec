@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'value' is a required property
+
+# A literal operand is written `{ value = ... }`. An empty table carries no
+# value.
+version = "0"
+
+[properties.p]
+check = ["lt", "speed", {}]

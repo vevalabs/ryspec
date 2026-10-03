@@ -1,0 +1,13 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error Additional properties are not allowed ('period' was unexpected)
+
+# A monitor holds its runtime settings under `runtime`, and nothing else besides
+# its variable lists.
+version = "0"
+
+[monitors.default]
+outputs = ["p"]
+period = 10
+
+[properties.p]
+check = "q"

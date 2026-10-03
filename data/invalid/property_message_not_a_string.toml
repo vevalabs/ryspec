@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error False is not of type 'string'
+
+# A property's message is the text reported when it is violated.
+version = "0"
+
+[properties.p]
+check = "q"
+message = false

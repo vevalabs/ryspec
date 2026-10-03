@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'q.s' does not match
+
+# A quantifier binds bare names: a binding has no namespace to put one in.
+version = "0"
+
+[properties.p]
+check = ["forall", ["assign", "sensor_id", { qvar = "s" }], { qvars = ["q.s"] }]

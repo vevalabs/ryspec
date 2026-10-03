@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'plant.mode' does not match
+
+# An equality reads a variable, named bare.
+version = "0"
+
+[properties.p]
+check = ["eq", "plant.mode", { value = "auto" }]

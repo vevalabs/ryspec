@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['forall', ['assign', 'sensor_id', {'qvar': 's'}], {'qvars': ['s']}, {'qvars': ['r']}] is too long
+
+# A quantifier has one binding, and it lists every name the quantifier binds.
+version = "0"
+
+[properties.p]
+check = ["forall", ["assign", "sensor_id", { qvar = "s" }], { qvars = ["s"] }, { qvars = ["r"] }]

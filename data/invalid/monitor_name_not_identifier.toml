@@ -1,0 +1,11 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'main monitor' does not match
+
+# A monitor is named by an identifier, as every key the format reads is.
+version = "0"
+
+[monitors."main monitor"]
+outputs = ["p"]
+
+[properties.p]
+check = "q"

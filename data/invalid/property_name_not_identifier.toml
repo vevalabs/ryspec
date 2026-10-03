@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'p 1' does not match
+
+# A property is named by an identifier, so a monitor can list it among its
+# outputs. `p 1` cannot be listed.
+version = "0"
+
+[properties."p 1"]
+check = "q"

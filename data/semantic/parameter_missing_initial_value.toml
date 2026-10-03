@@ -9,7 +9,7 @@ outputs = ["p"]
 parameters = ["threshold"]
 
 [variables]
-x = {}
+x = { type = "number" }
 threshold = { type = "number" }
 
 [properties.p]

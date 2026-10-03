@@ -17,12 +17,13 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "redhat.vscode-xml",
         "redhat.vscode-yaml",
         "Ollama.ollama",
         "Anthropic.claude-code",
         "esbenp.prettier-vscode",
-        "tamasfe.even-better-toml"
+        "tamasfe.even-better-toml",
+        "llvm-vs-code-extensions.vscode-clangd",
+        "ms-python.python"
       ]
     }
   }

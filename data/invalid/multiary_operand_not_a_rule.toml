@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error True is not of type 'string', 'array'
+
+# Every operand of `and` is a rule: a reference or an operator with its
+# operands. A boolean is neither.
+version = "0"
+
+[properties.p]
+check = ["and", true, "q"]

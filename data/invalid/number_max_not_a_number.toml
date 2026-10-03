@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'fast' is not of type 'number'
+
+# A number variable's largest value is a number.
+version = "0"
+
+[variables.speed]
+type = "number"
+max = "fast"
+
+[properties.p]
+check = "q"

@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['two', 'lines'] is not of type 'string'
+
+# A property's description is text.
+version = "0"
+
+[properties.p]
+check = "q"
+description = ["two", "lines"]

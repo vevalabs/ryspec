@@ -1,0 +1,16 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'limit' is not of type 'array'
+
+# `parameters` is a list, even of one variable.
+version = "0"
+
+[variables.limit]
+type = "number"
+initial_value = 30
+
+[monitors.default]
+outputs = ["p"]
+parameters = "limit"
+
+[properties.p]
+check = "q"

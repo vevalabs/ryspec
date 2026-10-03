@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error [] should be non-empty
+
+# A monitor that publishes nothing has nothing to say, so `outputs` lists at
+# least one value.
+version = "0"
+
+[monitors.default]
+outputs = []
+
+[properties.p]
+check = "q"

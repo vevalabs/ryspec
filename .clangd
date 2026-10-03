@@ -1,0 +1,4 @@
+# clangd reads the compile commands CMake writes into the build directory
+# (CMAKE_EXPORT_COMPILE_COMMANDS in CMakeLists.txt): run `make` once first.
+CompileFlags:
+  CompilationDatabase: build

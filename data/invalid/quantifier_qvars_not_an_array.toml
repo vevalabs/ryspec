@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 's' is not of type 'array'
+
+# `qvars` is a list, even of one name.
+version = "0"
+
+[properties.p]
+check = ["forall", ["assign", "sensor_id", { qvar = "s" }], { qvars = "s" }]

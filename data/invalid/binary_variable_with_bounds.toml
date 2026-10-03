@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error Additional properties are not allowed ('min' was unexpected)
+
+# `min` and `max` bound a number. Binary data has no order to bound.
+version = "0"
+
+[variables.frame]
+type = "binary"
+min = 0
+
+[properties.p]
+check = "q"

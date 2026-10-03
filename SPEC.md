@@ -16,17 +16,19 @@ A document is held to four layers, each of which presumes the one before it:
 | layer | what it settles | implemented by |
 | --- | --- | --- |
 | TOML | the document is TOML | a TOML 1.1 parser |
-| schema | which tables and keys exist, the type of each value, the spelling and arity of a prefix rule | the JSON Schema in [`schemas/v0/`](schemas/v0/) |
-| grammar | the syntax inside an expression-form string | nothing, today |
-| semantic | what a name refers to, types across references, time cones | nothing, today |
+| schema | which tables and keys exist, the type of each value, the spelling and arity of a prefix rule | the JSON Schema in [`schemas/v0/`](schemas/v0/), and `libryspec`'s linter, which holds a copy of it by hand |
+| grammar | the syntax inside an expression-form string | `libryspec`, as it parses a document |
+| semantic | what a name refers to, types across references, time cones | `libryspec`'s linter (`ryspec_toml_lint()`), all but Rule 21 |
 
 A document **conforms** when it passes all four. A JSON Schema validator checks
 the first two, so a document it accepts may still hold an expression the
 [grammar](#rules-in-expression-form) does not derive, or break a rule in
 [What the schema cannot check](#what-the-schema-cannot-check). The corpus
 fixture for each such rule is cited beside it, and it carries an
-`#:expect-grammar-error` or `#:expect-semantic-error` header that nothing yet
-answers to.
+`#:expect-grammar-error` or `#:expect-semantic-error` header. `libryspec`
+refuses to parse every file with a grammar header, and its linter
+(`ryspec_toml_lint()`) refuses each file with a semantic header whose rule it
+checks: every rule below but Rule 21.
 
 ## Document structure
 
@@ -314,7 +316,12 @@ number         = digit { digit } [ "." digit { digit } ] [ ( "e" | "E" ) [ "+" |
 signed-number  = [ "+" | "-" ] number ;
 ```
 
-Whitespace may separate any two tokens. Operators bind from tightest to
+Whitespace may separate any two tokens. A `signed-number` is one token, its
+sign against its digits, so `{a < -3}` compares with minus three and
+`{a < - 3}` derives nothing. A token is read as what the grammar takes where
+it stands: a word is a keyword only where one can stand, so `{once}` names a
+variable `once` and `[:s]` a parameter `s`, and inside a bound, which has no
+`:=`, a `:` is a `:` whatever follows it. Operators bind from tightest to
 loosest in the order the grammar nests them: `not` and `next`, the unary
 temporal operators, `since` and `until` (left-associative), `and`, `or` and
 `xor` (left-associative), `->` and `implies` (right-associative), and the
@@ -535,7 +542,8 @@ other gives its path.
 
 The grammar layer has its own fixtures: every file in
 [`data/malformed/`](data/malformed/) holds an expression the
-[grammar](#rules-in-expression-form) does not derive.
+[grammar](#rules-in-expression-form) does not derive, and `libryspec`
+refuses the document with a grammar error at it.
 
 ## Open questions
 

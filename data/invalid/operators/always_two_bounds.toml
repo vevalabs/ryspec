@@ -1,0 +1,8 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['always', 'q', {'max': 3}, {'max': 5}] is too long
+
+# An operator has one bound. Two windows on `always` are two `always`.
+version = "0"
+
+[properties.p]
+check = ["always", "q", { max = 3 }, { max = 5 }]

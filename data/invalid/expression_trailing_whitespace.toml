@@ -1,0 +1,10 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error does not match
+
+# An expression ends at its closing parenthesis: whitespace separates two
+# tokens, and none follows the last. The schema's pattern ends at the `)`,
+# and libryspec's parser refuses the space after it as a grammar error.
+version = "0"
+
+[properties.p]
+check = "({q}) "

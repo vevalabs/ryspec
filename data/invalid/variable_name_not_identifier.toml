@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'wheel-speed' does not match
+
+# A variable is named by an identifier, so a rule can name it bare. `wheel-speed`
+# reads as a subtraction to anyone who meets it in an expression.
+version = "0"
+
+[variables.wheel-speed]
+type = "number"
+
+[properties.p]
+check = "q"

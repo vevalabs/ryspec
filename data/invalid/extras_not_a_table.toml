@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'draft' is not of type 'object'
+
+# The document's `extras` is free-form inside, but it is a table.
+version = "0"
+extras = "draft"
+
+[properties.p]
+check = "q"

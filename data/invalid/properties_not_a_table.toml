@@ -1,0 +1,6 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'q' is not of type 'object'
+
+# `properties` is a table keyed by property name.
+version = "0"
+properties = "q"

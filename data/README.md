@@ -6,7 +6,7 @@ A corpus of `ryspec` documents, one directory per verdict the format has:
 | --- | --- |
 | `valid/` | documents the schema accepts |
 | `invalid/` | documents the schema rejects, and documents that break a rule nothing implements |
-| `malformed/` | documents only a parser could reject, and there is none |
+| `malformed/` | documents only a parser can reject: the grammar of expression form, which `libryspec` checks as it parses a document |
 | `semantic/` | schema-valid documents that each break one rule in [`SPEC.md`](../SPEC.md#what-the-schema-cannot-check)'s "What the schema cannot check" |
 
 Every file names the schema in a `#:schema` header, so any JSON Schema
@@ -14,13 +14,18 @@ validator that reads TOML -- an editor's included -- can check it. Nothing in
 this repository runs them: every file in `valid/`, `malformed/` and `semantic/`
 must pass the schema, and an `invalid/` file's header decides its verdict.
 
-**Only the schema rejects anything here.** A file declaring
-`#:expect-semantic-error` or `#:expect-grammar-error` is owed a rejection by
-nobody. The grammar that owed the second and the loader that owed the first
-are both out of the repository. Those files and their markers are kept, because the rule
-each states is still true of the format and the file is still the fixture for
-it. What every one of them owes *now* is the other half of its old contract,
-and it is the half that catches a schema grown too strict: it must validate.
+**The schema rejects what it can see** -- jsonschema, and `libryspec`'s copy
+of the schema, which its lint test holds to every file here -- and `libryspec`
+the grammar (SPEC.md's conformance table says who does what): parsing a file declaring
+`#:expect-grammar-error` fails, as the library's grammar test checks. An
+`#:expect-semantic-error` file, and every file in `semantic/`, is owed a
+rejection by `libryspec`'s linter, which checks every one of SPEC.md's rules
+but Rule 21: the library's lint test holds each file to failing its rule
+alone. A file whose rule nothing checks yet is held to passing every rule
+that is checked, and kept, marker and all, because the rule it states is
+still true of the format and the file is still the fixture for it.
+What every one of them owes besides is the other half of the contract, and it
+is the half that catches a schema grown too strict: it must validate.
 
 `invalid/` therefore has no single verdict of its own. Most of its files fail
 the schema and the rest stand on a rule nothing enforces. Each file's header is
@@ -92,6 +97,6 @@ testing something other than what it claims to.
 rather than a message, and a line and column are not worth freezing. A file
 declaring it belongs in `malformed/` and has to pass the schema.
 
-A `semantic` file must pass the schema too, that being the whole of what
-it asserts today. Only a `schema` file is rejected by anything, and only it
-names a substring to match.
+A `semantic` or `grammar` file must pass the schema too. `libryspec`
+rejects every `grammar` file; only a `schema` file names a substring to
+match.

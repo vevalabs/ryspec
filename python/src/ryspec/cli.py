@@ -7,7 +7,7 @@ import sys
 from collections.abc import Callable, Iterable, Iterator
 from pathlib import Path
 
-from ryspec.validate import Diagnostic, validate_file
+from ryspec.diagnostic import Diagnostic
 
 
 def toml_files(paths: Iterable[Path]) -> Iterator[Path]:
@@ -24,8 +24,8 @@ def toml_files(paths: Iterable[Path]) -> Iterator[Path]:
 
 
 def check_files(args: argparse.Namespace, check: Callable[[Path], list[Diagnostic]]) -> int:
-    """Run `check` over every file under `args.paths`, and report as `validate`
-    and `lint` both do."""
+    """Run `check` over every file under `args.paths`, and report each file's
+    diagnostics, then a summary."""
     missing = [p for p in args.paths if not p.exists()]
     for path in missing:
         print(f"ryspec: {path}: no such file or directory", file=sys.stderr)
@@ -49,13 +49,22 @@ def check_files(args: argparse.Namespace, check: Callable[[Path], list[Diagnosti
 
 
 def run_validate(args: argparse.Namespace) -> int:
+    from ryspec.validate import validate_file
+
     return check_files(args, lambda path: validate_file(path, args.schema))
 
 
 def run_lint(args: argparse.Namespace) -> int:
-    from ryspec.lint import lint_file
+    from ryspec.lint import lint_file, lint_rules
 
-    return check_files(args, lint_file)
+    if args.rules:
+        unknown = sorted(set(args.rules) - set(lint_rules()))
+        if unknown:
+            checked = ", ".join(map(str, lint_rules()))
+            print(f"ryspec: no lint rule {unknown[0]} (the rules checked: {checked})",
+                  file=sys.stderr)
+            return 2
+    return check_files(args, lambda path: lint_file(path, args.rules))
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -79,16 +88,23 @@ def build_parser() -> argparse.ArgumentParser:
 
     lint = commands.add_parser(
         "lint",
-        help="check TOML documents against the rules the schema cannot check",
+        help="check TOML documents against the schema and the rules it cannot check",
         description="Check every .toml file under each PATH with libryspec, the C "
-        "library, against the rules of SPEC.md's \"What the schema cannot check\". "
-        "No rule is implemented yet, so every document that parses passes.",
+        "library, layer by layer: its TOML, the grammar of expression form, the ryspec "
+        "schema (libryspec's own copy of it, not jsonschema), then the rules of "
+        "SPEC.md's \"What the schema cannot check\", stopping at a file's first "
+        "violation.",
     )
     lint.add_argument("paths", nargs="*", type=Path, default=[Path(".")], metavar="PATH",
                       help="a file or directory to check (default: the current directory)")
+    lint.add_argument("-r", "--rule", dest="rules", type=int, action="append", metavar="N",
+                      help="check rule N of SPEC.md alone, or 0 for the schema; repeat for "
+                      "several, which run in the order given (default: the schema, then every "
+                      "rule libryspec checks). A rule presumes a document the schema accepts")
     lint.add_argument("-q", "--quiet", action="store_true",
                       help="report only failing files, then the summary")
     lint.set_defaults(handler=run_lint)
+
     return parser
 
 

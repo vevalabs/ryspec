@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['not'] is too short
+
+# `not` negates one rule, so it has one operand.
+version = "0"
+
+[properties.p]
+check = ["not"]

@@ -1,0 +1,11 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'string' is not valid
+
+# A variable is `bool`, `number`, `text` or `binary`. A string is `text`.
+version = "0"
+
+[variables.label]
+type = "string"
+
+[properties.p]
+check = "q"

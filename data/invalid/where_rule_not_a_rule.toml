@@ -1,0 +1,11 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 1 is not of type 'string', 'array'
+
+# A property's local rules are rules all the same. A number is no rule.
+version = "0"
+
+[properties.p]
+check = "r"
+
+[properties.p.where]
+r = 1

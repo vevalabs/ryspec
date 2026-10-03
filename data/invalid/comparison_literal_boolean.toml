@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error True is not of type 'number', 'string'
+
+# An equality compares numbers or strings. A boolean variable is a rule on its
+# own, and `not` negates it.
+version = "0"
+
+[properties.p]
+check = ["eq", "door_open", { value = true }]

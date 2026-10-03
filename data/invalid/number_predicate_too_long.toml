@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['lt', 'low', 'speed', 'high'] is too long
+
+# A comparison has two operands.
+version = "0"
+
+[properties.p]
+check = ["lt", "low", "speed", "high"]

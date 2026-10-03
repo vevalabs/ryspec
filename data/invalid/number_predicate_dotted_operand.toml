@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'plant.speed' does not match
+
+# A comparison reads a variable, and a variable has no namespace to be named
+# under, so its first operand is a bare identifier.
+version = "0"
+
+[properties.p]
+check = ["gt", "plant.speed", { value = 30 }]

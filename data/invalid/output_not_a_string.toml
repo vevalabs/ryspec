@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 1 is not of type 'string'
+
+# An output names a property or a variable, so it is a dotted path. A number
+# names neither.
+version = "0"
+
+[monitors.default]
+outputs = [1]
+
+[properties.p]
+check = "q"

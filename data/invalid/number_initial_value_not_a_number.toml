@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error '0' is not of type 'number'
+
+# A number variable starts as a number.
+version = "0"
+
+[variables.speed]
+type = "number"
+initial_value = "0"
+
+[properties.p]
+check = "q"

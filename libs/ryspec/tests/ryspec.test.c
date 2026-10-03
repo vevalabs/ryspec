@@ -17,10 +17,38 @@ static int failures;
 
 static ryspec_status parse_string(const char *src) {
   ryspec_diagnostic diag;
-  ryspec_document *doc = ryspec_parse(src, strlen(src), "<test>", &diag);
+  ryspec_toml_doc *doc = ryspec_toml_parse(src, strlen(src), "<test>", &diag);
   CHECK((doc != NULL) == (diag.status == RYSPEC_OK));
-  ryspec_document_free(doc);
+  ryspec_toml_doc_free(doc);
   return diag.status;
+}
+
+/* Parse src and expect status, at line. */
+static void expect_error(const char *src, ryspec_status status, int line) {
+  ryspec_diagnostic diag;
+  ryspec_toml_doc *doc = ryspec_toml_parse(src, strlen(src), "<test>", &diag);
+  CHECK(doc == NULL);
+  if (diag.status != status || diag.line != line) {
+    fprintf(stderr, "%d:%d: status %d: %s\n", diag.line, diag.column,
+            (int)diag.status, diag.message);
+  }
+  CHECK(diag.status == status);
+  CHECK(diag.line == line);
+  CHECK(strncmp(diag.message, "(line", 5) != 0);
+  ryspec_toml_doc_free(doc);
+}
+
+static void test_toml_errors(void) {
+  expect_error("version = \"0\"\nx = \n", RYSPEC_ERROR_TOML, 2);
+  expect_error("x = \"\\uD800\"\n", RYSPEC_ERROR_TOML_ENCODING, 1);
+  expect_error("x = 1\nx = 2\n", RYSPEC_ERROR_TOML_REDEFINED, 2);
+  expect_error("[a]\n[a]\n", RYSPEC_ERROR_TOML_REDEFINED, 2);
+  expect_error("a = { b = 1 }\n[a.c]\n", RYSPEC_ERROR_TOML_REDEFINED, 2);
+
+  char deep[64] = "\nx = ";
+  memset(deep + 5, '[', 40);
+  deep[45] = '\n';
+  expect_error(deep, RYSPEC_ERROR_TOML_LIMIT, 2);
 }
 
 static void test_version(void) {
@@ -42,43 +70,22 @@ static void test_parse_file(const char *root) {
   char path[4096];
   snprintf(path, sizeof path, "%s/examples/prefix_form.toml", root);
   ryspec_diagnostic diag;
-  ryspec_document *doc = ryspec_parse_file(path, &diag);
+  ryspec_toml_doc *doc = ryspec_toml_parse_file(path, &diag);
   if (!doc) {
     fprintf(stderr, "%s:%d:%d: %s\n", path, diag.line, diag.column,
             diag.message);
   }
   CHECK(doc != NULL);
-  if (doc) {
-    CHECK(strcmp(ryspec_document_version(doc), "0") == 0);
-  }
-  ryspec_document_free(doc);
+  ryspec_toml_doc_free(doc);
 
-  CHECK(ryspec_parse_file("/nonexistent/ryspec.toml", &diag) == NULL);
+  CHECK(ryspec_toml_parse_file("/nonexistent/ryspec.toml", &diag) == NULL);
   CHECK(diag.status == RYSPEC_ERROR_IO);
-}
-
-static void count_finding(const ryspec_diagnostic *diag, void *ctx) {
-  (void)diag;
-  ++*(int *)ctx;
-}
-
-static void test_lint(void) {
-  const char *src = "version = \"0\"\n";
-  ryspec_document *doc = ryspec_parse(src, strlen(src), "<test>", NULL);
-  CHECK(doc != NULL);
-  if (doc) {
-    int reported = 0;
-    CHECK(ryspec_lint(doc, count_finding, &reported) == 0);
-    CHECK(reported == 0);
-    CHECK(ryspec_lint(doc, NULL, NULL) == 0);
-  }
-  ryspec_document_free(doc);
 }
 
 int main(int argc, char **argv) {
   test_version();
   test_parse();
-  test_lint();
+  test_toml_errors();
   if (argc > 1) {
     test_parse_file(argv[1]);
   }

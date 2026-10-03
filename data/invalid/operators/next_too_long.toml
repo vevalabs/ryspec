@@ -1,0 +1,8 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['next', 'q', 'r'] is too long
+
+# `next` takes one operand, and nothing after it.
+version = "0"
+
+[properties.p]
+check = ["next", "q", "r"]

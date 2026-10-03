@@ -1,0 +1,14 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error Additional properties are not allowed ('threads' was unexpected)
+
+# The runtime settings are a closed set.
+version = "0"
+
+[monitors.default]
+outputs = ["p"]
+
+[monitors.default.runtime]
+threads = 2
+
+[properties.p]
+check = "q"

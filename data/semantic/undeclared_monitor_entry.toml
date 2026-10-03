@@ -9,7 +9,7 @@ inputs = ["x", "y"]
 outputs = ["p"]
 
 [variables]
-x = {}
+x = { type = "number" }
 
 [properties.p]
 check = ["gt", "x", { value = 0 }]

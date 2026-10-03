@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 1 is not of type 'string', 'array'
+
+# A rule in a named namespace is a rule all the same: a reference or an
+# operator with its operands. A number is neither.
+version = "0"
+
+[namespace.plant.rules]
+r = 1
+
+[namespace.plant.properties.p]
+check = "r"

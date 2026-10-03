@@ -5,6 +5,7 @@
 #   make test       build, then run the C tests with ctest
 #   make validate   check the documents that must pass the schema
 #   make install    install the ryspec Python package, libryspec binding included
+#   make fuzz       hold libryspec's schema check to the JSON Schema, by mutation
 #   make clean      drop the build directory
 #
 # Every variable below is overridable: `make BUILD_TYPE=Debug`,
@@ -26,7 +27,7 @@ PIP_FLAGS ?=
 # file's verdict is its own header's, so it is not among them.
 VALIDATE_PATHS ?= examples data/valid data/malformed data/semantic
 
-.PHONY: all configure build test validate install clean
+.PHONY: all configure build test validate install fuzz clean
 
 all: build
 
@@ -53,6 +54,11 @@ validate:
 # PIP_FLAGS goes right before the path: `-e` there makes it editable.
 install:
 	$(PYTHON) -m pip install $(PIP_FLAGS) .
+
+# Needs the package as installed, its extension included: `make install`
+# first, after any change to libryspec.
+fuzz:
+	$(PYTHON) python/tools/schema_fuzz.py
 
 clean:
 	rm -rf $(BUILD_DIR)

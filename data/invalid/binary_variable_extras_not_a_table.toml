@@ -1,0 +1,13 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'raw' is not of type 'object'
+
+# A variable's `extras` is free-form inside, but it is a table.
+version = "0"
+
+[variables.frame]
+type = "binary"
+format = "flatbuffers"
+extras = "raw"
+
+[properties.p]
+check = "q"

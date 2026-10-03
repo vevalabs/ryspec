@@ -1,0 +1,14 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 1.5 is not of type 'integer'
+
+# An allocation size counts something, so it is a whole number.
+version = "0"
+
+[monitors.default]
+outputs = ["p"]
+
+[monitors.default.runtime]
+allocation_size = 1.5
+
+[properties.p]
+check = "q"

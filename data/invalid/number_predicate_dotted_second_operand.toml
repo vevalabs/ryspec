@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'plant.limit' does not match
+
+# A comparison's second operand, when it is not a literal, is a variable, and
+# so a bare identifier like the first.
+version = "0"
+
+[properties.p]
+check = ["gt", "speed", "plant.limit"]

@@ -1,0 +1,17 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'status mode' does not match
+
+# A source is a dotted path into another variable, so each of its steps is an
+# identifier.
+version = "0"
+
+[variables.status]
+type = "text"
+format = "json"
+
+[variables.mode]
+type = "text"
+source = "status mode"
+
+[properties.p]
+check = "q"

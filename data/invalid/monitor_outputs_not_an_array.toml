@@ -1,0 +1,11 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'p' is not of type 'array'
+
+# `outputs` is a list, even of one value.
+version = "0"
+
+[monitors.default]
+outputs = "p"
+
+[properties.p]
+check = "q"

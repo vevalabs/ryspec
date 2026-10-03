@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'north-wing' does not match
+
+# Every step of a namespace path is an identifier, the nested ones as much as
+# the first.
+version = "0"
+
+[namespace.plant.north-wing.properties.p]
+check = "q"

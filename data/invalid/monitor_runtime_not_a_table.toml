@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'embedded' is not of type 'object'
+
+# `runtime` is a table of settings.
+version = "0"
+
+[monitors.default]
+outputs = ["p"]
+runtime = "embedded"
+
+[properties.p]
+check = "q"

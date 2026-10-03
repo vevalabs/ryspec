@@ -1,0 +1,16 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+version = "0"
+
+# A binary variable names the encoding of its bytes in `format`. FlatBuffers is
+# the one binary format the format knows. The frame is read whole, never as a
+# truth value or a number, so it is an input monitored for presence only.
+[monitors.default]
+inputs = ["frame", "frame_ok"]
+outputs = ["frame_valid"]
+
+[variables]
+frame = { type = "binary", format = "flatbuffers", description = "one sensor frame" }
+frame_ok = { type = "bool" }
+
+[properties.frame_valid]
+check = "frame_ok"

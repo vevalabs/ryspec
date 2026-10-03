@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error False schema does not allow {'r': 'q'}
+
+# `[namespace]` names namespaces and is no namespace itself, so it holds no
+# rules: the anonymous namespace's rules sit at the root.
+version = "0"
+
+[namespace.rules]
+r = "q"
+
+[properties.p]
+check = "q"

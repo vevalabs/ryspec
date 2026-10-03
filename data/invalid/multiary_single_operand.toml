@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['and', 'q'] is too short
+
+# `and` joins two rules or more. Of one rule, it would be that rule.
+version = "0"
+
+[properties.p]
+check = ["and", "q"]

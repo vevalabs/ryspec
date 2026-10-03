@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 30 is not of type 'string'
+
+# A variable's description is text, whatever the variable's type.
+version = "0"
+
+[variables.speed]
+type = "number"
+description = 30
+
+[properties.p]
+check = "q"

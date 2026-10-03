@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'plant.1p' does not match
+
+# An output is a dotted path, so each of its steps is an identifier. `plant.1p`
+# has a step that is not.
+version = "0"
+
+[monitors.default]
+outputs = ["plant.1p"]
+
+[properties.p]
+check = "q"

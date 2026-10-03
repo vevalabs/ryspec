@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['assign', 'sensor_id'] is too short
+
+# An assignment binds a variable to a quantified variable, so it has both.
+version = "0"
+
+[properties.p]
+check = ["forall", ["assign", "sensor_id"], { qvars = ["s"] }]

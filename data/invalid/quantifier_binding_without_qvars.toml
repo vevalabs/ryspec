@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'qvars' is a required property
+
+# A binding lists the names it binds. An empty table binds nothing.
+version = "0"
+
+[properties.p]
+check = ["forall", ["assign", "sensor_id", { qvar = "s" }], {}]

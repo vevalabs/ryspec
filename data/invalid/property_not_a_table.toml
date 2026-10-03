@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'q' is not of type 'object'
+
+# A property is a table holding at least its `check`. A rule on its own is not
+# a property: it carries no `given`, message or tags, and belongs under `rules`.
+version = "0"
+
+[properties]
+p = "q"

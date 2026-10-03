@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'plant.suffix' does not match
+
+# A string comparison's second operand, when it is not a literal, is a
+# variable, named bare.
+version = "0"
+
+[properties.p]
+check = ["endswith", "label", "plant.suffix"]

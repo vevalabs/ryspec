@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'plant-north' does not match
+
+# A namespace is named by an identifier, so a dotted path can reach into it.
+# `plant-north.p` would not.
+version = "0"
+
+[namespace.plant-north.properties.p]
+check = "q"

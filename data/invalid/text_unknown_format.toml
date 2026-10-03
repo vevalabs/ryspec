@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'yaml' is not valid
+
+# Text is decoded as `json`, the one text format the format knows.
+version = "0"
+
+[variables.status]
+type = "text"
+format = "yaml"
+
+[properties.p]
+check = "q"

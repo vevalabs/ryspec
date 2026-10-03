@@ -11,7 +11,7 @@ inputs = ["x"]
 outputs = ["result"]
 
 [variables]
-x = {}
+x = { type = "number" }
 result = { type = "bool" }
 
 [properties.p]

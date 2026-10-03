@@ -1,0 +1,16 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['limit', 'limit'] has non-unique elements
+
+# A monitor is configured with each parameter once.
+version = "0"
+
+[variables.limit]
+type = "number"
+initial_value = 30
+
+[monitors.default]
+outputs = ["p"]
+parameters = ["limit", "limit"]
+
+[properties.p]
+check = "q"

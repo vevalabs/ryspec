@@ -1,0 +1,10 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['not', 'q'] is not of type 'object'
+
+# `rules` is a table keyed by rule name. One rule standing alone has no name
+# to be referenced by.
+version = "0"
+rules = ["not", "q"]
+
+[properties.p]
+check = "q"

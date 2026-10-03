@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'q-ready' does not match
+
+# A rule is named by an identifier, so another rule can reference it. `q-ready`
+# is no reference.
+version = "0"
+
+[rules]
+q-ready = "q"
+
+[properties.p]
+check = "q"

@@ -1,0 +1,12 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['p', 'p'] has non-unique elements
+
+# A monitor publishes each value once: an output listed twice says nothing the
+# first did not.
+version = "0"
+
+[monitors.default]
+outputs = ["p", "p"]
+
+[properties.p]
+check = "q"

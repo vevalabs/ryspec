@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error Additional properties are not allowed ('unit' was unexpected)
+
+# A literal carries its value and nothing else. A unit belongs to the variable
+# it is compared with.
+version = "0"
+
+[properties.p]
+check = ["lt", "speed", { value = 30, unit = "km/h" }]

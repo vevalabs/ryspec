@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 's' is not of type 'object'
+
+# A quantifier's binding is written `{ qvars = [...] }`. A bare name is not
+# one.
+version = "0"
+
+[properties.p]
+check = ["forall", ["assign", "sensor_id", { qvar = "s" }], "s"]

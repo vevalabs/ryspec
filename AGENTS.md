@@ -5,17 +5,22 @@
 ## Layout
 
 The repository is the format: its JSON Schema, the language definition, and the
-corpus that holds the schema to it, plus a C library skeleton that reads documents.
+corpus that holds the schema to it, plus a C library that reads documents.
 
 | path | holds |
 | --- | --- |
-| `schemas/v0/` | the JSON Schema. It is the one implemented layer, so it is the authority on what a document may be |
+| `schemas/v0/` | the JSON Schema, the authority on what shape a document may have. `libryspec` holds a copy of it by hand (`src/lint_schema.c`), and a change here is owed one there |
 | `SPEC.md` | the prose definition: expression syntax, semantics, and the rules the schema cannot check |
 | `data/`, `examples/` | the document corpus and the documented examples |
 | `data/README.md` | what each corpus directory means, and what a file's `#:expect-*-error` header still asserts |
 | `data/semantic/` | one schema-valid fixture per rule in `SPEC.md`'s "What the schema cannot check" |
-| `CMakeLists.txt`, `include/`, `src/`, `tests/` | `libryspec`, a static C library built on tomlc17 (fetched by CMake) |
-| `python/` | the `ryspec` Python package, whose `ryspec validate` checks documents against the schema, and `ryspec lint` against the rules the schema cannot check, through `libryspec` (`python/ext/`, built by CMake from the root `pyproject.toml`) |
+| `libs/ryspec/` | `libryspec`, a static C library built on tomlc17 (fetched by CMake) and a hand-written expression parser, with the public header `include/ryspec/ryspec.h`, its sources and its tests. The root `CMakeLists.txt` adds it. A thin wrapper: a document is tomlc17's tree behind an opaque `ryspec_toml_doc`, with each expression-form rule replaced by its prefix-form twin as the document is parsed, so every rule is a prefix-form value. The public header names no tomlc17 type, and has no reader of values: a document is parsed and validated. It allocates nothing but through tomlc17's allocator, which the `allocations` test holds it to |
+| `libs/ryspec/src/toml_doc.h`, `src/toml_doc.c` | documents: tomlc17's result in a block of its allocator. `toml_doc.h` is the one header that names tomlc17's types, and it is private |
+| `libs/ryspec/src/expr_parser.h`, `src/expr_parser.c` | the expression parser: recursive descent over SPEC.md's grammar, emitting a rule as private events in prefix form's order, written as prefix-form TOML; with the operators and the TOML text writer the library shares |
+| `libs/ryspec/src/lint.h`, `src/lint.c` | the linter: an index of the document, a walker over prefix-form rules, and one check per rule of SPEC.md's "What the schema cannot check", and the schema, by hand, as check 0 (`src/lint_schema.c`), dispatched by rule number so each runs alone (`ryspec_toml_lint_rule()`) or all in order (`ryspec_toml_lint()`), stopping at the first violation. Nothing under `extras` is checked. The checks sit in `src/lint_*.c` by what they read |
+| `libs/ryspec/src/translate.c` | expressions into prefix form: each expression-form string at a rule position is written as prefix-form TOML, parsed by tomlc17, and spliced into the document's tree in its place, placed where the expression spells each part. A malformed expression fails the parse with a grammar error |
+| `python/tools/schema_fuzz.py` | the schema fuzzer (`make fuzz`): mutates every value of `examples/` and `data/valid/` and holds `libryspec`'s schema check to jsonschema on each mutant. Run it after changing either: a disagreement is a bug in one of the two, and a constraint no mutation meets wants one added to `MUTATIONS` |
+| `python/` | the `ryspec` Python package: `ryspec validate` checks documents against the schema, and `ryspec lint` (`lint.py`) has `libryspec` parse and lint documents -- TOML, grammar, its own copy of the schema, then the rules -- reporting a file's first violation; `--rule N` runs single checks. Its extension, `ryspec._core` (`python/ext/`, built by CMake from the root `pyproject.toml`), binds `libryspec`: `lint(path, rules=None)` and `lint_rules()` |
 
 ## Rules
 
@@ -70,10 +75,13 @@ Namespaces provide a packaging mechanism for properties.
 * Every `ryspec` document must conform to the `ryspec` JSON Schema.
 * Preserve the distinction between TOML syntax, ryspec language syntax, and document-level schema constraints.
 * Invalid syntax and unsupported constructs should produce clear diagnostics rather than being silently ignored.
-* A corpus file declaring `#:expect-semantic-error` or `#:expect-grammar-error`
-  is owed a rejection by nobody today, and what it asserts instead is that the
-  schema accepts it. Keep both the file and its marker.
+* A corpus file declaring `#:expect-grammar-error` is owed a rejection by
+  `libryspec` when it parses the file, and one declaring
+  `#:expect-semantic-error` by `libryspec`'s linter, once it checks the
+  file's rule; what each asserts besides is that the schema accepts it. Keep
+  both the file and its marker.
 
 ## Code style
 
-- The schema is edited at `schemas/v0/`, and every corpus file and example points at it through its `#:schema` header, as a path relative to the file.
+- C23, `snake_case`, `ryspec_` prefix on all public symbols, `RYSPEC_` on macros/constants.
+- 2-space indentation, no tabs (see `.editorconfig`).

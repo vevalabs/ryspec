@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'plant' is not of type 'object'
+
+# `namespace` is a table of named namespaces, not the name of one.
+version = "0"
+namespace = "plant"
+
+[properties.p]
+check = "q"

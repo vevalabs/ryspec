@@ -1,0 +1,8 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['contains', 'label'] is too short
+
+# A string comparison has two operands.
+version = "0"
+
+[properties.p]
+check = ["contains", "label"]

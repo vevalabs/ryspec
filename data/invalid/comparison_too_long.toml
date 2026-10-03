@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error ['eq', 'a', 'b', 'c'] is too long
+
+# An equality has two operands. Three values equal to one another are two
+# equalities.
+version = "0"
+
+[properties.p]
+check = ["eq", "a", "b", "c"]

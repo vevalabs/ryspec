@@ -1,0 +1,9 @@
+#:schema ../../schemas/v0/ryspec.schema.json
+#:expect-schema-error 'check' is a required property
+
+# A property in a named namespace is a property all the same, and it has a
+# `check`.
+version = "0"
+
+[namespace.plant.properties.p]
+given = "q"

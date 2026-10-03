@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from functools import lru_cache
 from importlib import resources
 from pathlib import Path
@@ -11,25 +10,13 @@ from pathlib import Path
 import jsonschema
 import tomli
 
+from ryspec.diagnostic import Diagnostic
+
 SCHEMA_DIRECTIVE = "#:schema"
 
 # The schema a wheel ships, and where it sits in a source checkout.
 _PACKAGED_SCHEMA = ("schemas", "v0", "ryspec.schema.json")
 _CHECKOUT_SCHEMA = Path(__file__).resolve().parents[3] / "schemas" / "v0" / "ryspec.schema.json"
-
-
-@dataclass(frozen=True)
-class Diagnostic:
-    """One reason a document is rejected. `location` is a JSON path, or a
-    `line:column` for a TOML syntax error, or empty when neither applies."""
-
-    kind: str  # "toml", "schema" or "io"
-    location: str
-    message: str
-
-    def __str__(self) -> str:
-        where = f" {self.location}" if self.location else ""
-        return f"{self.kind} error{where}: {self.message}"
 
 
 def schema_directive(text: str) -> str | None:

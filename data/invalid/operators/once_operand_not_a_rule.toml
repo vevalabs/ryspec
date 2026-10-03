@@ -1,0 +1,9 @@
+#:schema ../../../schemas/v0/ryspec.schema.json
+#:expect-schema-error {'max': 3} is not of type 'string', 'array'
+
+# `once` takes a rule, then optionally a bound. A bound in the rule's place is
+# no rule.
+version = "0"
+
+[properties.p]
+check = ["once", { max = 3 }]
