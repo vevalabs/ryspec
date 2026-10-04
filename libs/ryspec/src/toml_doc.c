@@ -1,15 +1,16 @@
-/* Documents: parsing with tomlc17, the translation of expressions, and the
- * index: the entities of a document, and the name index over them. */
+/* Documents: parsing with tomlc17 and the translation of expressions; and
+ * reading them: the visitor of their entities, and the resolver of names. */
+#include "toml_doc.h"
+
 #include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "toml_doc.h"
-
-void ryspec_diagnose(ryspec_diagnostic *diag, ryspec_status status, int line,
-                     int column, const char *fmt, ...) {
-  if (!diag) {
+void ryspec_diagnose(
+  ryspec_diag* diag, int status, int line, int column, const char* fmt, ...)
+{
+  if(!diag) {
     return;
   }
   diag->status = status;
@@ -21,26 +22,32 @@ void ryspec_diagnose(ryspec_diagnostic *diag, ryspec_status status, int line,
   va_end(ap);
 }
 
-const char *ryspec_version(void) { return RYSPEC_VERSION_STRING; }
+int ryspec_version(void)
+{
+  return RYSPEC_VERSION_NUMBER;
+}
 
 /* ---------------------------------------------------------------------------
  * tomlc17. */
 
-toml_datum_t *ryspec_toml_value_lookup(const toml_datum_t *t, const char *key,
-                                       size_t key_len) {
-  if (!t || t->type != TOML_TABLE) {
+toml_datum_t* ryspec_toml_value_lookup(
+  const toml_datum_t* t, const char* key, size_t key_len)
+{
+  if(!t || t->type != TOML_TABLE) {
     return NULL;
   }
-  for (int i = 0; i < t->u.tab.size; i++) {
-    if ((size_t)t->u.tab.len[i] == key_len &&
-        memcmp(t->u.tab.key[i], key, key_len) == 0) {
+  for(int i = 0; i < t->u.tab.size; i++) {
+    if(
+      (size_t)t->u.tab.len[i] == key_len &&
+      memcmp(t->u.tab.key[i], key, key_len) == 0) {
       return &t->u.tab.value[i];
     }
   }
   return NULL;
 }
 
-toml_option_t ryspec_toml_options(void) {
+toml_option_t ryspec_toml_options(void)
+{
   /* Off by default in tomlc17; a document must be UTF-8. */
   toml_option_t opt = toml_default_option();
   opt.check_utf8 = true;
@@ -52,45 +59,46 @@ toml_option_t ryspec_toml_options(void) {
  * the words its messages hold, as of the tag CMake pins. Any other message is
  * a syntax error. */
 static const struct {
-  const char *words;
-  ryspec_status status;
+  const char* words;
+  int status;
 } errors[] = {
-    {"out of memory", RYSPEC_ERROR_MEMORY},
-    {"invalid UTF8 char", RYSPEC_ERROR_TOML_ENCODING},
-    {"error converting UCS", RYSPEC_ERROR_TOML_ENCODING},
-    {"duplicate key", RYSPEC_ERROR_TOML_REDEFINED},
-    {"table defined more than once", RYSPEC_ERROR_TOML_REDEFINED},
-    {"table defined before", RYSPEC_ERROR_TOML_REDEFINED},
-    {"inline table cannot be extended", RYSPEC_ERROR_TOML_REDEFINED},
-    {"cannot extend a static array", RYSPEC_ERROR_TOML_REDEFINED},
-    {"cannot extend a previously defined table", RYSPEC_ERROR_TOML_REDEFINED},
-    {"cannot locate table", RYSPEC_ERROR_TOML_REDEFINED},
-    {"encountered previously declared array", RYSPEC_ERROR_TOML_REDEFINED},
-    {"entry must be an array", RYSPEC_ERROR_TOML_REDEFINED},
-    {"has no elements", RYSPEC_ERROR_TOML_REDEFINED},
-    {"stack overflow", RYSPEC_ERROR_TOML_LIMIT},
-    {"too many key parts", RYSPEC_ERROR_TOML_LIMIT},
-    {"array too large", RYSPEC_ERROR_TOML_LIMIT},
-    {"table too large", RYSPEC_ERROR_TOML_LIMIT},
+  {"out of memory", RYSPEC_ERROR_MEMORY},
+  {"invalid UTF8 char", RYSPEC_ERROR_TOML_ENCODING},
+  {"error converting UCS", RYSPEC_ERROR_TOML_ENCODING},
+  {"duplicate key", RYSPEC_ERROR_TOML_REDEFINED},
+  {"table defined more than once", RYSPEC_ERROR_TOML_REDEFINED},
+  {"table defined before", RYSPEC_ERROR_TOML_REDEFINED},
+  {"inline table cannot be extended", RYSPEC_ERROR_TOML_REDEFINED},
+  {"cannot extend a static array", RYSPEC_ERROR_TOML_REDEFINED},
+  {"cannot extend a previously defined table", RYSPEC_ERROR_TOML_REDEFINED},
+  {"cannot locate table", RYSPEC_ERROR_TOML_REDEFINED},
+  {"encountered previously declared array", RYSPEC_ERROR_TOML_REDEFINED},
+  {"entry must be an array", RYSPEC_ERROR_TOML_REDEFINED},
+  {"has no elements", RYSPEC_ERROR_TOML_REDEFINED},
+  {"stack overflow", RYSPEC_ERROR_TOML_LIMIT},
+  {"too many key parts", RYSPEC_ERROR_TOML_LIMIT},
+  {"array too large", RYSPEC_ERROR_TOML_LIMIT},
+  {"table too large", RYSPEC_ERROR_TOML_LIMIT},
 };
 
 /* The position is a "(line N) " prefix, or for an encoding error an
  * " on line N" suffix; tomlc17 never gives a column. */
-void ryspec_toml_error(const char *errmsg, ryspec_diagnostic *diag) {
+void ryspec_toml_error(const char* errmsg, ryspec_diag* diag)
+{
   int line = 0, prefix = 0;
-  if (sscanf(errmsg, "(line %d) %n", &line, &prefix) < 1 || prefix == 0) {
+  if(sscanf(errmsg, "(line %d) %n", &line, &prefix) < 1 || prefix == 0) {
     line = 0;
     prefix = 0;
   }
-  const char *message = errmsg + prefix;
+  const char* message = errmsg + prefix;
   int len = (int)strlen(message);
-  const char *suffix = strstr(message, " on line ");
-  if (!line && suffix && sscanf(suffix, " on line %d", &line) == 1) {
+  const char* suffix = strstr(message, " on line ");
+  if(!line && suffix && sscanf(suffix, " on line %d", &line) == 1) {
     len = (int)(suffix - message);
   }
-  ryspec_status status = RYSPEC_ERROR_TOML;
-  for (size_t i = 0; i < sizeof errors / sizeof errors[0]; i++) {
-    if (strstr(message, errors[i].words)) {
+  int status = RYSPEC_ERROR_TOML;
+  for(size_t i = 0; i < sizeof errors / sizeof errors[0]; i++) {
+    if(strstr(message, errors[i].words)) {
       status = errors[i].status;
       break;
     }
@@ -103,10 +111,11 @@ void ryspec_toml_error(const char *errmsg, ryspec_diagnostic *diag) {
 
 /* A document holding result, in a block of tomlc17's allocator; NULL, with
  * result freed and diag filled, when that fails. */
-static ryspec_toml_doc *block(toml_result_t result, toml_option_t opt,
-                              ryspec_diagnostic *diag) {
-  ryspec_toml_doc *doc = opt.mem_realloc(NULL, sizeof *doc);
-  if (!doc) {
+static ryspec_toml_doc* block(
+  toml_result_t result, toml_option_t opt, ryspec_diag* diag)
+{
+  ryspec_toml_doc* doc = opt.mem_realloc(NULL, sizeof *doc);
+  if(!doc) {
     toml_free(result);
     ryspec_diagnose(diag, RYSPEC_ERROR_MEMORY, 0, 0, "out of memory");
     return NULL;
@@ -116,81 +125,84 @@ static ryspec_toml_doc *block(toml_result_t result, toml_option_t opt,
 }
 
 /* The document result parses into: its `version` checked, the rest of the
- * schema still to come, its expressions translated, and then indexed. NULL,
- * with diag filled, when it fails. */
-static ryspec_toml_doc *finish(toml_result_t result, toml_option_t opt,
-                               ryspec_diagnostic *diag) {
-  if (!result.ok) {
+ * schema still to come, and its expressions translated. NULL, with diag
+ * filled, when it fails. */
+static ryspec_toml_doc* finish(
+  toml_result_t result, toml_option_t opt, ryspec_diag* diag)
+{
+  if(!result.ok) {
     ryspec_toml_error(result.errmsg, diag);
     toml_free(result);
     return NULL;
   }
-  const toml_datum_t *version =
-      ryspec_toml_value_lookup(&result.toptab, "version", 7);
-  if (!version) {
-    ryspec_diagnose(diag, RYSPEC_ERROR_SCHEMA, 1, 1,
-                    "missing required key `version`");
+  const toml_datum_t* version =
+    ryspec_toml_value_lookup(&result.toptab, "version", 7);
+  if(!version) {
+    ryspec_diagnose(
+      diag, RYSPEC_ERROR_SCHEMA, 1, 1, "missing required key `version`");
     toml_free(result);
     return NULL;
   }
-  if (version->type != TOML_STRING || strcmp(version->u.s, "0") != 0) {
-    ryspec_diagnose(diag, RYSPEC_ERROR_SCHEMA, version->lineno,
-                    version->colno, "`version` must be the string \"0\"");
+  if(version->type != TOML_STRING || strcmp(version->u.s, "0") != 0) {
+    ryspec_diagnose(
+      diag,
+      RYSPEC_ERROR_SCHEMA,
+      version->lineno,
+      version->colno,
+      "`version` must be the string \"0\"");
     toml_free(result);
     return NULL;
   }
-  ryspec_toml_doc *doc = block(result, opt, diag);
-  /* Translation may move the block, so the index, which is in it, comes
-   * after; until then it is empty, as block() leaves it. */
-  if (doc && (ryspec_translate(&doc, opt, diag) != RYSPEC_OK ||
-              index_init(doc, diag) != RYSPEC_OK)) {
+  ryspec_toml_doc* doc = block(result, opt, diag);
+  if(doc && ryspec_translate(&doc, opt, diag) != RYSPEC_OK) {
     ryspec_toml_doc_free(doc);
     return NULL;
   }
-  if (doc) {
+  if(doc) {
     ryspec_diagnose(diag, RYSPEC_OK, 0, 0, "");
   }
   return doc;
 }
 
-ryspec_toml_doc *ryspec_toml_parse(const char *src, size_t len,
-                                   const char *name, ryspec_diagnostic *diag) {
-  if (len > (size_t)INT_MAX) {
+ryspec_toml_doc* ryspec_toml_parse(
+  const char* src, size_t len, ryspec_diag* diag)
+{
+  if(len > (size_t)INT_MAX) {
     ryspec_diagnose(diag, RYSPEC_ERROR_TOML_LIMIT, 0, 0, "input too large");
     return NULL;
   }
   toml_option_t opt = ryspec_toml_options();
-  return finish(toml_parse_named(src, (int)len, name), opt, diag);
+  return finish(toml_parse(src, (int)len), opt, diag);
 }
 
 /* The file is opened here, so a missing file is told apart from a parse
  * error; tomlc17 reads it, and says why a read failed in words of its own. */
-ryspec_toml_doc *ryspec_toml_parse_file(const char *path,
-                                        ryspec_diagnostic *diag) {
-  FILE *fp = fopen(path, "rb");
-  if (!fp) {
+ryspec_toml_doc* ryspec_toml_parse_file(const char* path, ryspec_diag* diag)
+{
+  FILE* fp = fopen(path, "rb");
+  if(!fp) {
     ryspec_diagnose(diag, RYSPEC_ERROR_IO, 0, 0, "cannot open %s", path);
     return NULL;
   }
   toml_option_t opt = ryspec_toml_options();
-  toml_result_t result = toml_parse_file_named(fp, path);
-  bool unread = !result.ok && (ferror(fp) ||
-                               strcmp(result.errmsg, "file is too big") == 0);
+  toml_result_t result = toml_parse_file(fp);
+  bool unread =
+    !result.ok && (ferror(fp) || strcmp(result.errmsg, "file is too big") == 0);
   fclose(fp);
-  if (unread) {
-    ryspec_diagnose(diag, RYSPEC_ERROR_IO, 0, 0, "cannot read %s: %s", path,
-                    result.errmsg);
+  if(unread) {
+    ryspec_diagnose(
+      diag, RYSPEC_ERROR_IO, 0, 0, "cannot read %s: %s", path, result.errmsg);
     toml_free(result);
     return NULL;
   }
   return finish(result, opt, diag);
 }
 
-void ryspec_toml_doc_free(ryspec_toml_doc *doc) {
-  if (!doc) {
+void ryspec_toml_doc_free(ryspec_toml_doc* doc)
+{
+  if(!doc) {
     return;
   }
-  index_release(doc);
   toml_free(doc->result);
   /* The allocator a block came from: tomlc17's default, which every parse
    * sets again (ryspec_toml_options()). */
@@ -198,595 +210,371 @@ void ryspec_toml_doc_free(ryspec_toml_doc *doc) {
 }
 
 /* ---------------------------------------------------------------------------
- * The index: building. */
+ * Entities. */
 
-static const toml_datum_t *get(const toml_datum_t *t, const char *key) {
+static const toml_datum_t* get(const toml_datum_t* t, const char* key)
+{
   return ryspec_toml_value_lookup(t, key, strlen(key));
 }
 
-static bool is_table(const toml_datum_t *d) {
+static bool is_table(const toml_datum_t* d)
+{
   return d && d->type == TOML_TABLE;
 }
 
-static bool key_is(const toml_datum_t *t, int i, const char *key) {
+static bool key_is(const toml_datum_t* t, int i, const char* key)
+{
   return (size_t)t->u.tab.len[i] == strlen(key) &&
          memcmp(t->u.tab.key[i], key, (size_t)t->u.tab.len[i]) == 0;
 }
 
-/* Add an entity of kind under parent, named by the len bytes at name, for
- * node, returning its id, or RYSPEC_NO_ENTITY when out of memory. */
-static ryspec_entity add(ryspec_toml_doc *doc, ryspec_entity_kind kind,
-                         ryspec_entity parent, const char *name, int len,
-                         const toml_datum_t *node) {
-  if (doc->n_entities == doc->cap_entities) {
-    toml_option_t opt = ryspec_toml_options();
-    size_t want = doc->cap_entities ? doc->cap_entities * 2 : 16;
-    index_entity *entities =
-        opt.mem_realloc(doc->entities, want * sizeof *entities);
-    if (!entities) {
-      return RYSPEC_NO_ENTITY;
-    }
-    doc->entities = entities;
-    const toml_datum_t **nodes =
-        opt.mem_realloc((void *)doc->nodes, want * sizeof *nodes);
-    if (!nodes) {
-      return RYSPEC_NO_ENTITY;
-    }
-    doc->nodes = nodes;
-    doc->cap_entities = want;
-  }
-  ryspec_entity e = doc->n_entities++;
-  doc->entities[e] = (index_entity){
-      .kind = kind,
-      .parent = parent,
-      .name = name,
-      .len = len,
-      .line = node ? node->lineno : 0,
-      .column = node ? node->colno : 0,
-  };
-  doc->nodes[e] = node;
-  return e;
+/* Whether the i-th entry of t, a table of namespaces, is one: a table, and
+ * not under a key a namespace may not have. */
+static bool is_namespace(const toml_datum_t* t, int i)
+{
+  return is_table(&t->u.tab.value[i]) && !key_is(t, i, "rules") &&
+         !key_is(t, i, "properties") && !key_is(t, i, "extras");
 }
 
-/* The rules of table t, each of kind, under parent. */
-static bool index_rules(ryspec_toml_doc *doc, const toml_datum_t *t,
-                        ryspec_entity_kind kind, ryspec_entity parent) {
-  if (!is_table(t)) {
-    return true;
-  }
-  for (int i = 0; i < t->u.tab.size; i++) {
-    if (add(doc, kind, parent, t->u.tab.key[i], t->u.tab.len[i],
-            &t->u.tab.value[i]) == RYSPEC_NO_ENTITY) {
-      return false;
-    }
-  }
-  return true;
+const toml_datum_t* ryspec_toml_doc_root(const ryspec_toml_doc* doc)
+{
+  return &doc->result.toptab;
 }
 
-/* A property's `given` or `check`, in *out, which stays RYSPEC_NO_ENTITY
- * where the property has none. */
-static bool index_position(ryspec_toml_doc *doc, const toml_datum_t *v,
-                           ryspec_entity_kind kind, ryspec_entity property,
-                           ryspec_entity *out) {
-  *out = RYSPEC_NO_ENTITY;
-  if (!v) {
-    return true;
-  }
-  *out = add(doc, kind, property, NULL, 0, v);
-  return *out != RYSPEC_NO_ENTITY;
+/* The table holding the named namespaces of the namespace ns: the root's
+ * `namespace`, or a named namespace's own table. */
+static const toml_datum_t* namespaces_of(
+  const ryspec_toml_doc* doc, const toml_datum_t* ns)
+{
+  return ns == ryspec_toml_doc_root(doc) ? get(ns, "namespace") : ns;
 }
 
-/* The rules and properties of the namespace ns. */
-static bool index_logic(ryspec_toml_doc *doc, ryspec_entity ns) {
-  const toml_datum_t *t = doc->nodes[ns];
-  if (!index_rules(doc, get(t, "rules"), RYSPEC_ENTITY_RULE, ns)) {
+/* The entity of kind under the i-th key of t, in ns and property. */
+static ryspec_toml_doc_entity entry(
+  ryspec_entity_kind kind,
+  const toml_datum_t* t,
+  int i,
+  const toml_datum_t* ns,
+  const toml_datum_t* property)
+{
+  return (ryspec_toml_doc_entity){
+    kind, t->u.tab.key[i], t->u.tab.len[i], &t->u.tab.value[i], ns, property};
+}
+
+bool ryspec_toml_doc_property_part(
+  const ryspec_toml_doc_entity* p,
+  ryspec_entity_kind part,
+  ryspec_toml_doc_entity* out)
+{
+  const toml_datum_t* v = p->kind != RYSPEC_ENTITY_PROPERTY ? NULL
+                          : part == RYSPEC_ENTITY_GIVEN ? get(p->value, "given")
+                          : part == RYSPEC_ENTITY_CHECK ? get(p->value, "check")
+                                                        : NULL;
+  if(!v) {
     return false;
   }
-  const toml_datum_t *properties = get(t, "properties");
-  if (!is_table(properties)) {
-    return true;
-  }
-  for (int i = 0; i < properties->u.tab.size; i++) {
-    const toml_datum_t *p = &properties->u.tab.value[i];
-    ryspec_entity at =
-        add(doc, RYSPEC_ENTITY_PROPERTY, ns, properties->u.tab.key[i],
-            properties->u.tab.len[i], p);
-    ryspec_entity given, check;
-    if (at == RYSPEC_NO_ENTITY ||
-        !index_position(doc, get(p, "given"), RYSPEC_ENTITY_GIVEN, at,
-                        &given) ||
-        !index_position(doc, get(p, "check"), RYSPEC_ENTITY_CHECK, at,
-                        &check) ||
-        !index_rules(doc, get(p, "where"), RYSPEC_ENTITY_PRIVATE_RULE, at)) {
-      return false;
-    }
-    doc->entities[at].u.property.given = given;
-    doc->entities[at].u.property.check = check;
-  }
+  *out = (ryspec_toml_doc_entity){part, p->name, p->len, v, p->ns, p->value};
   return true;
 }
 
-/* The named namespaces under t, a table of them, children of parent. */
-static bool index_namespaces(ryspec_toml_doc *doc, const toml_datum_t *t,
-                             ryspec_entity parent) {
-  if (!is_table(t)) {
-    return true;
+typedef struct visit {
+  const ryspec_toml_doc* doc;
+  ryspec_toml_doc_entity_fn fn;
+  void* ctx;
+  ryspec_diag* diag;
+} visit;
+
+/* Each entry of t as an entity of kind, in ns and property; only the
+ * tables with tables_only. */
+static int visit_table(
+  const visit* v,
+  const toml_datum_t* t,
+  ryspec_entity_kind kind,
+  bool tables_only,
+  const toml_datum_t* ns,
+  const toml_datum_t* property)
+{
+  int s = RYSPEC_OK;
+  for(int i = 0; s == RYSPEC_OK && is_table(t) && i < t->u.tab.size; i++) {
+    if(!tables_only || is_table(&t->u.tab.value[i])) {
+      ryspec_toml_doc_entity e = entry(kind, t, i, ns, property);
+      s = v->fn(&e, v->ctx, v->diag);
+    }
   }
-  for (int i = 0; i < t->u.tab.size; i++) {
-    const toml_datum_t *v = &t->u.tab.value[i];
-    if (!is_table(v) || key_is(t, i, "rules") || key_is(t, i, "properties") ||
-        key_is(t, i, "extras")) {
+  return s;
+}
+
+/* A property's parts: its `given`, its `check` and its private rules. */
+static int visit_parts(const visit* v, const ryspec_toml_doc_entity* p)
+{
+  static const ryspec_entity_kind parts[] = {
+    RYSPEC_ENTITY_GIVEN, RYSPEC_ENTITY_CHECK};
+  for(int k = 0; k < 2; k++) {
+    ryspec_toml_doc_entity e;
+    if(ryspec_toml_doc_property_part(p, parts[k], &e)) {
+      int s = v->fn(&e, v->ctx, v->diag);
+      if(s != RYSPEC_OK) {
+        return s;
+      }
+    }
+  }
+  return visit_table(
+    v,
+    get(p->value, "where"),
+    RYSPEC_ENTITY_PRIVATE_RULE,
+    false,
+    p->ns,
+    p->value);
+}
+
+/* The namespace of table ns: its rules, its properties and their parts,
+ * then its named namespaces, each so in turn. */
+static int visit_namespace(const visit* v, const toml_datum_t* ns)
+{
+  int s = visit_table(v, get(ns, "rules"), RYSPEC_ENTITY_RULE, false, ns, NULL);
+  const toml_datum_t* properties = get(ns, "properties");
+  for(int i = 0;
+      s == RYSPEC_OK && is_table(properties) && i < properties->u.tab.size;
+      i++) {
+    ryspec_toml_doc_entity p =
+      entry(RYSPEC_ENTITY_PROPERTY, properties, i, ns, NULL);
+    s = v->fn(&p, v->ctx, v->diag);
+    if(s == RYSPEC_OK) {
+      s = visit_parts(v, &p);
+    }
+  }
+  const toml_datum_t* t = namespaces_of(v->doc, ns);
+  for(int i = 0; s == RYSPEC_OK && is_table(t) && i < t->u.tab.size; i++) {
+    if(!is_namespace(t, i)) {
       continue;
     }
-    ryspec_entity at = add(doc, RYSPEC_ENTITY_NAMESPACE, parent,
-                           t->u.tab.key[i], t->u.tab.len[i], v);
-    if (at == RYSPEC_NO_ENTITY || !index_logic(doc, at) ||
-        !index_namespaces(doc, v, at)) {
-      return false;
+    ryspec_toml_doc_entity e = entry(RYSPEC_ENTITY_NAMESPACE, t, i, ns, NULL);
+    s = v->fn(&e, v->ctx, v->diag);
+    if(s == RYSPEC_OK) {
+      s = visit_namespace(v, e.value);
     }
   }
-  return true;
+  return s;
 }
 
-static ryspec_value_type type_of(const toml_datum_t *decl) {
-  const toml_datum_t *type = get(decl, "type");
-  if (!type || type->type != TOML_STRING) {
+int ryspec_toml_doc_each_entity(
+  const ryspec_toml_doc* doc,
+  ryspec_toml_doc_entity_fn fn,
+  void* ctx,
+  ryspec_diag* diag)
+{
+  const visit v = {doc, fn, ctx, diag};
+  const toml_datum_t* root = ryspec_toml_doc_root(doc);
+  int s = visit_namespace(&v, root);
+  return s == RYSPEC_OK ? visit_table(
+                            &v,
+                            get(root, "variables"),
+                            RYSPEC_ENTITY_VARIABLE,
+                            true,
+                            NULL,
+                            NULL)
+                        : s;
+}
+
+bool ryspec_toml_doc_is_position(ryspec_entity_kind kind)
+{
+  return kind == RYSPEC_ENTITY_RULE || kind == RYSPEC_ENTITY_PRIVATE_RULE ||
+         kind == RYSPEC_ENTITY_GIVEN || kind == RYSPEC_ENTITY_CHECK;
+}
+
+/* The index of the key of len bytes at name in t, or -1 when t is no table
+ * or holds no such key. */
+static int find(const toml_datum_t* t, const char* name, size_t len)
+{
+  for(int i = 0; is_table(t) && i < t->u.tab.size; i++) {
+    if(
+      (size_t)t->u.tab.len[i] == len &&
+      memcmp(t->u.tab.key[i], name, len) == 0) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+const toml_datum_t* ryspec_toml_doc_variable(
+  const ryspec_toml_doc* doc, const char* name, size_t len)
+{
+  const toml_datum_t* variables = get(ryspec_toml_doc_root(doc), "variables");
+  int i = find(variables, name, len);
+  return i >= 0 && is_table(&variables->u.tab.value[i])
+           ? &variables->u.tab.value[i]
+           : NULL;
+}
+
+ryspec_value_type ryspec_toml_doc_variable_type(const toml_datum_t* decl)
+{
+  const toml_datum_t* type = get(decl, "type");
+  if(!type || type->type != TOML_STRING) {
     return RYSPEC_TYPE_BOOL;
   }
-  if (strcmp(type->u.s, "number") == 0) {
+  if(strcmp(type->u.s, "number") == 0) {
     return RYSPEC_TYPE_NUMBER;
   }
-  if (strcmp(type->u.s, "text") == 0) {
+  if(strcmp(type->u.s, "text") == 0) {
     return RYSPEC_TYPE_TEXT;
   }
-  if (strcmp(type->u.s, "binary") == 0) {
+  if(strcmp(type->u.s, "binary") == 0) {
     return RYSPEC_TYPE_BINARY;
   }
   return RYSPEC_TYPE_BOOL;
 }
 
-/* The tables of t, each an entity of kind; a variable gets its type. */
-static bool index_tables(ryspec_toml_doc *doc, const toml_datum_t *t,
-                         ryspec_entity_kind kind) {
-  if (!is_table(t)) {
-    return true;
-  }
-  for (int i = 0; i < t->u.tab.size; i++) {
-    const toml_datum_t *v = &t->u.tab.value[i];
-    if (!is_table(v)) {
-      continue;
-    }
-    ryspec_entity at =
-        add(doc, kind, RYSPEC_NO_ENTITY, t->u.tab.key[i], t->u.tab.len[i], v);
-    if (at == RYSPEC_NO_ENTITY) {
-      return false;
-    }
-    if (kind == RYSPEC_ENTITY_VARIABLE) {
-      doc->entities[at].u.type = type_of(v);
-    }
-  }
-  return true;
-}
-
-/* ---------------------------------------------------------------------------
- * The name index. */
-
-/* The scope e's name is in, or with *in false, none: e is unnamed or a
- * monitor. */
-static ryspec_entity scope_of(const ryspec_toml_doc *doc, ryspec_entity e,
-                              bool *in) {
-  const index_entity *x = &doc->entities[e];
-  *in = x->name != NULL;
-  switch (x->kind) {
-  case RYSPEC_ENTITY_NAMESPACE:
-  case RYSPEC_ENTITY_RULE:
-  case RYSPEC_ENTITY_PROPERTY:
-  case RYSPEC_ENTITY_PRIVATE_RULE:
-    return x->parent;
-  case RYSPEC_ENTITY_VARIABLE:
-    return RYSPEC_NO_ENTITY;
-  default:
-    *in = false;
-    return RYSPEC_NO_ENTITY;
-  }
-}
-
-/* Order by scope, then name, then entity. */
-static int compare(ryspec_entity a_scope, const char *a_name, size_t a_len,
-                   ryspec_entity b_scope, const char *b_name, size_t b_len) {
-  if (a_scope != b_scope) {
-    return a_scope < b_scope ? -1 : 1;
-  }
-  int c = memcmp(a_name, b_name, a_len < b_len ? a_len : b_len);
-  if (c) {
-    return c;
-  }
-  return a_len == b_len ? 0 : a_len < b_len ? -1 : 1;
-}
-
-static bool before(const index_name *a, const index_name *b) {
-  int c = compare(a->scope, a->name, (size_t)a->len, b->scope, b->name,
-                  (size_t)b->len);
-  return c ? c < 0 : a->entity < b->entity;
-}
-
-/* Restore the heap of the n records at r below i. */
-static void sift(index_name *r, size_t i, size_t n) {
-  for (size_t child; (child = 2 * i + 1) < n; i = child) {
-    if (child + 1 < n && before(&r[child], &r[child + 1])) {
-      child++;
-    }
-    if (!before(&r[i], &r[child])) {
-      return;
-    }
-    index_name t = r[i];
-    r[i] = r[child];
-    r[child] = t;
-  }
-}
-
-/* Sort the n records at r in place, by heapsort: qsort() may allocate. */
-static void sort_names(index_name *r, size_t n) {
-  for (size_t i = n / 2; i-- > 0;) {
-    sift(r, i, n);
-  }
-  for (size_t end = n; end-- > 1;) {
-    index_name t = r[0];
-    r[0] = r[end];
-    r[end] = t;
-    sift(r, 0, end);
-  }
-}
-
-static bool index_names(ryspec_toml_doc *doc) {
-  size_t n = 0;
-  bool in;
-  for (ryspec_entity e = 0; e < doc->n_entities; e++) {
-    scope_of(doc, e, &in);
-    n += in;
-  }
-  doc->names =
-      ryspec_toml_options().mem_realloc(NULL, (n ? n : 1) * sizeof(index_name));
-  if (!doc->names) {
-    return false;
-  }
-  for (ryspec_entity e = 0; e < doc->n_entities; e++) {
-    ryspec_entity scope = scope_of(doc, e, &in);
-    if (in) {
-      doc->names[doc->n_names++] =
-          (index_name){scope, e, doc->entities[e].name, doc->entities[e].len};
-    }
-  }
-  sort_names(doc->names, doc->n_names);
-  return true;
-}
-
-ryspec_status index_init(ryspec_toml_doc *doc, ryspec_diagnostic *diag) {
-  const toml_datum_t *root = &doc->result.toptab;
-  if (add(doc, RYSPEC_ENTITY_NAMESPACE, RYSPEC_NO_ENTITY, NULL, 0, root) ==
-          RYSPEC_NO_ENTITY ||
-      !index_logic(doc, 0) ||
-      !index_namespaces(doc, get(root, "namespace"), 0) ||
-      !index_tables(doc, get(root, "variables"), RYSPEC_ENTITY_VARIABLE) ||
-      !index_tables(doc, get(root, "monitors"), RYSPEC_ENTITY_MONITOR) ||
-      !index_names(doc)) {
-    ryspec_diagnose(diag, RYSPEC_ERROR_MEMORY, 0, 0, "out of memory");
-    return RYSPEC_ERROR_MEMORY;
-  }
-  return RYSPEC_OK;
-}
-
-void index_release(ryspec_toml_doc *doc) {
-  void (*mem_free)(void *) = ryspec_toml_options().mem_free;
-  mem_free(doc->entities);
-  mem_free((void *)doc->nodes);
-  mem_free(doc->names);
-  doc->entities = NULL;
-  doc->nodes = NULL;
-  doc->names = NULL;
-  doc->n_entities = doc->cap_entities = doc->n_names = 0;
-}
-
-/* ---------------------------------------------------------------------------
- * The index: entities. */
-
-const index_entity *index_at(const ryspec_toml_doc *doc, ryspec_entity e) {
-  return doc && e < doc->n_entities ? &doc->entities[e] : NULL;
-}
-
-ryspec_entity_kind index_kind(const ryspec_toml_doc *doc, ryspec_entity e) {
-  const index_entity *x = index_at(doc, e);
-  return x ? x->kind : RYSPEC_ENTITY_NONE;
-}
-
-const toml_datum_t *index_node(const ryspec_toml_doc *doc, ryspec_entity e) {
-  return index_at(doc, e) ? doc->nodes[e] : NULL;
-}
-
-ryspec_entity index_next(const ryspec_toml_doc *doc, ryspec_entity e,
-                         ryspec_entity_kind kind) {
-  while (e < doc->n_entities && doc->entities[e].kind != kind) {
-    e++;
-  }
-  return e;
-}
-
-bool index_is_position(ryspec_entity_kind kind) {
-  return kind == RYSPEC_ENTITY_RULE || kind == RYSPEC_ENTITY_PRIVATE_RULE ||
-         kind == RYSPEC_ENTITY_GIVEN || kind == RYSPEC_ENTITY_CHECK;
-}
-
-ryspec_entity index_namespace_of(const ryspec_toml_doc *doc, ryspec_entity e) {
-  for (const index_entity *x; (x = index_at(doc, e)); e = x->parent) {
-    if (x->kind == RYSPEC_ENTITY_NAMESPACE) {
-      return e;
-    }
-  }
-  return 0;
-}
-
-ryspec_entity index_property_of(const ryspec_toml_doc *doc, ryspec_entity e) {
-  for (const index_entity *x; (x = index_at(doc, e)); e = x->parent) {
-    if (x->kind == RYSPEC_ENTITY_PROPERTY) {
-      return e;
-    }
-  }
-  return RYSPEC_NO_ENTITY;
-}
-
-/* ---------------------------------------------------------------------------
- * The index: names. */
-
-const index_name *index_lookup(const ryspec_toml_doc *doc, ryspec_entity scope,
-                               const char *name, size_t len, size_t *count) {
-  size_t lo = 0, hi = doc->n_names;
-  while (lo < hi) {
-    size_t mid = lo + (hi - lo) / 2;
-    const index_name *m = &doc->names[mid];
-    if (compare(m->scope, m->name, (size_t)m->len, scope, name, len) < 0) {
-      lo = mid + 1;
-    } else {
-      hi = mid;
-    }
-  }
-  size_t end = lo;
-  while (end < doc->n_names &&
-         compare(doc->names[end].scope, doc->names[end].name,
-                 (size_t)doc->names[end].len, scope, name, len) == 0) {
-    end++;
-  }
-  *count = end - lo;
-  return *count ? &doc->names[lo] : NULL;
-}
-
-/* What a name answers to, so far: how many entities, and the first. */
-typedef struct answers {
-  size_t count;
-  ryspec_entity first;
-} answers;
-
-/* Count the entities of the len bytes at name in scope whose kind is a or
- * b, into *to. */
-static void answer(const ryspec_toml_doc *doc, ryspec_entity scope,
-                   const char *name, size_t len, ryspec_entity_kind a,
-                   ryspec_entity_kind b, answers *to) {
-  size_t n;
-  const index_name *r = index_lookup(doc, scope, name, len, &n);
-  for (size_t i = 0; i < n; i++) {
-    ryspec_entity_kind k = doc->entities[r[i].entity].kind;
-    if (k == a || k == b) {
-      if (!to->count++ || r[i].entity < to->first) {
-        to->first = r[i].entity;
-      }
-    }
-  }
-}
-
-static index_target target(answers a, ryspec_resolution none) {
-  if (a.count == 0) {
-    return (index_target){none, RYSPEC_NO_ENTITY};
-  }
-  return (index_target){a.count == 1 ? RYSPEC_RESOLVES_ENTITY
-                                     : RYSPEC_RESOLVES_AMBIGUOUS,
-                        a.first};
-}
-
-static index_target resolve_path(const ryspec_toml_doc *doc, const char *name,
-                                 size_t len) {
-  ryspec_entity ns = 0;
-  const char *end = name + len;
-  for (const char *dot; (dot = memchr(name, '.', (size_t)(end - name)));
-       name = dot + 1) {
-    answers a = {0, RYSPEC_NO_ENTITY};
-    answer(doc, ns, name, (size_t)(dot - name), RYSPEC_ENTITY_NAMESPACE,
-           RYSPEC_ENTITY_NAMESPACE, &a);
-    if (!a.count) {
-      return (index_target){RYSPEC_RESOLVES_NOTHING, RYSPEC_NO_ENTITY};
-    }
-    ns = a.first;
-  }
-  answers a = {0, RYSPEC_NO_ENTITY};
-  answer(doc, ns, name, (size_t)(end - name), RYSPEC_ENTITY_RULE,
-         RYSPEC_ENTITY_PROPERTY, &a);
-  if (!a.count) {
-    answer(doc, ns, name, (size_t)(end - name), RYSPEC_ENTITY_NAMESPACE,
-           RYSPEC_ENTITY_NAMESPACE, &a);
-  }
-  return target(a, RYSPEC_RESOLVES_NOTHING);
-}
-
-index_target index_resolve(const ryspec_toml_doc *doc, ryspec_entity at,
-                           const char *name, size_t len) {
-  if (memchr(name, '.', len)) {
-    return resolve_path(doc, name, len);
-  }
-  ryspec_entity ns = index_namespace_of(doc, at);
-  ryspec_entity property = index_property_of(doc, at);
-  answers a = {0, RYSPEC_NO_ENTITY};
-  if (property != RYSPEC_NO_ENTITY) {
-    answer(doc, property, name, len, RYSPEC_ENTITY_PRIVATE_RULE,
-           RYSPEC_ENTITY_PRIVATE_RULE, &a);
-  }
-  answer(doc, ns, name, len, RYSPEC_ENTITY_RULE, RYSPEC_ENTITY_PROPERTY, &a);
-  if (ns == 0) {
-    answer(doc, ns, name, len, RYSPEC_ENTITY_NAMESPACE, RYSPEC_ENTITY_NAMESPACE,
-           &a);
-  }
-  answer(doc, RYSPEC_NO_ENTITY, name, len, RYSPEC_ENTITY_VARIABLE,
-         RYSPEC_ENTITY_VARIABLE, &a);
-  return target(a, RYSPEC_RESOLVES_DEDUCED);
-}
-
-ryspec_entity_kind index_target_kind(const ryspec_toml_doc *doc,
-                                     index_target t) {
-  return t.resolution == RYSPEC_RESOLVES_ENTITY ? index_kind(doc, t.entity)
-                                                : RYSPEC_ENTITY_NONE;
-}
-
-bool index_target_type(const ryspec_toml_doc *doc, index_target t,
-                       ryspec_value_type *out) {
-  switch (index_target_kind(doc, t)) {
-  case RYSPEC_ENTITY_VARIABLE:
-    *out = doc->entities[t.entity].u.type;
-    return true;
-  case RYSPEC_ENTITY_RULE:
-  case RYSPEC_ENTITY_PRIVATE_RULE:
-  case RYSPEC_ENTITY_PROPERTY:
-    *out = RYSPEC_TYPE_BOOL;
-    return true;
-  default:
-    return false;
-  }
-}
-
-const char *index_type_name(ryspec_value_type t) {
-  static const char *names[] = {"bool", "number", "text", "binary"};
+const char* ryspec_toml_doc_type_name(ryspec_value_type t)
+{
+  static const char* names[] = {"bool", "number", "text", "binary"};
   return names[t];
 }
 
-ryspec_entity index_variable_find(const ryspec_toml_doc *doc, const char *name,
-                                  size_t len) {
-  size_t n;
-  const index_name *r = index_lookup(doc, RYSPEC_NO_ENTITY, name, len, &n);
-  return n ? r[0].entity : RYSPEC_NO_ENTITY;
-}
-
 /* ---------------------------------------------------------------------------
- * The index: monitors. */
+ * Names. */
 
-ryspec_entity index_monitor_find(const ryspec_toml_doc *doc, const char *name,
-                                 size_t len) {
-  for (ryspec_entity e = 0; e < doc->n_entities; e++) {
-    const index_entity *x = &doc->entities[e];
-    if (x->kind == RYSPEC_ENTITY_MONITOR && (size_t)x->len == len &&
-        memcmp(x->name, name, len) == 0) {
-      return e;
+/* What a name answers to, so far: how many entities, and the first. */
+typedef struct answers {
+  int count;
+  ryspec_toml_doc_entity first;
+} answers;
+
+/* Count the entry of len bytes at name in t, as an entity of kind in ns and
+ * property, into *to; a namespace only where it is one. */
+static void answer(
+  const toml_datum_t* t,
+  const char* name,
+  size_t len,
+  ryspec_entity_kind kind,
+  const toml_datum_t* ns,
+  const toml_datum_t* property,
+  answers* to)
+{
+  int i = find(t, name, len);
+  if(i < 0 || (kind == RYSPEC_ENTITY_NAMESPACE && !is_namespace(t, i))) {
+    return;
+  }
+  if(!to->count++) {
+    to->first = entry(kind, t, i, ns, property);
+  }
+}
+
+static ryspec_toml_doc_target target(const answers* a, ryspec_resolution none)
+{
+  if(a->count == 0) {
+    return (ryspec_toml_doc_target){none, {0}};
+  }
+  return (ryspec_toml_doc_target){
+    a->count == 1 ? RYSPEC_RESOLVES_ENTITY : RYSPEC_RESOLVES_AMBIGUOUS,
+    a->first};
+}
+
+/* Count the rules and properties of len bytes at name in the namespace ns
+ * into *to. */
+static void answer_logic(
+  const toml_datum_t* ns, const char* name, size_t len, answers* to)
+{
+  answer(get(ns, "rules"), name, len, RYSPEC_ENTITY_RULE, ns, NULL, to);
+  answer(
+    get(ns, "properties"), name, len, RYSPEC_ENTITY_PROPERTY, ns, NULL, to);
+}
+
+static ryspec_toml_doc_target resolve_path(
+  const ryspec_toml_doc* doc, const char* name, size_t len)
+{
+  const toml_datum_t* ns = ryspec_toml_doc_root(doc);
+  const char* end = name + len;
+  for(const char* dot; (dot = memchr(name, '.', (size_t)(end - name)));
+      name = dot + 1) {
+    answers a = {0};
+    answer(
+      namespaces_of(doc, ns),
+      name,
+      (size_t)(dot - name),
+      RYSPEC_ENTITY_NAMESPACE,
+      ns,
+      NULL,
+      &a);
+    if(!a.count) {
+      return (ryspec_toml_doc_target){RYSPEC_RESOLVES_NOTHING, {0}};
     }
+    ns = a.first.value;
   }
-  return RYSPEC_NO_ENTITY;
+  answers a = {0};
+  answer_logic(ns, name, (size_t)(end - name), &a);
+  if(!a.count) {
+    answer(
+      namespaces_of(doc, ns),
+      name,
+      (size_t)(end - name),
+      RYSPEC_ENTITY_NAMESPACE,
+      ns,
+      NULL,
+      &a);
+  }
+  return target(&a, RYSPEC_RESOLVES_NOTHING);
 }
 
-const toml_datum_t *index_monitor_list(const ryspec_toml_doc *doc,
-                                       ryspec_entity m,
-                                       ryspec_monitor_list list) {
-  static const char *const keys[] = {"inputs", "parameters", "outputs"};
-  if (index_kind(doc, m) != RYSPEC_ENTITY_MONITOR) {
-    return NULL;
+ryspec_toml_doc_target ryspec_toml_doc_resolve(
+  const ryspec_toml_doc* doc,
+  const ryspec_toml_doc_entity* at,
+  const char* name,
+  size_t len)
+{
+  if(memchr(name, '.', len)) {
+    return resolve_path(doc, name, len);
   }
-  const toml_datum_t *v = get(doc->nodes[m], keys[list]);
-  return v && v->type == TOML_ARRAY ? v : NULL;
+  const toml_datum_t* root = ryspec_toml_doc_root(doc);
+  /* The namespace and property at is in, or is. */
+  const toml_datum_t *ns = root, *property = NULL;
+  if(at && at->kind == RYSPEC_ENTITY_NAMESPACE) {
+    ns = at->value;
+  }
+  else if(at && at->ns) {
+    ns = at->ns;
+    property = at->kind == RYSPEC_ENTITY_PROPERTY ? at->value : at->property;
+  }
+  answers a = {0};
+  answer(
+    get(property, "where"),
+    name,
+    len,
+    RYSPEC_ENTITY_PRIVATE_RULE,
+    ns,
+    property,
+    &a);
+  answer_logic(ns, name, len, &a);
+  if(ns == root) {
+    answer(
+      namespaces_of(doc, ns), name, len, RYSPEC_ENTITY_NAMESPACE, ns, NULL, &a);
+  }
+  const toml_datum_t* variables = get(root, "variables");
+  int i = find(variables, name, len);
+  if(i >= 0 && is_table(&variables->u.tab.value[i]) && !a.count++) {
+    a.first = entry(RYSPEC_ENTITY_VARIABLE, variables, i, NULL, NULL);
+  }
+  return target(&a, RYSPEC_RESOLVES_DEDUCED);
 }
 
-bool index_array_holds(const toml_datum_t *a, const char *name, size_t len) {
-  for (int i = 0; a && i < a->u.arr.size; i++) {
-    const toml_datum_t *e = &a->u.arr.elem[i];
-    if (e->type == TOML_STRING && (size_t)e->u.str.len == len &&
-        memcmp(e->u.str.ptr, name, len) == 0) {
+ryspec_entity_kind ryspec_toml_doc_target_kind(ryspec_toml_doc_target t)
+{
+  return t.resolution == RYSPEC_RESOLVES_ENTITY ? t.entity.kind
+                                                : RYSPEC_ENTITY_NONE;
+}
+
+bool ryspec_toml_doc_target_type(
+  ryspec_toml_doc_target t, ryspec_value_type* out)
+{
+  switch(ryspec_toml_doc_target_kind(t)) {
+    case RYSPEC_ENTITY_VARIABLE:
+      *out = ryspec_toml_doc_variable_type(t.entity.value);
       return true;
-    }
+    case RYSPEC_ENTITY_RULE:
+    case RYSPEC_ENTITY_PRIVATE_RULE:
+    case RYSPEC_ENTITY_PROPERTY:
+      *out = RYSPEC_TYPE_BOOL;
+      return true;
+    default:
+      return false;
   }
-  return false;
-}
-
-bool index_monitor_lists(const ryspec_toml_doc *doc, ryspec_entity m,
-                         const char *name, size_t len) {
-  return index_array_holds(index_monitor_list(doc, m, RYSPEC_MONITOR_INPUTS),
-                           name, len) ||
-         index_array_holds(
-             index_monitor_list(doc, m, RYSPEC_MONITOR_PARAMETERS), name,
-             len) ||
-         index_array_holds(index_monitor_list(doc, m, RYSPEC_MONITOR_OUTPUTS),
-                           name, len);
-}
-
-/* ---------------------------------------------------------------------------
- * The public interface: ryspec.h's, total over any id. */
-
-size_t ryspec_entity_count(const ryspec_toml_doc *doc) {
-  return doc ? doc->n_entities : 0;
-}
-
-ryspec_entity_kind ryspec_entity_kind_of(const ryspec_toml_doc *doc,
-                                         ryspec_entity entity) {
-  return index_kind(doc, entity);
-}
-
-ryspec_entity ryspec_entity_parent(const ryspec_toml_doc *doc,
-                                   ryspec_entity entity) {
-  const index_entity *x = index_at(doc, entity);
-  return x ? x->parent : RYSPEC_NO_ENTITY;
-}
-
-const char *ryspec_entity_name(const ryspec_toml_doc *doc, ryspec_entity entity,
-                               size_t *len) {
-  const index_entity *x = index_at(doc, entity);
-  const char *name = x ? x->name : NULL;
-  if (len) {
-    *len = name ? (size_t)x->len : 0;
-  }
-  return name;
-}
-
-/* Write e's path into buf from at on, returning where it ends: its named
- * ancestors' first, each followed by a dot. */
-static size_t write_path(const ryspec_toml_doc *doc, ryspec_entity e, char *buf,
-                         size_t size, size_t at) {
-  const index_entity *x = index_at(doc, e);
-  const index_entity *up = index_at(doc, x->parent);
-  if (up && up->name) {
-    at = write_path(doc, x->parent, buf, size, at);
-    if (at < size) {
-      buf[at] = '.';
-    }
-    at++;
-  }
-  for (int i = 0; i < x->len; i++, at++) {
-    if (at < size) {
-      buf[at] = x->name[i];
-    }
-  }
-  return at;
-}
-
-size_t ryspec_entity_path(const ryspec_toml_doc *doc, ryspec_entity entity,
-                          char *buf, size_t size) {
-  const index_entity *x = index_at(doc, entity);
-  size_t len = x && x->name ? write_path(doc, entity, buf, size, 0) : 0;
-  if (size) {
-    buf[len < size ? len : size - 1] = '\0';
-  }
-  return len;
-}
-
-bool ryspec_entity_place(const ryspec_toml_doc *doc, ryspec_entity entity,
-                         int *line, int *column) {
-  const index_entity *x = index_at(doc, entity);
-  bool placed = x && x->line > 0;
-  if (line) {
-    *line = placed ? x->line : 0;
-  }
-  if (column) {
-    *column = placed ? x->column : 0;
-  }
-  return placed;
 }

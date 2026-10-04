@@ -55,16 +55,9 @@ def run_validate(args: argparse.Namespace) -> int:
 
 
 def run_lint(args: argparse.Namespace) -> int:
-    from ryspec.lint import lint_file, lint_rules
+    from ryspec.lint import lint_file
 
-    if args.rules:
-        unknown = sorted(set(args.rules) - set(lint_rules()))
-        if unknown:
-            checked = ", ".join(map(str, lint_rules()))
-            print(f"ryspec: no lint rule {unknown[0]} (the rules checked: {checked})",
-                  file=sys.stderr)
-            return 2
-    return check_files(args, lambda path: lint_file(path, args.rules))
+    return check_files(args, lint_file)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -97,10 +90,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     lint.add_argument("paths", nargs="*", type=Path, default=[Path(".")], metavar="PATH",
                       help="a file or directory to check (default: the current directory)")
-    lint.add_argument("-r", "--rule", dest="rules", type=int, action="append", metavar="N",
-                      help="check rule N of SPEC.md alone, or 0 for the schema; repeat for "
-                      "several, which run in the order given (default: the schema, then every "
-                      "rule libryspec checks). A rule presumes a document the schema accepts")
     lint.add_argument("-q", "--quiet", action="store_true",
                       help="report only failing files, then the summary")
     lint.set_defaults(handler=run_lint)

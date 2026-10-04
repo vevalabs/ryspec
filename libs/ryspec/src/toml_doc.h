@@ -1,7 +1,7 @@
 /*
  * Documents, private to libryspec: the one place tomlc17's types meet the
- * library's. The public header names none: a ryspec_toml_doc is the
- * block below.
+ * library's. The public header names none: a ryspec_toml_doc is the block
+ * below.
  *
  * A document is tomlc17's tree, as parsed, but for its expressions: each
  * expression-form string at a rule position is translated to prefix-form
@@ -10,26 +10,17 @@
  * copied into the document's block, after the document, and the second
  * result freed: nothing in the tree points at the expression form.
  *
- * The index: the document's entities in one table, one id space, and the
- * name index that resolves references over them, built once the document is
- * translated, as fields of it, and released with it. Names, places and nodes
- * point into tomlc17's tree, copying nothing. Values of the wrong shape are
- * passed over, as are `extras` tables.
- *
- * Ids are dense, the root namespace 0, in the document's order: a
- * namespace, its rules, then for each of its properties the property, its
- * `given`, its `check` and its private rules, then its named namespaces,
- * each so in turn; then the variables; then the monitors. An entity's
- * parent is the only structural link: a namespace's is the namespace that
- * holds it, the root's none; a rule's and a property's, their namespace; a
- * private rule's, a `given`'s and a `check`'s, their property; a variable's
- * and a monitor's, none. A `given` and a `check` are positions, unnamed.
- *
- * The name index is the specification's symbol space: what a reference can
- * resolve to, each name in a scope -- a namespace, rule or property in its
- * parent namespace, a private rule in its property, a variable in the
- * global scope. A monitor is a runtime interface over that space, outside
- * it: its entries are references into it, and its own name is no symbol.
+ * Nothing else is kept: no index. The document's entities -- namespaces,
+ * rules, properties, their `given`s, `check`s and private rules, and
+ * variables -- are read from the tree where they stand, by a visitor that
+ * walks them in the document's order, and a reference is resolved, by
+ * SPEC.md's "Names", with a few lookups in the tables that declare names.
+ * TOML gives a table no key twice, so a scope holds a name at most once per
+ * table, and a name more than one table holds where a reference stands is
+ * ambiguous. Values of the wrong shape are passed over, as are `extras`
+ * tables. A monitor is no entity: a runtime interface over the
+ * specification's names, outside them, its entries references into them
+ * and its own name none.
  */
 #ifndef RYSPEC_SRC_TOML_DOC_H
 #define RYSPEC_SRC_TOML_DOC_H
@@ -38,70 +29,17 @@
 #include <stddef.h>
 
 #include "ryspec/ryspec.h"
+
 #include "tomlc17.h"
-
-/* The entity kinds and ids are public (ryspec.h), read through the
- * document; the rest stays here until a consumer needs it. */
-
-typedef enum ryspec_value_type {
-  RYSPEC_TYPE_BOOL,
-  RYSPEC_TYPE_NUMBER,
-  RYSPEC_TYPE_TEXT,
-  RYSPEC_TYPE_BINARY,
-} ryspec_value_type;
-
-typedef enum ryspec_resolution {
-  RYSPEC_RESOLVES_NOTHING,   /* a dotted path nothing answers to */
-  RYSPEC_RESOLVES_DEDUCED,   /* a bare name nothing declares: an input */
-  RYSPEC_RESOLVES_ENTITY,    /* exactly one entity */
-  RYSPEC_RESOLVES_AMBIGUOUS, /* more than one: Rule 11's */
-} ryspec_resolution;
-
-typedef enum ryspec_monitor_list {
-  RYSPEC_MONITOR_INPUTS,
-  RYSPEC_MONITOR_PARAMETERS,
-  RYSPEC_MONITOR_OUTPUTS,
-} ryspec_monitor_list;
-
-/* An entity. name is NULL for the root, a `given` and a `check`; line and
- * column are 0 where the entity has no place. */
-typedef struct index_entity {
-  ryspec_entity_kind kind;
-  ryspec_entity parent;
-  const char *name;
-  int len;
-  int line, column;
-  union {
-    ryspec_value_type type; /* a variable's */
-    struct {
-      ryspec_entity given, check; /* RYSPEC_NO_ENTITY where absent */
-    } property;
-  } u;
-} index_entity;
-
-/* A record of the name index, by (scope, name, entity). The global scope
- * is RYSPEC_NO_ENTITY. */
-typedef struct index_name {
-  ryspec_entity scope, entity;
-  const char *name;
-  int len;
-} index_name;
 
 struct ryspec_toml_doc {
   toml_result_t result; /* the document, its expressions translated */
-
-  /* Its index, built once it is translated. */
-  index_entity *entities;
-  const toml_datum_t **nodes; /* per entity, the tree node the linter reads */
-  size_t n_entities, cap_entities;
-  index_name *names; /* the name index, sorted by (scope, name, entity) */
-  size_t n_names;
 };
 
 /* The value of the key of key_len bytes in table t, or NULL when t is no
  * table or has no such key. */
-toml_datum_t *ryspec_toml_value_lookup(const toml_datum_t *t, const char *key,
-                                       size_t key_len);
+toml_datum_t* ryspec_toml_value_lookup(
+  const toml_datum_t* t, const char* key, size_t key_len);
 
 /* Set tomlc17's options for a parse, returning them: its allocator, which
  * the library allocates through too, and the UTF-8 check. */
@@ -109,12 +47,12 @@ toml_option_t ryspec_toml_options(void);
 
 /* Fill diag, which may be NULL, with status at line and column, and the
  * message fmt formats. */
-void ryspec_diagnose(ryspec_diagnostic *diag, ryspec_status status, int line,
-                     int column, const char *fmt, ...);
+void ryspec_diagnose(
+  ryspec_diag* diag, int status, int line, int column, const char* fmt, ...);
 
 /* Classify a failed result's errmsg into diag, which may be NULL, as a
  * TOML status at the line it names, the message without the position. */
-void ryspec_toml_error(const char *errmsg, ryspec_diagnostic *diag);
+void ryspec_toml_error(const char* errmsg, ryspec_diag* diag);
 
 /* Search (*doc)->result for expression-form strings at rule positions and
  * replace each by its prefix twin, *doc's block grown, and so perhaps
@@ -123,103 +61,125 @@ void ryspec_toml_error(const char *errmsg, ryspec_diagnostic *diag);
  * NULL, is filled with: RYSPEC_ERROR_GRAMMAR at the first expression that
  * does not parse, placed in the document, the TOML status of a twin
  * tomlc17 refuses, or RYSPEC_ERROR_MEMORY. */
-ryspec_status ryspec_translate(ryspec_toml_doc **doc, toml_option_t opt,
-                               ryspec_diagnostic *diag);
+int ryspec_translate(
+  ryspec_toml_doc** doc, toml_option_t opt, ryspec_diag* diag);
 
 /* ---------------------------------------------------------------------------
- * The index. */
+ * Entities. */
 
-/* Index doc, whose index is empty. Returns RYSPEC_OK, or
- * RYSPEC_ERROR_MEMORY with diag, which may be NULL, filled and doc's index
- * only fit to be released. */
-ryspec_status index_init(ryspec_toml_doc *doc, ryspec_diagnostic *diag);
+typedef enum ryspec_entity_kind {
+  RYSPEC_ENTITY_NONE = 0,
+  RYSPEC_ENTITY_NAMESPACE,
+  RYSPEC_ENTITY_RULE,
+  RYSPEC_ENTITY_PROPERTY,
+  RYSPEC_ENTITY_PRIVATE_RULE, /* a rule of a property's `where` */
+  RYSPEC_ENTITY_VARIABLE,
+  RYSPEC_ENTITY_GIVEN, /* a property's `given`: a position */
+  RYSPEC_ENTITY_CHECK, /* a property's `check`: a position */
+} ryspec_entity_kind;
 
-/* Release doc's index, leaving it empty; an empty index may be released
- * again. */
-void index_release(ryspec_toml_doc *doc);
+typedef enum ryspec_value_type {
+  RYSPEC_TYPE_BOOL,
+  RYSPEC_TYPE_NUMBER,
+  RYSPEC_TYPE_TEXT,
+  RYSPEC_TYPE_BINARY,
+} ryspec_value_type;
 
-/* The entity e, or NULL when e is no id of doc. */
-const index_entity *index_at(const ryspec_toml_doc *doc, ryspec_entity e);
+/* An entity, as it stands in the tree: its kind, its key, its value -- a
+ * rule position's rule, a variable's declaration, a namespace's or
+ * property's table -- and the tables holding it. A `given` and a `check`
+ * are positions, unnamed, and carry their property's key, for a
+ * diagnostic. ns is the namespace's table it is in, the root's being the
+ * document's top table, and for a namespace the one holding it; NULL for a
+ * variable. property is the property's table holding a private rule, a
+ * `given` or a `check`, and NULL otherwise. Two entities are one when their
+ * values are. */
+typedef struct ryspec_toml_doc_entity {
+  ryspec_entity_kind kind;
+  const char* name;
+  int len;
+  const toml_datum_t* value;
+  const toml_datum_t* ns;
+  const toml_datum_t* property;
+} ryspec_toml_doc_entity;
 
-/* The kind of e, RYSPEC_ENTITY_NONE when e is no id of doc. */
-ryspec_entity_kind index_kind(const ryspec_toml_doc *doc, ryspec_entity e);
+/* The document's top table: the root namespace's. */
+const toml_datum_t* ryspec_toml_doc_root(const ryspec_toml_doc* doc);
 
-/* The tree node of e: a rule position's rule, a variable's declaration, a
- * namespace's, property's or monitor's table; NULL when e is no id. */
-const toml_datum_t *index_node(const ryspec_toml_doc *doc, ryspec_entity e);
+/* Receives each entity; anything but RYSPEC_OK stops the visit and is
+ * returned. */
+typedef int (*ryspec_toml_doc_entity_fn)(
+  const ryspec_toml_doc_entity* e, void* ctx, ryspec_diag* diag);
 
-/* The first entity of kind from e on, in id order, or doc->n_entities:
- * so
- *   for (e = index_next(doc, 0, k); e < doc->n_entities;
- *        e = index_next(doc, e + 1, k))
- * visits every entity of kind k. */
-ryspec_entity index_next(const ryspec_toml_doc *doc, ryspec_entity e,
-                         ryspec_entity_kind kind);
+/* Visit the entities of doc in the document's order: a namespace's rules,
+ * then for each of its properties the property, its `given`, its `check`
+ * and its private rules, then each of its named namespaces and what it
+ * holds, so in turn, from the root; then the variables. The root is
+ * visited as no entity. */
+int ryspec_toml_doc_each_entity(
+  const ryspec_toml_doc* doc,
+  ryspec_toml_doc_entity_fn fn,
+  void* ctx,
+  ryspec_diag* diag);
 
-/* Whether kind is a rule position: a rule, private rule, given or check. */
-bool index_is_position(ryspec_entity_kind kind);
+/* Whether kind is a rule position's: a rule, private rule, given or
+ * check. */
+bool ryspec_toml_doc_is_position(ryspec_entity_kind kind);
 
-/* The nearest namespace holding e, or e itself if a namespace; the root for
- * RYSPEC_NO_ENTITY. */
-ryspec_entity index_namespace_of(const ryspec_toml_doc *doc, ryspec_entity e);
+/* The `given` or `check`, as part, of the property p, in *out, returning
+ * whether it has one. */
+bool ryspec_toml_doc_property_part(
+  const ryspec_toml_doc_entity* p,
+  ryspec_entity_kind part,
+  ryspec_toml_doc_entity* out);
 
-/* The nearest property holding e, or e itself if a property, or
- * RYSPEC_NO_ENTITY. */
-ryspec_entity index_property_of(const ryspec_toml_doc *doc, ryspec_entity e);
+/* The declaration of the variable of len bytes at name, or NULL. */
+const toml_datum_t* ryspec_toml_doc_variable(
+  const ryspec_toml_doc* doc, const char* name, size_t len);
 
-/* The name records of len bytes at name in scope, *count of them, sorted
- * by entity; NULL with *count 0 when there are none. */
-const index_name *index_lookup(const ryspec_toml_doc *doc, ryspec_entity scope,
-                               const char *name, size_t len, size_t *count);
+/* The type the variable declaration decl declares; RYSPEC_TYPE_BOOL where
+ * it names none. */
+ryspec_value_type ryspec_toml_doc_variable_type(const toml_datum_t* decl);
 
-/* What a reference resolves to, and the entity: the one for
- * RYSPEC_RESOLVES_ENTITY, the first by id for RYSPEC_RESOLVES_AMBIGUOUS,
- * RYSPEC_NO_ENTITY otherwise. */
-typedef struct index_target {
+/* The name of the type, as "text". */
+const char* ryspec_toml_doc_type_name(ryspec_value_type t);
+
+/* ---------------------------------------------------------------------------
+ * Names. */
+
+typedef enum ryspec_resolution {
+  RYSPEC_RESOLVES_NOTHING,   /* a dotted path nothing answers to */
+  RYSPEC_RESOLVES_DEDUCED,   /* a bare name nothing declares: an input */
+  RYSPEC_RESOLVES_ENTITY,    /* exactly one entity */
+  RYSPEC_RESOLVES_AMBIGUOUS, /* more than one: Rule 11's */
+} ryspec_resolution;
+
+/* What a reference resolves to, and the entity: the one, or for
+ * RYSPEC_RESOLVES_AMBIGUOUS one of them; of kind RYSPEC_ENTITY_NONE
+ * otherwise. */
+typedef struct ryspec_toml_doc_target {
   ryspec_resolution resolution;
-  ryspec_entity entity;
-} index_target;
+  ryspec_toml_doc_entity entity;
+} ryspec_toml_doc_target;
 
 /* What the len bytes at name, written at the entity at, resolve to. A bare
  * name is looked up among the private rules of at's property, the rules
  * and properties of at's namespace, and at the root its top-level
  * namespaces, and the variables; a dotted path walks from the root, each
- * segment but the last a namespace. at RYSPEC_NO_ENTITY is the root. */
-index_target index_resolve(const ryspec_toml_doc *doc, ryspec_entity at,
-                           const char *name, size_t len);
+ * segment but the last a namespace. at NULL is the root. */
+ryspec_toml_doc_target ryspec_toml_doc_resolve(
+  const ryspec_toml_doc* doc,
+  const ryspec_toml_doc_entity* at,
+  const char* name,
+  size_t len);
 
 /* The kind of the one entity t resolves to, or RYSPEC_ENTITY_NONE. */
-ryspec_entity_kind index_target_kind(const ryspec_toml_doc *doc,
-                                     index_target t);
+ryspec_entity_kind ryspec_toml_doc_target_kind(ryspec_toml_doc_target t);
 
 /* The type a reference has, when it resolves to a variable, a rule or a
  * property, a rule's or property's being RYSPEC_TYPE_BOOL, in *out,
  * returning whether it has one. */
-bool index_target_type(const ryspec_toml_doc *doc, index_target t,
-                       ryspec_value_type *out);
-
-/* The name of the type, as "text". */
-const char *index_type_name(ryspec_value_type t);
-
-/* The variable declared as the len bytes at name, or RYSPEC_NO_ENTITY. */
-ryspec_entity index_variable_find(const ryspec_toml_doc *doc, const char *name,
-                                  size_t len);
-
-/* The monitor of len bytes at name, or RYSPEC_NO_ENTITY. */
-ryspec_entity index_monitor_find(const ryspec_toml_doc *doc, const char *name,
-                                 size_t len);
-
-/* The monitor m's list, or NULL when it lacks one or it is no array. */
-const toml_datum_t *index_monitor_list(const ryspec_toml_doc *doc,
-                                       ryspec_entity m,
-                                       ryspec_monitor_list list);
-
-/* Whether the array a, which may be NULL, holds the string of len bytes at
- * name. */
-bool index_array_holds(const toml_datum_t *a, const char *name, size_t len);
-
-/* Whether monitor m lists the len bytes at name in any of its lists. */
-bool index_monitor_lists(const ryspec_toml_doc *doc, ryspec_entity m,
-                         const char *name, size_t len);
+bool ryspec_toml_doc_target_type(
+  ryspec_toml_doc_target t, ryspec_value_type* out);
 
 #endif /* RYSPEC_SRC_TOML_DOC_H */

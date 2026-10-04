@@ -1,0 +1,54 @@
+---
+BasedOnStyle: Google
+Language: Cpp
+
+AlignAfterOpenBracket: AlwaysBreak
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+AlwaysBreakBeforeMultilineStrings: true
+
+BinPackArguments: false
+BinPackParameters: false
+BreakBeforeBraces: Stroustrup
+
+ContinuationIndentWidth: 2
+
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: Never
+SpaceBeforeSquareBrackets: false
+SpaceInEmptyBlock: false
+SpaceInEmptyParentheses: false
+SpacesInCStyleCastParentheses: false
+SpacesInConditionalStatement: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+DerivePointerAlignment: false
+PointerAlignment: Left
+ReflowComments: true
+
+UseTab: Never
+
+IncludeBlocks: Regroup
+
+IncludeCategories:
+  # C standard library
+  - Regex: '^<[^>]+\.h>$'
+    Priority: 1
+
+  # rysdk public API
+  - Regex: '^"ryspec/.*"$'
+    Priority: 2
+
+  # Other project-local headers
+  - Regex: '^"[^"]+\.h"$'
+    Priority: 100
+
+  # Everything else
+  - Regex: '.*'
+    Priority: 1000

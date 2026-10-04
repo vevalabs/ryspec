@@ -3,11 +3,12 @@
 Every `key = value` line of every document under the given paths is replaced
 in turn by each of a set of wrong values, or deleted, and each mutant that is
 still TOML is judged twice: by jsonschema against schemas/v0/, as
-`ryspec validate` judges it, and by libryspec's parser and schema check,
-`ryspec lint -r 0`. The two must agree, but for one difference by design: the
-schema takes any non-blank `(...)` string as an expression, and only the
-parser reads the grammar inside it, so a mutant jsonschema accepts may fail
-libryspec with a grammar error.
+`ryspec validate` judges it, and by libryspec's parser and linter, as
+`ryspec lint` does, whose schema check runs before any rule: a rule's
+violation is the schema passed. The two must agree, but for one difference
+by design: the schema takes any non-blank `(...)` string as an expression,
+and only the parser reads the grammar inside it, so a mutant jsonschema
+accepts may fail libryspec with a grammar error.
 
 Exits 1 when any mutant is judged otherwise -- rejected by jsonschema and
 passed by libryspec, or passed by jsonschema and refused by libryspec for any
@@ -33,7 +34,6 @@ from pathlib import Path
 import tomli
 
 from ryspec import _core
-from ryspec.lint import lint_rules
 from ryspec.validate import load_validator
 
 REPOSITORY = Path(__file__).resolve().parents[2]
@@ -126,8 +126,10 @@ def judge(path: Path, schema: Path) -> Verdicts:
                 continue
             error = next(iter(validator.iter_errors(data)), None)
             scratch.write_text(mutant.text, encoding="utf-8")
-            finding = next(iter(_core.lint(str(scratch), [0])), None)
+            finding = next(iter(_core.lint(str(scratch))), None)
             kind = finding[0] if finding else "ok"
+            if kind == "semantic":
+                finding, kind = None, "ok"  # the schema passed, then a rule failed
             found.counts[(error is None, kind)] += 1
             if error is not None and finding is None:
                 found.missed.append((str(mutant), error.message))
@@ -153,9 +155,6 @@ def main(argv: list[str] | None = None) -> int:
                         help="show at most N disagreements of each kind (default: 20)")
     args = parser.parse_args(argv)
 
-    if 0 not in lint_rules():
-        print("schema_fuzz: this libryspec has no schema check", file=sys.stderr)
-        return 2
     schema = args.schema.resolve()
     files = list(toml_files(args.paths))
     found = Verdicts()

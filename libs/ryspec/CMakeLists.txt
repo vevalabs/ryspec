@@ -61,8 +61,11 @@ target_include_directories(ryspec
     src
     $<TARGET_PROPERTY:tomlc17,INTERFACE_INCLUDE_DIRECTORIES>)
 
+# The version as one number, as Boost writes its own: 0.1.0 is 100.
+math(EXPR ryspec_version_number
+  "${PROJECT_VERSION_MAJOR} * 100000 + ${PROJECT_VERSION_MINOR} * 100 + ${PROJECT_VERSION_PATCH}")
 target_compile_definitions(ryspec PRIVATE
-  RYSPEC_VERSION_STRING="${PROJECT_VERSION}")
+  RYSPEC_VERSION_NUMBER=${ryspec_version_number})
 
 target_compile_options(ryspec PRIVATE
   $<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-Wall;-Wextra;-Wpedantic>)
