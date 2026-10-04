@@ -37,20 +37,19 @@ set_target_properties(tomlc17 PROPERTIES
 # A thin wrapper over two parsers: tomlc17 reads the document
 # (src/toml_doc.c), and the hand-written expression parser
 # (src/expr_parser.c) turns each expression into prefix-form TOML that
-# tomlc17 reads in turn (src/translate.c). Only src/toml_doc.h names
-# tomlc17's types; the public header names none.
+# tomlc17 reads in turn (src/translate.c); src/toml_doc.c then indexes the
+# tree's entities and resolves names over them. The linter reads both:
+# src/lint.c walks rules and dispatches the checks, and src/lint_check.c
+# holds them.
+# tomlc17's types are named in src/toml_doc.h and the private headers built
+# on it; the public header names none.
 
 add_library(ryspec STATIC
   src/toml_doc.c
   src/translate.c
   src/expr_parser.c
   src/lint.c
-  src/lint_monitors.c
-  src/lint_variables.c
-  src/lint_names.c
-  src/lint_cones.c
-  src/lint_quantifiers.c
-  src/lint_schema.c
+  src/lint_check.c
   $<TARGET_OBJECTS:tomlc17>)
 add_library(ryspec::ryspec ALIAS ryspec)
 
